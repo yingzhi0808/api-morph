@@ -42,6 +42,9 @@
   "engines": {
     "node": ">=18.19.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "start": "node --watch --enable-source-maps --import @oxc-node/core/register",
     "build": "tsdown",
