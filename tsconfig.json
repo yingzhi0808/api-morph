@@ -9,8 +9,7 @@
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
-      "@tests/*": ["./tests/*"],
-      "api-morph": ["./src/index.ts"]
+      "@tests/*": ["./tests/*"]
     },
     "resolveJsonModule": true,
     "types": ["node"],
@@ -30,5 +29,5 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["src", "tests", "examples"]
+  "include": ["src", "tests"]
 }
