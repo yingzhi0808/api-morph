@@ -14,7 +14,7 @@ export function generateDocument(
   options?: GenerateDocumentOptions,
 ) {
   const project = new Project({
-    tsConfigFilePath: options?.tsConfigFilePath,
+    tsConfigFilePath: options?.tsConfigFilePath ?? "tsconfig.json",
   });
   const parser = new OpenAPIParser(project, options?.parserOptions);
   const documentBuilder = config instanceof DocumentBuilder ? config : new DocumentBuilder(config);
