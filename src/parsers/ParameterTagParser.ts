@@ -2,10 +2,10 @@ import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { ParameterBuilder } from "@/builders";
 import { JSDocTagName, VALID_PARAMETER_IN } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers";
 import type { ParameterTagData, ParameterTagParams, ParsedTagData, ParsedTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
-import { TagParser } from "./TagParser";
 
 /**
  * 参数标签解析器，处理 `@parameter` 标签

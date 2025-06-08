@@ -1,6 +1,6 @@
 import { cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type { CallbackObject, PathItemObject } from "@/types";
-import type { Builder } from "./Builder";
 
 /**
  * 回调构建器，用于构建 OpenAPI CallbackObject

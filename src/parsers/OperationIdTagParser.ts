@@ -1,9 +1,9 @@
 import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers";
 import type { ParsedTagData, ParsedTagParams } from "@/types";
-import { TagParser } from "./TagParser";
 
 /**
  * 操作ID解析器，处理 `@operationId` 标签

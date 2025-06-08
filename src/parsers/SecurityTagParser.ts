@@ -2,9 +2,9 @@ import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { SecurityBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers";
 import type { ParsedTagData, ParsedTagParams, SecurityTagData, SecurityTagParams } from "@/types";
-import { TagParser } from "./TagParser";
 
 /**
  * 安全标签解析器，处理 `@security` 标签

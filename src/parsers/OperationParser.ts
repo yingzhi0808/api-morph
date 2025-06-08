@@ -21,6 +21,7 @@ export class OperationParser {
    * @returns 解析后的 ParsedOperationData。
    */
   async parse(sourceOperationData: SourceOperationData) {
+    console.log("sourceOperationData", sourceOperationData.node);
     if (!sourceOperationData.tags?.length) return this.buildOperation([]);
 
     const parsedTagDataList: ParsedTagData[] = [];

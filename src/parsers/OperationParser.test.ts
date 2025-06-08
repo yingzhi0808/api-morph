@@ -4,7 +4,7 @@ import {
   createSourceOperationData,
 } from "@tests/utils";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TagParserRegistry } from "@/core";
+import { TagParser, TagParserRegistry } from "@/core";
 import type { ParameterObject, RequestBodyObject, ResponseObject } from "@/types";
 import { CallbackTagParser } from "./CallbackTagParser";
 import { DeprecatedTagParser } from "./DeprecatedTagParser";
@@ -20,7 +20,6 @@ import { ResponsesExtensionsTagParser } from "./ResponsesExtensionsTagParser";
 import { ResponseTagParser } from "./ResponseTagParser";
 import { SecurityTagParser } from "./SecurityTagParser";
 import { ServerTagParser } from "./ServerTagParser";
-import { TagParser } from "./TagParser";
 import { TagsTagParser } from "./TagsTagParser";
 
 describe("OperationParser", () => {

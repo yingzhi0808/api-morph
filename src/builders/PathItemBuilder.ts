@@ -1,5 +1,6 @@
 import { cloneDeep } from "radashi";
 import type { HttpMethod } from "@/constants";
+import type { Builder } from "@/core";
 import type {
   OperationObject,
   ParameterObject,
@@ -8,7 +9,6 @@ import type {
   ServerObject,
 } from "@/types";
 import { isParameterObject } from "@/utils";
-import type { Builder } from "./Builder";
 import type { OperationBuilder } from "./OperationBuilder";
 import type { ParameterBuilder } from "./ParameterBuilder";
 

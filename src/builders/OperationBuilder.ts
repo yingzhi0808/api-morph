@@ -1,4 +1,5 @@
 import { cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type {
   CallbackObject,
   ExternalDocumentationObject,
@@ -11,7 +12,6 @@ import type {
   ServerObject,
 } from "@/types";
 import { isParameterObject } from "@/utils";
-import type { Builder } from "./Builder";
 import type { ParameterBuilder } from "./ParameterBuilder";
 import type { RequestBodyBuilder } from "./RequestBodyBuilder";
 import type { ResponseBuilder } from "./ResponseBuilder";

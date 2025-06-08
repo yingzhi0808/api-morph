@@ -1,4 +1,4 @@
-import type { TagParser } from "@/parsers";
+import type { TagParser } from "@/core";
 
 /**
  * 标签解析器注册表，用于管理和查找标签解析器

@@ -2,8 +2,8 @@ import { createJSDocTag, createParseContext } from "@tests/utils";
 import type { JSDocTag } from "ts-morph";
 import { Project, SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
+import { TagParser } from "@/core";
 import type { ParseContext, ParsedTagData, ParseTagParamsWithYamlOptions } from "@/types";
-import { TagParser } from "./TagParser";
 
 /**
  * 具体的 TagParser 实现，用于测试抽象类的功能

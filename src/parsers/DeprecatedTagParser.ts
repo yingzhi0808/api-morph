@@ -1,7 +1,7 @@
 import type { JSDocTag } from "ts-morph";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import type { ParsedTagData, ParsedTagParams } from "@/types";
-import { TagParser } from "./TagParser";
 
 /**
  * 废弃标记解析器，处理 `@deprecated` 标签

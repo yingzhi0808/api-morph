@@ -2,10 +2,10 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { ServerBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers/zod";
 import type { ParsedTagData, ParsedTagParams, ServerTagData, ServerTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
-import { TagParser } from "./TagParser";
 
 /**
  * 服务器标签解析器，处理 `@server` 标签

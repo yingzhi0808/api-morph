@@ -16,5 +16,4 @@ export * from "./ResponseTagParser";
 export * from "./SecurityTagParser";
 export * from "./ServerTagParser";
 export * from "./SimplifiedResponseTagParser";
-export * from "./TagParser";
 export * from "./TagsTagParser";

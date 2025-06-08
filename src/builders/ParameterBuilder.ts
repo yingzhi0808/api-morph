@@ -1,6 +1,6 @@
 import { cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type { MediaTypeObject, ParameterObject } from "@/types";
-import type { Builder } from "./Builder";
 
 /**
  * 参数构建器，用于构建 OpenAPI ParameterObject

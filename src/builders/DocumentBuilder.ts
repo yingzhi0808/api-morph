@@ -1,4 +1,5 @@
 import { assign, cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type {
   CallbackObject,
   ContactObject,
@@ -20,7 +21,6 @@ import type {
   ServerObject,
   TagObject,
 } from "@/types";
-import type { Builder } from "./Builder";
 import type { PathItemBuilder } from "./PathItemBuilder";
 
 /**

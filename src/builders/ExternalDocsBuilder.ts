@@ -1,6 +1,6 @@
 import { cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type { ExternalDocumentationObject } from "@/types";
-import type { Builder } from "./Builder";
 
 /**
  * 外部文档构建器，用于构建 OpenAPI ExternalDocumentationObject

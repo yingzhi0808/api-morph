@@ -3,10 +3,10 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { ResponseBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers";
 import type { ParsedTagData, ParsedTagParams, ResponseTagData, ResponseTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
-import { TagParser } from "./TagParser";
 
 /**
  * 响应标签解析器，处理 `@response` 标签

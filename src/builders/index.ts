@@ -1,6 +1,5 @@
 /* v8 ignore start */
 
-export * from "./Builder";
 export * from "./CallbackBuilder";
 export * from "./DocumentBuilder";
 export * from "./ExternalDocsBuilder";

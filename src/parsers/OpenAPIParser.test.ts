@@ -2,9 +2,9 @@ import { createFileWithContent, createProject } from "@tests/utils";
 import { Project } from "ts-morph";
 import { describe, expect, it } from "vitest";
 import { DocumentBuilder } from "@/builders";
+import { TagParser } from "@/core";
 import type { OpenAPIObject, ParserOptions } from "@/types";
 import { OpenAPIParser } from "./OpenAPIParser";
-import { TagParser } from "./TagParser";
 
 function createDefaultDocumentBuilder() {
   const defaultDocument: OpenAPIObject = {

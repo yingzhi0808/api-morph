@@ -1,6 +1,6 @@
 import { cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type { MediaTypeObject, RequestBodyObject } from "@/types";
-import type { Builder } from "./Builder";
 
 /**
  * 请求体构建器，用于构建 OpenAPI RequestBodyObject

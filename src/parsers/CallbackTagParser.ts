@@ -2,10 +2,10 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { CallbackBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers/zod";
 import type { CallbackTagData, CallbackTagParams, ParsedTagData, ParsedTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
-import { TagParser } from "./TagParser";
 
 /**
  * 回调标签解析器，处理 `@callback` 标签

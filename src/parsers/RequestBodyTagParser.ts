@@ -3,6 +3,7 @@ import YAML from "yaml";
 import z from "zod/v4";
 import { RequestBodyBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers";
 import { normalizeMediaType } from "@/helpers/mediaType";
 import type {
@@ -12,7 +13,6 @@ import type {
   RequestBodyTagParams,
 } from "@/types";
 import { isExtensionKey } from "@/utils";
-import { TagParser } from "./TagParser";
 
 /**
  * 请求体标签解析器，处理 `@requestBody` 标签。

@@ -1,4 +1,5 @@
 import { cloneDeep } from "radashi";
+import type { Builder } from "@/core";
 import type {
   HeaderObject,
   LinkObject,
@@ -6,7 +7,6 @@ import type {
   ReferenceObject,
   ResponseObject,
 } from "@/types";
-import type { Builder } from "./Builder";
 
 /**
  * 响应构建器，用于构建 OpenAPI ResponseObject

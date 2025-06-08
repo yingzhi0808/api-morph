@@ -2,6 +2,7 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { ExternalDocsBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
+import { TagParser } from "@/core";
 import { getZodErrorMessage } from "@/helpers";
 import type {
   ExternalDocsTagData,
@@ -10,7 +11,6 @@ import type {
   ParsedTagParams,
 } from "@/types";
 import { isExtensionKey } from "@/utils";
-import { TagParser } from "./TagParser";
 
 /**
  * 外部文档标签解析器，处理 `@externalDocs` 标签
