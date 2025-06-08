@@ -18,7 +18,7 @@ import { tokenizeString } from "@/utils";
  */
 export abstract class TagParser {
   /** 解析器支持的 JSDoc 标签名称列表 */
-  abstract tags: string[];
+  abstract readonly tags: string[];
 
   /**
    * 创建标签解析器实例。
