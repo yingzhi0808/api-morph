@@ -40,7 +40,6 @@ describe("OpenAPIParser", () => {
 
       class CustomParser extends TagParser {
         tags = ["custom"];
-        priority = 70;
         parse() {
           return {
             extensions: {
@@ -579,7 +578,6 @@ describe("OpenAPIParser", () => {
 
       class CustomParser extends TagParser {
         tags = ["custom"];
-        priority = 70;
 
         parse() {
           return {

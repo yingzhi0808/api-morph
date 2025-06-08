@@ -10,7 +10,6 @@ import type { ParseContext, ParsedTagData, ParseTagParamsWithYamlOptions } from 
  */
 class TestTagParser extends TagParser {
   tags = ["test"];
-  priority = 1;
 
   parse(_tag: JSDocTag): ParsedTagData | null {
     return { description: "test parsed data" };
@@ -374,10 +373,6 @@ good: value`);
   describe("abstract methods and properties", () => {
     it("应该有正确的 tags", () => {
       expect(parser.tags).toEqual(["test"]);
-    });
-
-    it("应该有正确的 priority", () => {
-      expect(parser.priority).toBe(1);
     });
 
     it("应该能调用 parse 方法", () => {

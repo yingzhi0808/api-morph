@@ -294,7 +294,6 @@ x-nullable: false`,
     it("应该正确处理标签解析器返回null的情况", async () => {
       class NullReturnParser extends TagParser {
         tags = ["mock"];
-        priority = 50;
         parse() {
           return null;
         }
