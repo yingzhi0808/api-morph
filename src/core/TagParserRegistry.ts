@@ -6,27 +6,25 @@ import type { TagParser } from "@/parsers";
 export class TagParserRegistry {
   /** 标签名到解析器的映射 */
   private tagToParser = new Map<string, TagParser>();
-  /** 解析器到其支持标签的映射 */
-  private parserToTags = new Map<TagParser, Set<string>>();
-  /** 所有已注册的解析器集合 */
-  private allParsers = new Set<TagParser>();
 
   /**
-   * 注册标签解析器，如果解析器已存在，或者其支持的某个标签已被其他解析器注册，则会抛出错误。
+   * 注册标签解析器，如果解析器支持的某个标签已被其他解析器注册，则会抛出错误。
    * @param parser 标签解析器实例。
-   * @throws {Error} 如果解析器名称冲突或标签冲突。
+   * @throws {Error} 如果标签冲突。
    */
   register(parser: TagParser) {
-    if (this.allParsers.has(parser)) {
-      throw new Error(`解析器已存在：解析器实例 "${parser.constructor.name}" 已经被注册。`);
-    }
-
     // 获取解析器支持的标签
     const tags = parser.getTags();
 
     // 检查标签数组是否为空
     if (tags.length === 0) {
       throw new Error(`无效的解析器：解析器 "${parser.constructor.name}" 必须至少支持一个标签。`);
+    }
+
+    // 检查是否已经注册了相同的解析器实例
+    const existingParsers = new Set(this.tagToParser.values());
+    if (existingParsers.has(parser)) {
+      throw new Error(`解析器已存在：解析器实例 "${parser.constructor.name}" 已经被注册。`);
     }
 
     // 检查标签冲突
@@ -51,23 +49,10 @@ export class TagParserRegistry {
       );
     }
 
-    // 注册解析器和标签映射
-    const tagsSet = new Set(tags);
-    this.parserToTags.set(parser, tagsSet);
-    this.allParsers.add(parser);
-
+    // 注册标签到解析器的映射
     for (const tagName of tags) {
       this.tagToParser.set(tagName, parser);
     }
-  }
-
-  /**
-   * 检查是否存在某个标签解析器。
-   * @param tagName JSDoc 标签名称。
-   * @returns 是否存在解析器。
-   */
-  hasParser(tagName: string) {
-    return this.tagToParser.has(tagName);
   }
 
   /**

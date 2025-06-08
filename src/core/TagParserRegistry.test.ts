@@ -67,8 +67,6 @@ describe("TagParserRegistry", () => {
     it("应该成功注册单个解析器", () => {
       registry.register(parser1);
 
-      expect(registry.hasParser("test1")).toBe(true);
-      expect(registry.hasParser("test2")).toBe(true);
       expect(registry.getParser("test1")).toBe(parser1);
       expect(registry.getParser("test2")).toBe(parser1);
     });
@@ -77,9 +75,6 @@ describe("TagParserRegistry", () => {
       registry.register(parser1);
       registry.register(parser2);
 
-      expect(registry.hasParser("test1")).toBe(true);
-      expect(registry.hasParser("test2")).toBe(true);
-      expect(registry.hasParser("test3")).toBe(true);
       expect(registry.getParser("test3")).toBe(parser2);
     });
 
@@ -123,13 +118,6 @@ describe("TagParserRegistry", () => {
     beforeEach(() => {
       registry.register(parser1);
       registry.register(parser2);
-    });
-
-    it("hasParser 应该正确检查标签存在性", () => {
-      expect(registry.hasParser("test1")).toBe(true);
-      expect(registry.hasParser("test2")).toBe(true);
-      expect(registry.hasParser("test3")).toBe(true);
-      expect(registry.hasParser("nonexistent")).toBe(false);
     });
 
     it("getParser 应该返回正确的解析器", () => {
