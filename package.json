@@ -73,11 +73,9 @@
   "devDependencies": {
     "@biomejs/biome": "^2.0.0-beta.6",
     "@oxc-node/core": "^0.0.27",
-    "@types/express": "^5.0.3",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.15.30",
     "@vitest/coverage-v8": "^3.2.2",
-    "express": "^5.1.0",
     "lefthook": "^1.11.13",
     "npm-run-all2": "^8.0.4",
     "tsdown": "^0.12.7",
@@ -87,6 +85,7 @@
     "vue": "^3.5.16"
   },
   "peerDependencies": {
+    "@types/express": "^5.0.0",
     "express": "^5.0.0"
   }
 }
