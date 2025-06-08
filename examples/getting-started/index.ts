@@ -77,21 +77,22 @@ app.post("/login", (req, res) => {
   }
 });
 
+const openapi = await generateDocument(
+  {
+    info: {
+      version: "1.0.0",
+      title: "API Documentaion",
+      description: "This is a simple API documentation",
+    },
+  },
+  {
+    parserOptions: {
+      include: ["examples/**/*.ts"],
+    },
+  },
+);
+
 app.get("/openapi.json", async (_req, res) => {
-  const openapi = await generateDocument(
-    {
-      info: {
-        version: "1.0.0",
-        title: "API Documentaion",
-        description: "This is a simple API documentation",
-      },
-    },
-    {
-      parserOptions: {
-        include: ["examples/**/*.ts"],
-      },
-    },
-  );
   res.json(openapi);
 });
 
