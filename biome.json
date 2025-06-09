@@ -13,8 +13,12 @@
       "suspicious": {
         "noExplicitAny": "error"
       },
+      "nursery": {
+        "useConsistentObjectDefinition": "error"
+      },
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "useBlockStatements": "error"
       },
       "correctness": {
         "noUnusedImports": "off",
@@ -26,20 +30,5 @@
   "formatter": {
     "useEditorconfig": true,
     "lineWidth": 100
-  },
-  "overrides": [
-    {
-      "includes": ["examples/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          },
-          "correctness": {
-            "noUnusedVariables": "warn"
-          }
-        }
-      }
-    }
-  ]
+  }
 }
