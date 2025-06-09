@@ -2,21 +2,21 @@ import deepmerge from "deepmerge";
 import { OperationBuilder } from "@/builders";
 import type { OperationData, ParsedOperation, SourceOperationData } from "@/types";
 import { isExtensionKey } from "@/utils";
-import type { ASTAnalyzerRegistry } from "./ASTAnalyzerRegistry";
+import type { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 import type { TagParserRegistry } from "./TagParserRegistry";
 
 /**
- * 操作组合器，负责整合 JSDoc 标签解析和 AST 分析的结果，构建完整的 API 操作
+ * 操作组合器，负责整合 JSDoc 标签解析和框架 AST 分析的结果，构建完整的 API 操作
  */
 export class OperationComposer {
   /**
    * 创建操作组合器实例。
    * @param tagParserRegistry 标签解析器注册表。
-   * @param astAnalyzerRegistry AST分析器注册表。
+   * @param frameworkAnalyzerRegistry 框架分析器注册表。
    */
   constructor(
     private readonly tagParserRegistry: TagParserRegistry,
-    private readonly astAnalyzerRegistry: ASTAnalyzerRegistry,
+    private readonly frameworkAnalyzerRegistry: FrameworkAnalyzerRegistry,
   ) {}
 
   /**
@@ -25,13 +25,16 @@ export class OperationComposer {
    * @returns 组合后的完整操作。
    */
   async compose(sourceOperationData: SourceOperationData) {
-    // 分析AST结构，收集分析器结果
+    // 框架优先策略：找到第一个能处理的框架就返回其结果
     let astAnalysisData: OperationData = {};
-    const analyzers = this.astAnalyzerRegistry.getAnalyzers(sourceOperationData.node);
-    for (const analyzer of analyzers) {
-      const analysisResult = await analyzer.analyze(sourceOperationData.node);
+    const frameworkAnalyzer = this.frameworkAnalyzerRegistry.getFirstMatchingAnalyzer(
+      sourceOperationData.node,
+    );
+
+    if (frameworkAnalyzer) {
+      const analysisResult = await frameworkAnalyzer.analyze(sourceOperationData.node);
       if (analysisResult) {
-        astAnalysisData = deepmerge(astAnalysisData, analysisResult);
+        astAnalysisData = analysisResult;
       }
     }
 
@@ -54,7 +57,7 @@ export class OperationComposer {
       }
     }
 
-    // 合并AST分析和标签解析结果，标签解析结果优先
+    // 合并框架分析和标签解析结果，标签解析结果优先
     const combinedOperationData = { ...astAnalysisData, ...tagParsingData };
 
     return this.buildOperation(combinedOperationData);

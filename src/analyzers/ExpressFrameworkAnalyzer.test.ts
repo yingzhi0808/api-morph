@@ -1,11 +1,11 @@
 import { createParseContext } from "@tests/utils";
 import { Project, SyntaxKind } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import { ExpressASTAnalyzer } from "./ExpressASTAnalyzer";
+import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
 
-describe("ExpressASTAnalyzer", () => {
+describe("ExpressFrameworkAnalyzer", () => {
   const context = createParseContext();
-  const analyzer = new ExpressASTAnalyzer(context);
+  const analyzer = new ExpressFrameworkAnalyzer(context);
 
   function createTestNode(code: string) {
     const project = new Project({ useInMemoryFileSystem: true });
@@ -13,10 +13,10 @@ describe("ExpressASTAnalyzer", () => {
     return sourceFile.getFirstChildByKind(SyntaxKind.ExpressionStatement)!;
   }
 
-  describe("canAnalyze", () => {
+  describe("canAnalyzeFramework", () => {
     it("应该识别Express路由调用", () => {
       const node = createTestNode('app.get("/users", handler);');
-      expect(analyzer.canAnalyze(node)).toBe(true);
+      expect(analyzer.canAnalyzeFramework(node)).toBe(true);
     });
 
     it("应该识别不同的HTTP方法", () => {
@@ -24,18 +24,18 @@ describe("ExpressASTAnalyzer", () => {
 
       for (const method of methods) {
         const node = createTestNode(`app.${method}("/test", handler);`);
-        expect(analyzer.canAnalyze(node)).toBe(true);
+        expect(analyzer.canAnalyzeFramework(node)).toBe(true);
       }
     });
 
-    it("应该拒绝非Express路由调用", () => {
+    it("应该拒绝非Express调用", () => {
       const node = createTestNode('console.log("test");');
-      expect(analyzer.canAnalyze(node)).toBe(false);
+      expect(analyzer.canAnalyzeFramework(node)).toBe(false);
     });
 
-    it("应该拒绝不支持的HTTP方法", () => {
+    it("应该拒绝不支持的方法", () => {
       const node = createTestNode('app.invalid("/test", handler);');
-      expect(analyzer.canAnalyze(node)).toBe(false);
+      expect(analyzer.canAnalyzeFramework(node)).toBe(false);
     });
   });
 
@@ -121,6 +121,19 @@ describe("ExpressASTAnalyzer", () => {
       const result = await analyzer.analyze(node);
 
       expect(result).toBeNull();
+    });
+
+    it("应该暂时对use调用返回null", async () => {
+      const node = createTestNode('app.use("/middleware", middleware);');
+      const result = await analyzer.analyze(node);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("frameworkName", () => {
+    it("应该返回正确的框架名称", () => {
+      expect(analyzer.frameworkName).toBe("Express");
     });
   });
 });

@@ -2,37 +2,24 @@ import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import type { HttpMethod } from "@/constants";
 import { VALID_HTTP_METHODS } from "@/constants";
-import { ASTAnalyzer } from "@/core";
+import { FrameworkAnalyzer } from "@/core";
 import type { OperationData } from "@/types";
 
 /**
- * Express路由分析器，用于分析Express应用的路由定义
+ * Express框架分析器，用于分析Express应用的各种节点类型。
  * 支持分析如下模式：
- * - app.get("/path", handler)
- * - app.post("/path", handler)
- * - router.put("/path", handler)
- * - ...
+ * - 路由调用: `app.get("/path", handler)`、`router.post("/path", handler)`
+ * - 路由挂载: `app.use("/api", router)`
  */
-export class ExpressASTAnalyzer extends ASTAnalyzer {
-  name = "ExpressRoute";
+export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
+  frameworkName = "Express";
 
   /**
-   * 将Express路径参数格式转换为OpenAPI格式，
-   * Express格式: /users/:id/posts/:postId，
-   * OpenAPI格式: /users/{id}/posts/{postId}
-   * @param expressPath Express格式的路径
-   * @returns OpenAPI格式的路径
-   */
-  private convertExpressPathToOpenAPI(expressPath: string) {
-    return expressPath.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "{$1}");
-  }
-
-  /**
-   * 判断节点是否是Express路由调用
+   * 判断节点是否属于Express框架
    * @param node AST节点
-   * @returns 如果是Express路由调用返回true
+   * @returns 如果属于Express框架返回true
    */
-  canAnalyze(node: Node) {
+  canAnalyzeFramework(node: Node) {
     if (!node.isKind(SyntaxKind.ExpressionStatement)) {
       return false;
     }
@@ -56,9 +43,9 @@ export class ExpressASTAnalyzer extends ASTAnalyzer {
   }
 
   /**
-   * 分析Express路由定义
+   * 分析Express节点，内部分发到具体的节点类型处理方法
    * @param node AST节点
-   * @returns 解析后的路由信息
+   * @returns 解析后的操作数据
    */
   async analyze(node: Node): Promise<OperationData | null> {
     const expression = node.getFirstChildByKind(SyntaxKind.CallExpression);
@@ -109,5 +96,14 @@ export class ExpressASTAnalyzer extends ASTAnalyzer {
       method: methodName as HttpMethod,
       path,
     };
+  }
+
+  /**
+   * 将 Express 路径参数格式转换为 OpenAPI 格式: `/users/:id` -> `/users/{id}`
+   * @param expressPath Express格式的路径
+   * @returns OpenAPI格式的路径
+   */
+  private convertExpressPathToOpenAPI(expressPath: string) {
+    return expressPath.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "{$1}");
   }
 }

@@ -1,1 +1,1 @@
-export { ExpressASTAnalyzer } from "./ExpressASTAnalyzer";
+export * from "./ExpressFrameworkAnalyzer";

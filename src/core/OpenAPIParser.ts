@@ -1,6 +1,6 @@
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
-import { ExpressASTAnalyzer } from "@/analyzers";
+import { ExpressFrameworkAnalyzer } from "@/analyzers";
 import { type OpenAPIBuilder, PathItemBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
 import {
@@ -22,7 +22,7 @@ import {
   TagsTagParser,
 } from "@/parsers";
 import type { ParseContext, ParsedOperation, ParserOptions, SourceOperationData } from "@/types";
-import { ASTAnalyzerRegistry } from "./ASTAnalyzerRegistry";
+import { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 import { OperationComposer } from "./OperationComposer";
 import { TagParserRegistry } from "./TagParserRegistry";
 
@@ -34,8 +34,8 @@ export class OpenAPIParser {
   private context: ParseContext;
   /** 标签解析器注册表 */
   private tagParserRegistry: TagParserRegistry;
-  /** AST分析器注册表 */
-  private astAnalyzerRegistry: ASTAnalyzerRegistry;
+  /** 框架分析器注册表 */
+  private frameworkAnalyzerRegistry: FrameworkAnalyzerRegistry;
 
   constructor(
     private project: Project,
@@ -43,7 +43,7 @@ export class OpenAPIParser {
   ) {
     this.context = this.createParseContext(this.project, options);
     this.tagParserRegistry = this.createTagParserRegistry(this.options);
-    this.astAnalyzerRegistry = this.createASTAnalyzerRegistry(this.options);
+    this.frameworkAnalyzerRegistry = this.createFrameworkAnalyzerRegistry(this.options);
   }
 
   /**
@@ -52,7 +52,10 @@ export class OpenAPIParser {
    * @returns 返回完整的 OpenAPI 对象。
    */
   async parse(openAPIBuilder: OpenAPIBuilder) {
-    const operationParser = new OperationComposer(this.tagParserRegistry, this.astAnalyzerRegistry);
+    const operationParser = new OperationComposer(
+      this.tagParserRegistry,
+      this.frameworkAnalyzerRegistry,
+    );
 
     const include = this.context.options.include;
     const excludes = this.context.options.exclude;
@@ -183,26 +186,29 @@ export class OpenAPIParser {
   }
 
   /**
-   * 创建AST分析器注册表。
+   * 创建框架分析器注册表。
    * @param options 配置选项。
-   * @returns AST分析器注册表。
+   * @returns 框架分析器注册表。
    */
-  private createASTAnalyzerRegistry(options: ParserOptions) {
-    const astAnalyzerRegistry = new ASTAnalyzerRegistry();
+  private createFrameworkAnalyzerRegistry(options: ParserOptions) {
+    const frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
 
     // 如果禁用了AST分析，返回空的注册表
     if (options.enableASTAnalysis === false) {
-      return astAnalyzerRegistry;
+      return frameworkAnalyzerRegistry;
     }
 
-    const defaultAnalyzers = [ExpressASTAnalyzer];
-    const analyzers = [...defaultAnalyzers, ...(options.customAnalyzers ?? [])];
+    const defaultFrameworkAnalyzers = [ExpressFrameworkAnalyzer];
+    const frameworkAnalyzers = [
+      ...defaultFrameworkAnalyzers,
+      ...(options.customFrameworkAnalyzers ?? []),
+    ];
 
-    for (const analyzer of analyzers) {
-      astAnalyzerRegistry.register(new analyzer(this.context));
+    for (const analyzer of frameworkAnalyzers) {
+      frameworkAnalyzerRegistry.register(new analyzer(this.context));
     }
 
-    return astAnalyzerRegistry;
+    return frameworkAnalyzerRegistry;
   }
 
   /**

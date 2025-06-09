@@ -1,6 +1,6 @@
 import { createParseContext, createSourceOperationData } from "@tests/utils";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ASTAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
+import { FrameworkAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
 import {
   CallbackTagParser,
   DeprecatedTagParser,
@@ -24,7 +24,7 @@ import { OperationComposer } from "./OperationComposer";
 describe("OperationComposer", () => {
   const context = createParseContext();
   const tagParserRegistry = new TagParserRegistry();
-  const astAnalyzerRegistry = new ASTAnalyzerRegistry();
+  const frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
   let parser: OperationComposer;
 
   tagParserRegistry.register(new ParameterTagParser(context));
@@ -44,7 +44,7 @@ describe("OperationComposer", () => {
   tagParserRegistry.register(new OperationTagParser(context));
 
   beforeEach(() => {
-    parser = new OperationComposer(tagParserRegistry, astAnalyzerRegistry);
+    parser = new OperationComposer(tagParserRegistry, frameworkAnalyzerRegistry);
   });
 
   describe("compose", () => {
@@ -290,10 +290,10 @@ x-nullable: false`,
 
       const context = createParseContext();
       const tagParserRegistry = new TagParserRegistry();
-      const astAnalyzerRegistry = new ASTAnalyzerRegistry();
+      const frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
       tagParserRegistry.register(new NullReturnParser(context));
 
-      const mockParser = new OperationComposer(tagParserRegistry, astAnalyzerRegistry);
+      const mockParser = new OperationComposer(tagParserRegistry, frameworkAnalyzerRegistry);
 
       const sourceData = createSourceOperationData(["@mock test"]);
       const result = await mockParser.compose(sourceData);
@@ -589,7 +589,7 @@ x-timeout: 30`,
 
       const parserWithoutAST = new OperationComposer(
         tagParserRegistryWithoutAST,
-        astAnalyzerRegistry,
+        frameworkAnalyzerRegistry,
       );
       const sourceData = createSourceOperationData(["@operation"]);
 

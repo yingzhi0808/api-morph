@@ -2,7 +2,7 @@
 
 import type { JSDocTag, Node, Project, TypeChecker } from "ts-morph";
 import type { HttpMethod } from "@/constants";
-import type { ASTAnalyzer, TagParser } from "@/core";
+import type { FrameworkAnalyzer, TagParser } from "@/core";
 import type {
   CallbackObject,
   ExternalDocumentationObject,
@@ -50,10 +50,10 @@ export interface ParserOptions {
   customParsers?: (new (
     context: ParseContext,
   ) => TagParser)[];
-  /** 自定义AST分析器 */
-  customAnalyzers?: (new (
+  /** 自定义框架分析器 */
+  customFrameworkAnalyzers?: (new (
     context: ParseContext,
-  ) => ASTAnalyzer)[];
+  ) => FrameworkAnalyzer)[];
   /**
    * 是否启用AST分析
    * @default true
