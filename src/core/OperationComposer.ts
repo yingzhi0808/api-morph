@@ -53,7 +53,6 @@ export class OperationComposer {
         tagParsingData = deepmerge(tagParsingData, parsingResult);
       }
     }
-    console.log(tagParsingData);
 
     // 合并AST分析和标签解析结果，标签解析结果优先
     const combinedOperationData = { ...astAnalysisData, ...tagParsingData };

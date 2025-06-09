@@ -393,7 +393,7 @@ good: value`);
     let context: ParseContext;
 
     beforeEach(() => {
-      context = createParseContext(project);
+      context = createParseContext({}, project);
       parser = new TestTagParser(context);
     });
 

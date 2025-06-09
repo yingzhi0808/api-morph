@@ -28,7 +28,7 @@ describe("RequestBodyTagParser", () => {
     let context: ParseContext;
 
     beforeEach(() => {
-      context = createParseContext(project);
+      context = createParseContext({}, project);
       parser = new RequestBodyTagParser(context);
     });
 

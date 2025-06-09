@@ -561,8 +561,39 @@ x-timeout: 30`,
   describe("错误处理", () => {
     it("应该在解析器抛出错误时正确传播错误", async () => {
       const sourceData = createSourceOperationData(["@operation"]);
+      const result = await parser.compose(sourceData);
 
-      await expect(async () => await parser.compose(sourceData)).rejects.toThrow();
+      expect(result).toHaveProperty("operation");
+      expect(result.operation).toHaveProperty("responses");
+    });
+
+    it("应该在禁用AST分析时对空@operation标签抛出错误", async () => {
+      const contextWithoutAST = createParseContext({ enableASTAnalysis: false });
+      const tagParserRegistryWithoutAST = new TagParserRegistry();
+
+      tagParserRegistryWithoutAST.register(new ParameterTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new RequestBodyTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ResponseTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ExternalDocsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new SecurityTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ServerTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new CallbackTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new OperationIdTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new DeprecatedTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ExtensionsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ResponsesExtensionsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new DescriptionTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new SummaryTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new TagsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new OperationTagParser(contextWithoutAST));
+
+      const parserWithoutAST = new OperationComposer(
+        tagParserRegistryWithoutAST,
+        astAnalyzerRegistry,
+      );
+      const sourceData = createSourceOperationData(["@operation"]);
+
+      await expect(async () => await parserWithoutAST.compose(sourceData)).rejects.toThrow();
     });
 
     it("应该在参数解析器抛出错误时正确传播错误", async () => {
