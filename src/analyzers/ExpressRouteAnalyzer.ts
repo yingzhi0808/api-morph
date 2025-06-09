@@ -17,6 +17,17 @@ export class ExpressRouteAnalyzer extends ASTAnalyzer {
   name = "ExpressRoute";
 
   /**
+   * 将Express路径参数格式转换为OpenAPI格式，
+   * Express格式: /users/:id/posts/:postId，
+   * OpenAPI格式: /users/{id}/posts/{postId}
+   * @param expressPath Express格式的路径
+   * @returns OpenAPI格式的路径
+   */
+  private convertExpressPathToOpenAPI(expressPath: string) {
+    return expressPath.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "{$1}");
+  }
+
+  /**
    * 判断节点是否是Express路由调用
    * @param node AST节点
    * @returns 如果是Express路由调用返回true
@@ -77,7 +88,7 @@ export class ExpressRouteAnalyzer extends ASTAnalyzer {
       pathArg.isKind(SyntaxKind.StringLiteral) ||
       pathArg.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
     ) {
-      path = JSON.parse(pathArg.getText());
+      path = pathArg.getText().slice(1, -1);
     } else {
       return null;
     }
@@ -90,6 +101,9 @@ export class ExpressRouteAnalyzer extends ASTAnalyzer {
     if (!path.startsWith("/")) {
       path = `/${path}`;
     }
+
+    // 将Express路径参数格式转换为OpenAPI格式
+    path = this.convertExpressPathToOpenAPI(path);
 
     return {
       method: methodName as HttpMethod,

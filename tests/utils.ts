@@ -1,5 +1,5 @@
 import { Project, type ProjectOptions, SyntaxKind } from "ts-morph";
-import type { ParseContext, SourceOperationData } from "@/types";
+import type { ParseContext, ParserOptions, SourceOperationData } from "@/types";
 
 /**
  * 创建一个 ts-morph Project 实例，默认使用内存文件系统。
@@ -12,22 +12,27 @@ export function createProject(options: ProjectOptions = {}) {
 
 /**
  * 创建 ParseContext。
+ * @param options 解析选项。
  * @param project 项目实例。
  * @returns ParseContext。
  */
-export function createParseContext(project = createProject()): ParseContext {
+export function createParseContext(
+  options: ParserOptions = {},
+  project = createProject(),
+): ParseContext {
   // 默认选项，与 OpenAPIParser 中的保持一致
-  const defaultOptions = {
+  const defaultOptions: ParserOptions = {
     includeDeprecated: true,
     defaultResponseMediaType: "application/json",
     defaultRequestMediaType: "application/json",
+    enableASTAnalysis: true,
   };
 
   return {
     schemas: new Map(),
     project,
     typeChecker: project.getTypeChecker(),
-    options: defaultOptions,
+    options: { ...defaultOptions, ...options },
   };
 }
 
