@@ -13,7 +13,7 @@ import type { OperationData } from "@/types";
  * - router.put("/path", handler)
  * - ...
  */
-export class ExpressRouteAnalyzer extends ASTAnalyzer {
+export class ExpressASTAnalyzer extends ASTAnalyzer {
   name = "ExpressRoute";
 
   /**

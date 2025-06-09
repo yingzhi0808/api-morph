@@ -1,1 +1,1 @@
-export { ExpressRouteAnalyzer } from "./ExpressRouteAnalyzer";
+export { ExpressASTAnalyzer } from "./ExpressASTAnalyzer";

@@ -1,11 +1,11 @@
 import { createParseContext } from "@tests/utils";
 import { Project, SyntaxKind } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import { ExpressRouteAnalyzer } from "./ExpressRouteAnalyzer";
+import { ExpressASTAnalyzer } from "./ExpressASTAnalyzer";
 
-describe("ExpressRouteAnalyzer", () => {
+describe("ExpressASTAnalyzer", () => {
   const context = createParseContext();
-  const analyzer = new ExpressRouteAnalyzer(context);
+  const analyzer = new ExpressASTAnalyzer(context);
 
   function createTestNode(code: string) {
     const project = new Project({ useInMemoryFileSystem: true });

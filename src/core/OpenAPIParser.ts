@@ -1,6 +1,6 @@
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
-import { ExpressRouteAnalyzer } from "@/analyzers";
+import { ExpressASTAnalyzer } from "@/analyzers";
 import { type OpenAPIBuilder, PathItemBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
 import {
@@ -195,7 +195,7 @@ export class OpenAPIParser {
       return astAnalyzerRegistry;
     }
 
-    const defaultAnalyzers = [ExpressRouteAnalyzer];
+    const defaultAnalyzers = [ExpressASTAnalyzer];
     const analyzers = [...defaultAnalyzers, ...(options.customAnalyzers ?? [])];
 
     for (const analyzer of analyzers) {
