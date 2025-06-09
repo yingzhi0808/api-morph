@@ -24,16 +24,16 @@ describe("OperationTagParser", () => {
         expect(result).toEqual({ method: "get", path: "/users" });
       });
 
-      it("应该正确解析有效的 @operation 标签（带summary）", async () => {
-        const tag = createJSDocTag("@operation get /users 获取用户列表");
+      it("应该正确解析有效的 @operation 标签", async () => {
+        const tag = createJSDocTag("@operation get /users");
         const result = await parser.parse(tag);
-        expect(result).toEqual({ method: "get", path: "/users", summary: "获取用户列表" });
+        expect(result).toEqual({ method: "get", path: "/users" });
       });
 
       it("应该正确解析带有单词summary的 @operation 标签", async () => {
-        const tag = createJSDocTag(`@operation post /users 创建用户`);
+        const tag = createJSDocTag(`@operation post /users`);
         const result = await parser.parse(tag);
-        expect(result).toEqual({ method: "post", path: "/users", summary: "创建用户" });
+        expect(result).toEqual({ method: "post", path: "/users" });
       });
 
       it("应该正确解析所有支持的 HTTP 方法", async () => {
@@ -71,12 +71,11 @@ describe("OperationTagParser", () => {
 
     describe("边界情况", () => {
       it("应该正确处理@operation中Unicode字符的summary", async () => {
-        const tag = createJSDocTag("@operation get /users 获取用户列表🚀");
+        const tag = createJSDocTag("@operation get /users");
         const result = await parser.parse(tag);
         expect(result).toEqual({
           method: "get",
           path: "/users",
-          summary: "获取用户列表🚀",
         });
       });
 

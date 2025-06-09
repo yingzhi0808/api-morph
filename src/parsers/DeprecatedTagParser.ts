@@ -1,7 +1,7 @@
 import type { JSDocTag } from "ts-morph";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
-import type { ParsedTagData, ParsedTagParams } from "@/types";
+import { TagParser } from "@/core/TagParser";
+import type { OperationData, ParsedTagParams } from "@/types";
 
 /**
  * 废弃标记解析器，处理 `@deprecated` 标签
@@ -47,7 +47,7 @@ export class DeprecatedTagParser extends TagParser {
    * 构建解析结果。
    * @returns 构建的解析结果。
    */
-  private buildResult(): ParsedTagData {
+  private buildResult(): OperationData {
     return { deprecated: true };
   }
 }

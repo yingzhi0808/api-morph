@@ -33,7 +33,9 @@ export function unescapeString(text: string) {
  */
 export function tokenizeString(text: string) {
   const trimmedLine = text.trim();
-  if (!trimmedLine) return [];
+  if (!trimmedLine) {
+    return [];
+  }
 
   const values: string[] = [];
   const valueRegex = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\{(?:[^{}\\]|\\.)*\}|[^\s'"]+/g;
@@ -41,7 +43,9 @@ export function tokenizeString(text: string) {
 
   while (true) {
     currentMatch = valueRegex.exec(trimmedLine);
-    if (currentMatch === null) break;
+    if (currentMatch === null) {
+      break;
+    }
 
     const rawValue = currentMatch[0];
     let cleanedValue: string;
@@ -52,7 +56,9 @@ export function tokenizeString(text: string) {
       cleanedValue = unescapeString(removeQuotes(rawValue)).trim();
     }
 
-    if (cleanedValue.length > 0) values.push(cleanedValue);
+    if (cleanedValue.length > 0) {
+      values.push(cleanedValue);
+    }
   }
   return values;
 }

@@ -2,9 +2,9 @@ import http from "node:http";
 import { camel } from "radashi";
 import type { JSDocTag } from "ts-morph";
 import YAML from "yaml";
-import { normalizeMediaType } from "@/helpers/mediaType";
+import { normalizeMediaType } from "@/helpers";
+import { ResponseTagParser } from "@/parsers";
 import type { ParsedTagParams } from "@/types";
-import { ResponseTagParser } from "./ResponseTagParser";
 
 // 生成状态码到描述的映射：200 -> "ok", 201 -> "created", 400 -> "badRequest" 等
 const statusCodeToTag = Object.fromEntries(
@@ -69,7 +69,9 @@ export class SimplifiedResponseTagParser extends ResponseTagParser {
    * @returns 解析结果或null
    */
   private parseSimplifiedSyntax(inlineParams: string[]) {
-    if (inlineParams.length === 0) return null;
+    if (inlineParams.length === 0) {
+      return null;
+    }
 
     let mediaType: string | undefined;
     let schemaRef: string | undefined;
@@ -79,7 +81,9 @@ export class SimplifiedResponseTagParser extends ResponseTagParser {
 
     // 先查找包含 $ref 的参数作为 schema
     const schemaIndex = parts.findIndex((part) => part.includes("$ref:"));
-    if (schemaIndex !== -1) schemaRef = parts.splice(schemaIndex, 1)[0];
+    if (schemaIndex !== -1) {
+      schemaRef = parts.splice(schemaIndex, 1)[0];
+    }
 
     // 检查第一个参数是否为 media type
     if (parts.length > 0) {
@@ -91,13 +95,19 @@ export class SimplifiedResponseTagParser extends ResponseTagParser {
     }
 
     // 剩余部分作为描述
-    if (parts.length > 0) description = parts[0];
+    if (parts.length > 0) {
+      description = parts[0];
+    }
 
     // 如果有 schema 但没有 mediaType，使用默认的响应媒体类型
-    if (schemaRef && !mediaType) mediaType = this.context.options.defaultResponseMediaType;
+    if (schemaRef && !mediaType) {
+      mediaType = this.context.options.defaultResponseMediaType;
+    }
 
     // 如果没有 mediaType 和 schemaRef，使用原始语法
-    if (!mediaType && !schemaRef) return null;
+    if (!mediaType && !schemaRef) {
+      return null;
+    }
 
     const yaml: Record<string, unknown> = {};
 
@@ -112,7 +122,9 @@ export class SimplifiedResponseTagParser extends ResponseTagParser {
           return null;
         }
 
-        if (schema) yaml.content = { [mediaType]: { schema } };
+        if (schema) {
+          yaml.content = { [mediaType]: { schema } };
+        }
       } else {
         // 只有 mediaType，没有 schema，创建空的 content
         yaml.content = { [mediaType]: {} };

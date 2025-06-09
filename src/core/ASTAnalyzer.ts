@@ -1,15 +1,12 @@
 import type { Node } from "ts-morph";
-import type { ParseContext, ParsedTagData } from "@/types";
+import type { OperationData, ParseContext } from "@/types";
 
 /**
  * AST分析器抽象基类，用于分析代码结构并提取API信息
  */
 export abstract class ASTAnalyzer {
-  /** 分析器名称，用于标识和调试 */
+  /** 分析器名称，用于调试和日志 */
   abstract readonly name: string;
-
-  /** 分析器优先级，数值越小优先级越高 */
-  readonly priority: number = 100;
 
   /**
    * 创建AST分析器实例
@@ -29,13 +26,5 @@ export abstract class ASTAnalyzer {
    * @param node AST节点
    * @returns 解析后的标签数据，如果无法解析返回null
    */
-  abstract analyze(node: Node): Promise<ParsedTagData | null>;
-
-  /**
-   * 获取分析器的描述信息，用于调试和日志
-   * @returns 分析器描述
-   */
-  getDescription(): string {
-    return `${this.name} AST Analyzer`;
-  }
+  abstract analyze(node: Node): Promise<OperationData | null>;
 }

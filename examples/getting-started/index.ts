@@ -1,26 +1,14 @@
 import { generateDocument, generateSwaggerUI, getSwaggerUIAssetInfo } from "api-morph";
-import express, { Router } from "express";
+import express from "express";
 
 const app = express();
 
 app.use(express.json());
 app.use(express.static(getSwaggerUIAssetInfo().assetPath));
 
-const auth = Router();
-
-auth.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username !== "admin" || password !== "123456") {
-    res.status(401).json({ message: "Invalid username or password" });
-  } else {
-    res.json({ id: 1, token: "token-123456" });
-  }
-});
-
-app.get("/auth", auth);
-
 /**
- * @operation post /login 用户登录接口
+ * @operation post /login1
+ * @summary 用户登录接口
  * @description 提供用户登录功能，校验用户名和密码，登录成功后返回用户ID和认证令牌
  * @tags 认证与授权
  * @operationId login
@@ -87,10 +75,12 @@ const openapi = await generateDocument(
   },
   {
     parserOptions: {
-      include: ["examples/**/*.ts"],
+      include: ["examples/getting-started/*.ts"],
     },
   },
 );
+
+console.log(JSON.stringify(openapi, null, 2));
 
 app.get("/openapi.json", async (_req, res) => {
   res.json(openapi);

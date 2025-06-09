@@ -10,14 +10,18 @@ export function findSchemaJSDocLinks(tag: JSDocTag): JSDocLink[] {
   const comment = tag.getComment();
   const schemaLinks: JSDocLink[] = [];
 
-  if (!Array.isArray(comment)) return schemaLinks;
+  if (!Array.isArray(comment)) {
+    return schemaLinks;
+  }
 
   for (let i = 0; i < comment.length; i++) {
     const item = comment[i];
 
     if (item?.isKind(SyntaxKind.JSDocText)) {
       const nextItem = comment[i + 1];
-      if (nextItem?.isKind(SyntaxKind.JSDocLink)) schemaLinks.push(nextItem);
+      if (nextItem?.isKind(SyntaxKind.JSDocLink)) {
+        schemaLinks.push(nextItem);
+      }
     }
   }
 

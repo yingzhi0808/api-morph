@@ -3,9 +3,9 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { ResponseBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
-import type { ParsedTagData, ParsedTagParams, ResponseTagData, ResponseTagParams } from "@/types";
+import type { OperationData, ParsedTagParams, ResponseTagData, ResponseTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
 
 /**
@@ -66,7 +66,9 @@ export class ResponseTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -75,14 +77,16 @@ export class ResponseTagParser extends TagParser {
    * @param params 响应参数。
    * @returns 构建的响应对象。
    */
-  private buildResponse(params: ResponseTagData): ParsedTagData {
+  private buildResponse(params: ResponseTagData): OperationData {
     const { statusCode, yaml, description } = params;
     const responseBuilder = new ResponseBuilder();
 
     let finalDescription = description;
 
     if (yaml) {
-      if (yaml.description) finalDescription = yaml.description;
+      if (yaml.description) {
+        finalDescription = yaml.description;
+      }
 
       if (yaml.headers) {
         Object.entries(yaml.headers).forEach(([name, header]) => {
@@ -103,18 +107,19 @@ export class ResponseTagParser extends TagParser {
       }
 
       Object.entries(yaml).forEach(([key, value]) => {
-        if (isExtensionKey(key)) responseBuilder.addExtension(key, value);
+        if (isExtensionKey(key)) {
+          responseBuilder.addExtension(key, value);
+        }
       });
     }
 
     finalDescription = finalDescription || http.STATUS_CODES[statusCode] || "";
-    if (finalDescription) responseBuilder.setDescription(finalDescription);
+    if (finalDescription) {
+      responseBuilder.setDescription(finalDescription);
+    }
 
     return {
-      response: {
-        statusCode,
-        response: responseBuilder.build(),
-      },
+      responses: { [statusCode]: responseBuilder.build() },
     };
   }
 }

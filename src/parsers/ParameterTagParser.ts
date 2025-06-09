@@ -2,9 +2,9 @@ import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { ParameterBuilder } from "@/builders";
 import { JSDocTagName, VALID_PARAMETER_IN } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
-import type { ParameterTagData, ParameterTagParams, ParsedTagData, ParsedTagParams } from "@/types";
+import type { OperationData, ParameterTagData, ParameterTagParams, ParsedTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
 
 /**
@@ -75,7 +75,9 @@ export class ParameterTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -84,44 +86,64 @@ export class ParameterTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 构建的参数对象。
    */
-  private buildParameter(params: ParameterTagData): ParsedTagData {
+  private buildParameter(params: ParameterTagData): OperationData {
     const { name, paramIn, description, yaml } = params;
     const parameterBuilder = new ParameterBuilder(name, paramIn);
 
     let finalDescription = description;
 
     if (yaml) {
-      if (yaml.description) finalDescription = yaml.description;
+      if (yaml.description) {
+        finalDescription = yaml.description;
+      }
 
-      if (yaml.required !== undefined) parameterBuilder.setRequired(yaml.required);
+      if (yaml.required !== undefined) {
+        parameterBuilder.setRequired(yaml.required);
+      }
 
-      if (yaml.deprecated !== undefined) parameterBuilder.setDeprecated(yaml.deprecated);
+      if (yaml.deprecated !== undefined) {
+        parameterBuilder.setDeprecated(yaml.deprecated);
+      }
 
-      if (yaml.allowEmptyValue !== undefined)
+      if (yaml.allowEmptyValue !== undefined) {
         parameterBuilder.setAllowEmptyValue(yaml.allowEmptyValue);
+      }
 
-      if (yaml.style) parameterBuilder.setStyle(yaml.style);
+      if (yaml.style) {
+        parameterBuilder.setStyle(yaml.style);
+      }
 
-      if (yaml.explode !== undefined) parameterBuilder.setExplode(yaml.explode);
+      if (yaml.explode !== undefined) {
+        parameterBuilder.setExplode(yaml.explode);
+      }
 
-      if (yaml.allowReserved !== undefined) parameterBuilder.setAllowReserved(yaml.allowReserved);
+      if (yaml.allowReserved !== undefined) {
+        parameterBuilder.setAllowReserved(yaml.allowReserved);
+      }
 
-      if (yaml.schema) parameterBuilder.setSchema(yaml.schema);
+      if (yaml.schema) {
+        parameterBuilder.setSchema(yaml.schema);
+      }
 
-      if (yaml.content)
+      if (yaml.content) {
         Object.entries(yaml.content).forEach(([mediaType, mediaTypeObject]) => {
           parameterBuilder.addContent(mediaType, mediaTypeObject);
         });
+      }
 
       Object.entries(yaml).forEach(([key, value]) => {
-        if (isExtensionKey(key)) parameterBuilder.addExtension(key, value);
+        if (isExtensionKey(key)) {
+          parameterBuilder.addExtension(key, value);
+        }
       });
     }
 
-    if (finalDescription) parameterBuilder.setDescription(finalDescription);
+    if (finalDescription) {
+      parameterBuilder.setDescription(finalDescription);
+    }
 
     return {
-      parameter: parameterBuilder.build(),
+      parameters: [parameterBuilder.build()],
     };
   }
 }

@@ -2,9 +2,9 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { ServerBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers/zod";
-import type { ParsedTagData, ParsedTagParams, ServerTagData, ServerTagParams } from "@/types";
+import type { OperationData, ParsedTagParams, ServerTagData, ServerTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
 
 /**
@@ -62,7 +62,9 @@ export class ServerTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -71,12 +73,14 @@ export class ServerTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 构建的服务器对象。
    */
-  private buildServer(params: ServerTagData): ParsedTagData {
+  private buildServer(params: ServerTagData): OperationData {
     const { url, description, yaml } = params;
     const serverBuilder = new ServerBuilder();
 
     serverBuilder.setUrl(url);
-    if (description) serverBuilder.setDescription(description);
+    if (description) {
+      serverBuilder.setDescription(description);
+    }
 
     if (yaml.variables) {
       for (const [name, variable] of Object.entries(yaml.variables)) {
@@ -85,7 +89,9 @@ export class ServerTagParser extends TagParser {
     }
 
     for (const [key, value] of Object.entries(yaml)) {
-      if (isExtensionKey(key)) serverBuilder.addExtension(key, value);
+      if (isExtensionKey(key)) {
+        serverBuilder.addExtension(key, value);
+      }
     }
 
     return {

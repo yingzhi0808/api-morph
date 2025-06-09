@@ -1,4 +1,5 @@
 import { assign, cloneDeep } from "radashi";
+import type { PathItemBuilder } from "@/builders";
 import type { Builder } from "@/core";
 import type {
   CallbackObject,
@@ -21,12 +22,11 @@ import type {
   ServerObject,
   TagObject,
 } from "@/types";
-import type { PathItemBuilder } from "./PathItemBuilder";
 
 /**
  * 文档构建器，用于构建完整的 OpenAPI 文档
  */
-export class DocumentBuilder implements Builder<OpenAPIObject> {
+export class OpenAPIBuilder implements Builder<OpenAPIObject> {
   private document: OpenAPIObject;
 
   constructor(document?: Partial<Omit<OpenAPIObject, "info"> & { info: Partial<InfoObject> }>) {
@@ -130,7 +130,9 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addInfoExtension(key: `x-${string}`, value: unknown) {
     const document = this.document;
-    if (!document.info[key]) document.info[key] = value;
+    if (!document.info[key]) {
+      document.info[key] = value;
+    }
     return this;
   }
 
@@ -151,7 +153,9 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addServer(server: ServerObject) {
     const document = this.document;
-    if (!document.servers) document.servers = [];
+    if (!document.servers) {
+      document.servers = [];
+    }
     document.servers.push(server);
     return this;
   }
@@ -164,8 +168,12 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addPathItem(path: string, pathItem: PathItemObject) {
     const document = this.document;
-    if (!document.paths) document.paths = {};
-    if (!document.paths[path]) document.paths[path] = pathItem;
+    if (!document.paths) {
+      document.paths = {};
+    }
+    if (!document.paths[path]) {
+      document.paths[path] = pathItem;
+    }
     return this;
   }
 
@@ -187,8 +195,12 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addPathsExtension(key: `x-${string}`, value: unknown) {
     const document = this.document;
-    if (!document.paths) document.paths = {};
-    if (!document.paths[key]) document.paths[key] = value;
+    if (!document.paths) {
+      document.paths = {};
+    }
+    if (!document.paths[key]) {
+      document.paths[key] = value;
+    }
     return this;
   }
 
@@ -200,8 +212,12 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addWebhook(name: string, webhook: PathItemObject) {
     const document = this.document;
-    if (!document.webhooks) document.webhooks = {};
-    if (!document.webhooks[name]) document.webhooks[name] = webhook;
+    if (!document.webhooks) {
+      document.webhooks = {};
+    }
+    if (!document.webhooks[name]) {
+      document.webhooks[name] = webhook;
+    }
     return this;
   }
 
@@ -212,7 +228,9 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addSecurity(securityRequirement: SecurityRequirementObject) {
     const document = this.document;
-    if (!document.security) document.security = [];
+    if (!document.security) {
+      document.security = [];
+    }
     document.security.push(securityRequirement);
     return this;
   }
@@ -224,8 +242,12 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addTag(tag: TagObject) {
     const document = this.document;
-    if (!document.tags) document.tags = [];
-    if (!document.tags.find((t) => t.name === tag.name)) document.tags.push(tag);
+    if (!document.tags) {
+      document.tags = [];
+    }
+    if (!document.tags.find((t) => t.name === tag.name)) {
+      document.tags.push(tag);
+    }
     return this;
   }
 
@@ -247,7 +269,9 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const document = this.document;
-    if (!document[key]) document[key] = value;
+    if (!document[key]) {
+      document[key] = value;
+    }
     return this;
   }
 
@@ -259,9 +283,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addSchemaToComponents(name: string, schema: SchemaObject | boolean) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.schemas) document.components.schemas = {};
-    if (!document.components.schemas[name]) document.components.schemas[name] = schema;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.schemas) {
+      document.components.schemas = {};
+    }
+    if (!document.components.schemas[name]) {
+      document.components.schemas[name] = schema;
+    }
     return this;
   }
 
@@ -273,9 +303,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addResponseToComponents(name: string, response: ResponseObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.responses) document.components.responses = {};
-    if (!document.components.responses[name]) document.components.responses[name] = response;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.responses) {
+      document.components.responses = {};
+    }
+    if (!document.components.responses[name]) {
+      document.components.responses[name] = response;
+    }
     return this;
   }
 
@@ -287,9 +323,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addParameterToComponents(name: string, parameter: ParameterObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.parameters) document.components.parameters = {};
-    if (!document.components.parameters[name]) document.components.parameters[name] = parameter;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.parameters) {
+      document.components.parameters = {};
+    }
+    if (!document.components.parameters[name]) {
+      document.components.parameters[name] = parameter;
+    }
     return this;
   }
 
@@ -301,9 +343,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addExampleToComponents(name: string, example: ExampleObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.examples) document.components.examples = {};
-    if (!document.components.examples[name]) document.components.examples[name] = example;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.examples) {
+      document.components.examples = {};
+    }
+    if (!document.components.examples[name]) {
+      document.components.examples[name] = example;
+    }
     return this;
   }
 
@@ -315,10 +363,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addRequestBodyToComponents(name: string, requestBody: RequestBodyObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.requestBodies) document.components.requestBodies = {};
-    if (!document.components.requestBodies[name])
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.requestBodies) {
+      document.components.requestBodies = {};
+    }
+    if (!document.components.requestBodies[name]) {
       document.components.requestBodies[name] = requestBody;
+    }
     return this;
   }
 
@@ -330,9 +383,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addHeaderToComponents(name: string, header: HeaderObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.headers) document.components.headers = {};
-    if (!document.components.headers[name]) document.components.headers[name] = header;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.headers) {
+      document.components.headers = {};
+    }
+    if (!document.components.headers[name]) {
+      document.components.headers[name] = header;
+    }
     return this;
   }
 
@@ -347,8 +406,12 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
     securityScheme: SecuritySchemeObject | ReferenceObject,
   ) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.securitySchemes) document.components.securitySchemes = {};
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.securitySchemes) {
+      document.components.securitySchemes = {};
+    }
     if (!document.components.securitySchemes[name]) {
       document.components.securitySchemes[name] = securityScheme;
     }
@@ -363,9 +426,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addLinkToComponents(name: string, link: LinkObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.links) document.components.links = {};
-    if (!document.components.links[name]) document.components.links[name] = link;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.links) {
+      document.components.links = {};
+    }
+    if (!document.components.links[name]) {
+      document.components.links[name] = link;
+    }
     return this;
   }
 
@@ -377,9 +446,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addCallbackToComponents(name: string, callback: CallbackObject | ReferenceObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.callbacks) document.components.callbacks = {};
-    if (!document.components.callbacks[name]) document.components.callbacks[name] = callback;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.callbacks) {
+      document.components.callbacks = {};
+    }
+    if (!document.components.callbacks[name]) {
+      document.components.callbacks[name] = callback;
+    }
     return this;
   }
 
@@ -391,9 +466,15 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addPathItemToComponents(name: string, pathItem: PathItemObject) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components.pathItems) document.components.pathItems = {};
-    if (!document.components.pathItems[name]) document.components.pathItems[name] = pathItem;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components.pathItems) {
+      document.components.pathItems = {};
+    }
+    if (!document.components.pathItems[name]) {
+      document.components.pathItems[name] = pathItem;
+    }
     return this;
   }
 
@@ -405,8 +486,12 @@ export class DocumentBuilder implements Builder<OpenAPIObject> {
    */
   addComponentsExtension(key: `x-${string}`, value: unknown) {
     const document = this.document;
-    if (!document.components) document.components = {};
-    if (!document.components[key]) document.components[key] = value;
+    if (!document.components) {
+      document.components = {};
+    }
+    if (!document.components[key]) {
+      document.components[key] = value;
+    }
     return this;
   }
 }

@@ -3,11 +3,11 @@ import YAML from "yaml";
 import z from "zod/v4";
 import { RequestBodyBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
 import { normalizeMediaType } from "@/helpers/mediaType";
 import type {
-  ParsedTagData,
+  OperationData,
   ParsedTagParams,
   RequestBodyTagData,
   RequestBodyTagParams,
@@ -63,7 +63,9 @@ export class RequestBodyTagParser extends TagParser {
    * @returns 解析结果或null
    */
   private parseSimplifiedSyntax(inlineParams: string[]) {
-    if (inlineParams.length === 0) return null;
+    if (inlineParams.length === 0) {
+      return null;
+    }
 
     let mediaType: string | undefined;
     let schemaRef: string | undefined;
@@ -73,7 +75,9 @@ export class RequestBodyTagParser extends TagParser {
 
     // 先查找包含 $ref 的参数作为 schema
     const schemaIndex = parts.findIndex((part) => part.includes("$ref:"));
-    if (schemaIndex !== -1) schemaRef = parts.splice(schemaIndex, 1)[0];
+    if (schemaIndex !== -1) {
+      schemaRef = parts.splice(schemaIndex, 1)[0];
+    }
 
     // 检查第一个参数是否为 media type
     if (parts.length > 0) {
@@ -85,14 +89,20 @@ export class RequestBodyTagParser extends TagParser {
     }
 
     // 剩余部分作为描述
-    if (parts.length > 0) description = parts[0];
+    if (parts.length > 0) {
+      description = parts[0];
+    }
 
     // 如果有 schema 但没有 mediaType，使用默认的请求体媒体类型
-    if (schemaRef && !mediaType) mediaType = this.context.options.defaultRequestMediaType;
+    if (schemaRef && !mediaType) {
+      mediaType = this.context.options.defaultRequestMediaType;
+    }
 
     // 简化语法必须包含 mediaType 或 schemaRef
     // 如果两者都没有，说明不是简化语法（比如只有描述），返回 null 使用原始语法
-    if (!mediaType && !schemaRef) return null;
+    if (!mediaType && !schemaRef) {
+      return null;
+    }
 
     // 构建 yaml 参数（简化语法总是需要生成 yaml）
     const yaml: Record<string, unknown> = {};
@@ -108,7 +118,9 @@ export class RequestBodyTagParser extends TagParser {
           return null;
         }
 
-        if (schema) yaml.content = { [mediaType]: { schema } };
+        if (schema) {
+          yaml.content = { [mediaType]: { schema } };
+        }
       } else {
         // 只有 mediaType，没有 schema，创建空的 content
         yaml.content = { [mediaType]: {} };
@@ -146,7 +158,9 @@ export class RequestBodyTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -155,13 +169,17 @@ export class RequestBodyTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 构建的请求体对象。
    */
-  private buildRequestBody(params: RequestBodyTagData): ParsedTagData {
+  private buildRequestBody(params: RequestBodyTagData): OperationData {
     const { description, yaml } = params;
     const requestBodyBuilder = new RequestBodyBuilder();
 
     let finalDescription = description;
-    if (yaml.description) finalDescription = yaml.description;
-    if (finalDescription) requestBodyBuilder.setDescription(finalDescription);
+    if (yaml.description) {
+      finalDescription = yaml.description;
+    }
+    if (finalDescription) {
+      requestBodyBuilder.setDescription(finalDescription);
+    }
 
     if (yaml.content) {
       Object.entries(yaml.content).forEach(([mediaType, mediaTypeObject]) => {
@@ -169,10 +187,14 @@ export class RequestBodyTagParser extends TagParser {
       });
     }
 
-    if (yaml.required !== undefined) requestBodyBuilder.setRequired(yaml.required);
+    if (yaml.required !== undefined) {
+      requestBodyBuilder.setRequired(yaml.required);
+    }
 
     Object.entries(yaml).forEach(([key, value]) => {
-      if (isExtensionKey(key)) requestBodyBuilder.addExtension(key, value);
+      if (isExtensionKey(key)) {
+        requestBodyBuilder.addExtension(key, value);
+      }
     });
 
     return {

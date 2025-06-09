@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DocumentBuilder } from "@/builders";
+import { OpenAPIBuilder } from "@/builders";
 import type { GenerateDocumentOptions, OpenAPIObject } from "@/types";
 import { generateDocument } from "./document";
 
@@ -80,9 +80,9 @@ describe("generateDocument", () => {
     });
   });
 
-  describe("使用 DocumentBuilder 实例", () => {
-    it("应该正确处理 DocumentBuilder 实例", async () => {
-      const documentBuilder = new DocumentBuilder({
+  describe("使用 OpenAPIBuilder 实例", () => {
+    it("应该正确处理 OpenAPIBuilder 实例", async () => {
+      const openAPIBuilder = new OpenAPIBuilder({
         openapi: "3.1.0",
         info: { title: "Builder API", version: "3.0.0" },
       })
@@ -99,7 +99,7 @@ describe("generateDocument", () => {
         },
       };
 
-      const result = await generateDocument(documentBuilder, options);
+      const result = await generateDocument(openAPIBuilder, options);
 
       expect(result.info.title).toBe("Builder API");
       expect(result.info.version).toBe("3.0.0");
@@ -117,8 +117,8 @@ describe("generateDocument", () => {
       expect(result.paths).toBeUndefined();
     });
 
-    it("应该正确处理预配置的复杂 DocumentBuilder", async () => {
-      const documentBuilder = new DocumentBuilder({
+    it("应该正确处理预配置的复杂 OpenAPIBuilder", async () => {
+      const openAPIBuilder = new OpenAPIBuilder({
         openapi: "3.1.0",
         info: { title: "Auth API", version: "1.0.0" },
       })
@@ -143,7 +143,7 @@ describe("generateDocument", () => {
         },
       };
 
-      const result = await generateDocument(documentBuilder, options);
+      const result = await generateDocument(openAPIBuilder, options);
 
       expect(result.info.title).toBe("Auth API");
       expect(result.components?.securitySchemes).toHaveProperty("bearerAuth");

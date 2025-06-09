@@ -1,4 +1,5 @@
 import { cloneDeep } from "radashi";
+import type { ParameterBuilder, RequestBodyBuilder, ResponseBuilder } from "@/builders";
 import type { Builder } from "@/core";
 import type {
   CallbackObject,
@@ -12,9 +13,6 @@ import type {
   ServerObject,
 } from "@/types";
 import { isParameterObject } from "@/utils";
-import type { ParameterBuilder } from "./ParameterBuilder";
-import type { RequestBodyBuilder } from "./RequestBodyBuilder";
-import type { ResponseBuilder } from "./ResponseBuilder";
 
 /**
  * 操作构建器，用于构建 OpenAPI OperationObject
@@ -33,8 +31,12 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addTag(tag: string) {
     const operation = this.operation;
-    if (!operation.tags) operation.tags = [];
-    if (!operation.tags.includes(tag)) operation.tags.push(tag);
+    if (!operation.tags) {
+      operation.tags = [];
+    }
+    if (!operation.tags.includes(tag)) {
+      operation.tags.push(tag);
+    }
     return this;
   }
 
@@ -85,11 +87,15 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addParameterFromObject(parameter: ParameterObject) {
     const operation = this.operation;
-    if (!operation.parameters) operation.parameters = [];
+    if (!operation.parameters) {
+      operation.parameters = [];
+    }
     const exists = operation.parameters.some(
       (p) => isParameterObject(p) && p.name === parameter.name && p.in === parameter.in,
     );
-    if (!exists) operation.parameters.push(parameter);
+    if (!exists) {
+      operation.parameters.push(parameter);
+    }
 
     return this;
   }
@@ -101,11 +107,15 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addParameterFromReference(parameter: ReferenceObject) {
     const operation = this.operation;
-    if (!operation.parameters) operation.parameters = [];
+    if (!operation.parameters) {
+      operation.parameters = [];
+    }
     const exists = operation.parameters.some(
       (p) => !isParameterObject(p) && p.$ref === parameter.$ref,
     );
-    if (!exists) operation.parameters.push(parameter);
+    if (!exists) {
+      operation.parameters.push(parameter);
+    }
     return this;
   }
 
@@ -149,8 +159,12 @@ export class OperationBuilder implements Builder<OperationObject> {
     const operation = this.operation;
     // 因为 operation.responses 是必填字段，所以它永远不会为空，这里的判断只是为了代码的一致性
     /* v8 ignore next */
-    if (!operation.responses) operation.responses = {};
-    if (!operation.responses[statusCode]) operation.responses[statusCode] = response;
+    if (!operation.responses) {
+      operation.responses = {};
+    }
+    if (!operation.responses[statusCode]) {
+      operation.responses[statusCode] = response;
+    }
     return this;
   }
 
@@ -172,8 +186,12 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addCallback(name: string, callback: CallbackObject | ReferenceObject) {
     const operation = this.operation;
-    if (!operation.callbacks) operation.callbacks = {};
-    if (!operation.callbacks[name]) operation.callbacks[name] = callback;
+    if (!operation.callbacks) {
+      operation.callbacks = {};
+    }
+    if (!operation.callbacks[name]) {
+      operation.callbacks[name] = callback;
+    }
     return this;
   }
 
@@ -194,7 +212,9 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addSecurity(securityRequirement: SecurityRequirementObject) {
     const operation = this.operation;
-    if (!operation.security) operation.security = [];
+    if (!operation.security) {
+      operation.security = [];
+    }
     operation.security.push(securityRequirement);
     return this;
   }
@@ -206,7 +226,9 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addServer(server: ServerObject) {
     const operation = this.operation;
-    if (!operation.servers) operation.servers = [];
+    if (!operation.servers) {
+      operation.servers = [];
+    }
     operation.servers.push(server);
     return this;
   }
@@ -219,7 +241,9 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const operation = this.operation;
-    if (!operation[key]) operation[key] = value;
+    if (!operation[key]) {
+      operation[key] = value;
+    }
     return this;
   }
 
@@ -231,7 +255,9 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addResponsesExtension(key: `x-${string}`, value: unknown) {
     const operation = this.operation;
-    if (!operation.responses[key]) operation.responses[key] = value;
+    if (!operation.responses[key]) {
+      operation.responses[key] = value;
+    }
     return this;
   }
 }

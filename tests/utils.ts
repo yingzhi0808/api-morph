@@ -63,7 +63,9 @@ export function createJSDocTag(
   );
   const [jsDoc] = sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc);
   const tag = jsDoc?.getTags()[0];
-  if (!tag) throw new Error("无法创建JSDoc标签");
+  if (!tag) {
+    throw new Error("无法创建JSDoc标签");
+  }
   return tag;
 }
 
@@ -88,20 +90,5 @@ function test() {}`,
   return {
     node: jsDoc.getParent(),
     tags: jsDoc.getTags(),
-  };
-}
-
-/**
- * 创建空标签数组的 SourceOperationData 对象，用于测试空标签情况。
- * @returns SourceOperationData 对象，包含空的标签数组。
- */
-export function createEmptySourceOperationData(): SourceOperationData {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile(`test-${Date.now()}.ts`, "function test() {}");
-  const node = sourceFile.getFunctions()[0];
-
-  return {
-    node,
-    tags: [],
   };
 }

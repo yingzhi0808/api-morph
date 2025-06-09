@@ -40,8 +40,12 @@ export class ServerBuilder implements Builder<ServerObject> {
    */
   addVariable(name: string, variable: ServerVariableObject) {
     const server = this.server;
-    if (!server.variables) server.variables = {};
-    if (!server.variables[name]) server.variables[name] = variable;
+    if (!server.variables) {
+      server.variables = {};
+    }
+    if (!server.variables[name]) {
+      server.variables[name] = variable;
+    }
     return this;
   }
 
@@ -53,7 +57,9 @@ export class ServerBuilder implements Builder<ServerObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const server = this.server;
-    if (!server[key]) server[key] = value;
+    if (!server[key]) {
+      server[key] = value;
+    }
     return this;
   }
 }

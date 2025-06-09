@@ -24,9 +24,8 @@ describe("ResponseTagParser", () => {
         x-custom: "test"`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "成功响应",
               "x-custom": "test",
             },
@@ -39,9 +38,8 @@ describe("ResponseTagParser", () => {
         x-custom: "test"`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "default",
-            response: {
+          responses: {
+            default: {
               description: "默认响应",
               "x-custom": "test",
             },
@@ -54,9 +52,8 @@ describe("ResponseTagParser", () => {
         x-custom: "test"`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "OK",
               "x-custom": "test",
             },
@@ -79,9 +76,8 @@ describe("ResponseTagParser", () => {
           x-custom: "test"`);
           const result = await parser.parse(tag);
           expect(result).toEqual({
-            response: {
-              statusCode,
-              response: {
+            responses: {
+              [statusCode]: {
                 description: expectedDescription,
                 "x-custom": "test",
               },
@@ -95,9 +91,8 @@ describe("ResponseTagParser", () => {
         x-custom: "test"`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "201",
-            response: {
+          responses: {
+            "201": {
               description: "创建成功",
               "x-custom": "test",
             },
@@ -126,9 +121,8 @@ describe("ResponseTagParser", () => {
                     type: object`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "详细的响应描述",
               headers: {
                 "x-total-count": {
@@ -165,9 +159,8 @@ describe("ResponseTagParser", () => {
         x-cache-enabled: true`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "成功",
               "x-custom-header": "custom-value",
               "x-response-time": "fast",
@@ -186,9 +179,8 @@ describe("ResponseTagParser", () => {
               id: $response.body#/id`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "201",
-            response: {
+          responses: {
+            "201": {
               description: "创建成功",
               links: {
                 GetCreatedResource: {
@@ -208,9 +200,8 @@ describe("ResponseTagParser", () => {
         description: YAML中的描述`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "YAML中的描述",
             },
           },
@@ -247,9 +238,8 @@ describe("ResponseTagParser", () => {
         x-compression: gzip`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "成功响应",
               headers: {
                 "x-rate-limit": {
@@ -335,9 +325,9 @@ describe("ResponseTagParser", () => {
           const tag = createJSDocTag(`@response ${statusCode}
           x-test: "value"`);
           const result = await parser.parse(tag);
-          expect(result?.response?.statusCode).toBe(statusCode);
+          expect(Object.keys(result?.responses || {})[0]).toBe(statusCode);
           // 非标准状态码应该使用空字符串作为默认描述
-          expect(result?.response?.response?.description).toBe("");
+          expect(result?.responses?.[statusCode]?.description).toBe("");
         }
       });
     });
@@ -371,7 +361,7 @@ describe("ResponseTagParser", () => {
           const tag = createJSDocTag(`@response ${statusCode}
           x-test: "value"`);
           const result = await parser.parse(tag);
-          expect(result?.response?.statusCode).toBe(statusCode);
+          expect(Object.keys(result?.responses || {})[0]).toBe(statusCode);
         }
       });
 
@@ -379,21 +369,21 @@ describe("ResponseTagParser", () => {
         const tag = createJSDocTag(`@response 200 版本2.0的API响应
         x-test: "value"`);
         const result = await parser.parse(tag);
-        expect(result?.response?.response?.description).toBe("版本2.0的API响应");
+        expect(result?.responses?.["200"]?.description).toBe("版本2.0的API响应");
       });
 
       it("应该正确处理包含标点符号的描述", async () => {
         const tag = createJSDocTag(`@response 400 请求格式错误，请检查参数！
         x-test: "value"`);
         const result = await parser.parse(tag);
-        expect(result?.response?.response?.description).toBe("请求格式错误，请检查参数！");
+        expect(result?.responses?.["400"]?.description).toBe("请求格式错误，请检查参数！");
       });
 
       it("应该正确处理带有引号的描述", async () => {
         const tag = createJSDocTag(`@response 200 "成功"响应
         x-test: "value"`);
         const result = await parser.parse(tag);
-        expect(result?.response?.response?.description).toBe("成功");
+        expect(result?.responses?.["200"]?.description).toBe("成功");
       });
 
       it("应该正确处理不带描述只有YAML的情况", async () => {
@@ -404,9 +394,9 @@ describe("ResponseTagParser", () => {
             schema:
               type: string`);
         const result = await parser.parse(tag);
-        expect(result?.response?.statusCode).toBe("201");
-        expect(result?.response?.response?.description).toBe("Created");
-        expect(result?.response?.response?.headers).toEqual({
+        expect(Object.keys(result?.responses || {})[0]).toBe("201");
+        expect(result?.responses?.["201"]?.description).toBe("Created");
+        expect(result?.responses?.["201"]?.headers).toEqual({
           location: {
             description: "新创建资源的位置",
             schema: {
@@ -431,7 +421,7 @@ describe("ResponseTagParser", () => {
             operationId: getSelf
         x-custom: "扩展字段"`);
         const result = await parser.parse(tag);
-        const response = result?.response?.response;
+        const response = result?.responses?.["200"];
 
         expect(response?.description).toBe("YAML描述覆盖参数描述");
         expect(response).toHaveProperty("headers");
@@ -445,7 +435,7 @@ describe("ResponseTagParser", () => {
         x-processing-time: 100ms
         x-server-id: server-01`);
         const result = await parser.parse(tag);
-        const response = result?.response?.response;
+        const response = result?.responses?.["204"];
 
         expect(response?.description).toBe("No Content");
         expect(response).toHaveProperty("x-processing-time", "100ms");
@@ -461,9 +451,8 @@ describe("ResponseTagParser", () => {
         x-tags: ["api", "response"]`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "成功",
               "x-timeout": 30000,
               "x-enabled": true,
@@ -481,9 +470,8 @@ describe("ResponseTagParser", () => {
         content: {}`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "成功",
             },
           },
@@ -518,9 +506,8 @@ describe("ResponseTagParser", () => {
         x-cache-ttl: 300`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "200",
-            response: {
+          responses: {
+            "200": {
               description: "获取用户列表成功",
               headers: {
                 "x-total-count": {
@@ -589,9 +576,8 @@ describe("ResponseTagParser", () => {
               id: $response.body#/id`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "201",
-            response: {
+          responses: {
+            "201": {
               description: "用户创建成功",
               headers: {
                 location: {
@@ -657,9 +643,8 @@ describe("ResponseTagParser", () => {
         x-error-category: validation`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "400",
-            response: {
+          responses: {
+            "400": {
               description: "请求参数错误",
               content: {
                 "application/json": {
@@ -711,9 +696,8 @@ describe("ResponseTagParser", () => {
         x-fallback: true`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "default",
-            response: {
+          responses: {
+            default: {
               description: "未预期的错误",
               content: {
                 "application/json": {

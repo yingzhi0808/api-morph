@@ -129,8 +129,12 @@ export class ParameterBuilder implements Builder<ParameterObject> {
    */
   addContent(mediaType: string, mediaTypeObject: MediaTypeObject) {
     const parameter = this.parameter;
-    if (!parameter.content) parameter.content = {};
-    if (!parameter.content[mediaType]) parameter.content[mediaType] = mediaTypeObject;
+    if (!parameter.content) {
+      parameter.content = {};
+    }
+    if (!parameter.content[mediaType]) {
+      parameter.content[mediaType] = mediaTypeObject;
+    }
     return this;
   }
 
@@ -142,7 +146,9 @@ export class ParameterBuilder implements Builder<ParameterObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const parameter = this.parameter;
-    if (!parameter[key]) parameter[key] = value;
+    if (!parameter[key]) {
+      parameter[key] = value;
+    }
     return this;
   }
 }

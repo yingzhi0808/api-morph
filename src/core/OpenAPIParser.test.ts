@@ -1,17 +1,17 @@
 import { createFileWithContent, createProject } from "@tests/utils";
 import { Project } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import { DocumentBuilder } from "@/builders";
-import { TagParser } from "@/core";
+import { OpenAPIBuilder } from "@/builders";
+import { TagParser } from "@/core/TagParser";
 import type { OpenAPIObject, ParserOptions } from "@/types";
 import { OpenAPIParser } from "./OpenAPIParser";
 
-function createDefaultDocumentBuilder() {
+function createDefaultOpenAPIBuilder() {
   const defaultDocument: OpenAPIObject = {
     openapi: "3.1.0",
     info: { title: "Test API", version: "1.0.0" },
   };
-  return new DocumentBuilder(defaultDocument);
+  return new OpenAPIBuilder(defaultDocument);
 }
 
 describe("OpenAPIParser", () => {
@@ -80,7 +80,7 @@ describe("OpenAPIParser", () => {
     it("应该正确解析空项目", async () => {
       const project = createProject();
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
 
       const result = await parser.parse(builder);
 
@@ -109,7 +109,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result).toEqual({
@@ -128,14 +128,15 @@ describe("OpenAPIParser", () => {
         "users.ts",
         `
         /**
-         * @operation get /users 获取用户列表
+         * @operation get /users
+         * @summary 获取用户列表
          */
         function getUsers() {}
         `,
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/users");
@@ -153,19 +154,21 @@ describe("OpenAPIParser", () => {
         "users.ts",
         `
         /**
-         * @operation get /users 获取用户列表
+         * @operation get /users
+         * @summary 获取用户列表
          */
         function getUsers() {}
 
         /**
-         * @operation post /users 创建用户
+         * @operation post /users
+         * @summary 创建用户
          */
         function createUser() {}
         `,
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/users");
@@ -182,19 +185,21 @@ describe("OpenAPIParser", () => {
         "api.ts",
         `
         /**
-         * @operation get /users 获取用户
+         * @operation get /users
+         * @summary 获取用户
          */
         function getUsers() {}
 
         /**
-         * @operation get /posts 获取文章
+         * @operation get /posts
+         * @summary 获取文章
          */
         function getPosts() {}
         `,
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/users");
@@ -210,7 +215,8 @@ describe("OpenAPIParser", () => {
         "api.ts",
         `
         /**
-         * @operation post /users 创建用户
+         * @operation post /users
+         * @summary 创建用户
          * @description 创建一个新的用户账户
          * @tags user management
          * @parameter name query 用户名称
@@ -227,7 +233,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       const operation = result.paths?.["/users"]?.post;
@@ -287,7 +293,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/users");
@@ -301,24 +307,27 @@ describe("OpenAPIParser", () => {
         "api.ts",
         `
         /**
-         * @operation get /users/{id} 获取单个用户
+         * @operation get /users/{id}
+         * @summary 获取单个用户
          */
         function getUser() {}
 
         /**
-         * @operation put /users/{id} 更新用户
+         * @operation put /users/{id}
+         * @summary 更新用户
          */
         function updateUser() {}
 
         /**
-         * @operation delete /users/{id} 删除用户
+         * @operation delete /users/{id}
+         * @summary 删除用户
          */
         function deleteUser() {}
         `,
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       const pathItem = result.paths?.["/users/{id}"];
@@ -337,14 +346,15 @@ describe("OpenAPIParser", () => {
         "test.ts",
         `
         /**
-         * @operation get /test 测试接口
+         * @operation get /test
+         * @summary 测试接口
          */
         function test() {}
         `,
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/test");
@@ -379,7 +389,7 @@ describe("OpenAPIParser", () => {
       const parser = new OpenAPIParser(project, {
         include: ["api/**/*.ts"],
       });
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/users");
@@ -400,7 +410,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project, { include: [] });
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toBeUndefined();
@@ -421,7 +431,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project, { include: ["no-match/**/*.ts"] });
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toBeUndefined();
@@ -457,7 +467,7 @@ describe("OpenAPIParser", () => {
       const parser = new OpenAPIParser(project, {
         exclude: ["test.ts"],
       });
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       // 当只有 excludes 时，ts-morph 的 getSourceFiles 只传入排除模式可能不返回文件
@@ -508,7 +518,7 @@ describe("OpenAPIParser", () => {
         include: ["src/**/*.ts"],
         exclude: ["**/admin.ts"],
       });
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/users");
@@ -530,7 +540,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toBeUndefined();
@@ -555,7 +565,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toBeUndefined();
@@ -593,7 +603,7 @@ describe("OpenAPIParser", () => {
       };
 
       const parser = new OpenAPIParser(project, customOptions);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths?.["/test"]?.get).toHaveProperty("x-custom", "value");
@@ -617,7 +627,7 @@ describe("OpenAPIParser", () => {
       createFileWithContent(project, "test.ts", content);
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       for (let i = 0; i < methods.length; i++) {
@@ -642,7 +652,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/api/users/{user-id}/posts/{post_id}");
@@ -660,7 +670,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toBeUndefined();
@@ -695,7 +705,7 @@ describe("OpenAPIParser", () => {
 
       project.addDirectoryAtPath("tests/fixtures");
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
 
       const result = await parser.parse(builder);
 
@@ -740,7 +750,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
 
       const result = await parser.parse(builder);
 
@@ -788,7 +798,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -834,7 +844,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -869,7 +879,7 @@ describe("OpenAPIParser", () => {
         // 注意：不设置includeDeprecated，使用默认值
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -913,7 +923,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -959,7 +969,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -1009,7 +1019,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -1067,7 +1077,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -1126,7 +1136,7 @@ describe("OpenAPIParser", () => {
         include: ["test.ts"],
       });
 
-      const builder = createDefaultDocumentBuilder().setTitle("Test API").setVersion("1.0.0");
+      const builder = createDefaultOpenAPIBuilder().setTitle("Test API").setVersion("1.0.0");
 
       const result = await parser.parse(builder);
 
@@ -1156,7 +1166,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.tags).toEqual([{ name: "test-tag" }]);
@@ -1169,7 +1179,7 @@ describe("OpenAPIParser", () => {
       const project = createProject();
       const parser = new OpenAPIParser(project, undefined);
 
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result).toMatchObject({
@@ -1208,7 +1218,7 @@ describe("OpenAPIParser", () => {
       }
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(Object.keys(result.paths || {})).toHaveLength(50);
@@ -1238,7 +1248,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       const pathItem = result.paths?.["/api/resource"];
@@ -1274,7 +1284,7 @@ describe("OpenAPIParser", () => {
       );
 
       const parser = new OpenAPIParser(project);
-      const builder = createDefaultDocumentBuilder();
+      const builder = createDefaultOpenAPIBuilder();
       const result = await parser.parse(builder);
 
       expect(result.paths).toHaveProperty("/v1/users");

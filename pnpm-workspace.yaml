@@ -7,4 +7,5 @@ ignoredBuiltDependencies:
   - tree-sitter-json
 onlyBuiltDependencies:
   - lefthook
-useNodeVersion: 21.0.0
+useNodeVersion: 18.20.8
+enableGlobalVirtualStore: true

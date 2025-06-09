@@ -20,7 +20,9 @@ export class CallbackBuilder implements Builder<CallbackObject> {
    */
   addExpression(expression: string, pathItem: PathItemObject) {
     const callback = this.callback;
-    if (!callback[expression]) callback[expression] = pathItem;
+    if (!callback[expression]) {
+      callback[expression] = pathItem;
+    }
     return this;
   }
 
@@ -32,7 +34,9 @@ export class CallbackBuilder implements Builder<CallbackObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const document = this.callback;
-    if (!document[key]) document[key] = value;
+    if (!document[key]) {
+      document[key] = value;
+    }
     return this;
   }
 }

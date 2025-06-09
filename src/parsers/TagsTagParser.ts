@@ -1,9 +1,9 @@
 import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
-import type { ParsedTagData, ParsedTagParams } from "@/types";
+import type { OperationData, ParsedTagParams } from "@/types";
 
 /**
  * 标签解析器，处理 `@tags` 标签
@@ -46,7 +46,9 @@ export class TagsTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -55,7 +57,7 @@ export class TagsTagParser extends TagParser {
    * @param params 验证后的参数。
    * @returns 构建的解析结果。
    */
-  private buildResult(params: { tags: string[] }): ParsedTagData {
+  private buildResult(params: { tags: string[] }): OperationData {
     return params;
   }
 }

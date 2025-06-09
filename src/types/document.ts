@@ -1,4 +1,4 @@
-import type { ParserOptions } from "./parser";
+import type { ParserOptions } from "@/types";
 
 /**
  * generateDocument 的选项配置

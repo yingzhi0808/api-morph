@@ -2,12 +2,12 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { ExternalDocsBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
 import type {
   ExternalDocsTagData,
   ExternalDocsTagParams,
-  ParsedTagData,
+  OperationData,
   ParsedTagParams,
 } from "@/types";
 import { isExtensionKey } from "@/utils";
@@ -67,7 +67,9 @@ export class ExternalDocsTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -76,16 +78,20 @@ export class ExternalDocsTagParser extends TagParser {
    * @param params 外部文档参数。
    * @returns 构建的外部文档对象。
    */
-  private buildExternalDocs(params: ExternalDocsTagData): ParsedTagData {
+  private buildExternalDocs(params: ExternalDocsTagData): OperationData {
     const { url, yaml, description } = params;
     const externalDocsBuilder = new ExternalDocsBuilder();
 
     externalDocsBuilder.setUrl(url);
-    if (description !== undefined) externalDocsBuilder.setDescription(description);
+    if (description !== undefined) {
+      externalDocsBuilder.setDescription(description);
+    }
 
     if (yaml) {
       for (const [key, value] of Object.entries(yaml)) {
-        if (isExtensionKey(key)) externalDocsBuilder.addExtension(key, value);
+        if (isExtensionKey(key)) {
+          externalDocsBuilder.addExtension(key, value);
+        }
       }
     }
 

@@ -1,11 +1,11 @@
 import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { type HttpMethod, JSDocTagName, VALID_HTTP_METHODS } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
-import type { ParsedTagData, ParsedTagParams } from "@/types";
+import type { OperationData, ParsedTagParams } from "@/types";
 
-/**
+/**∏
  * 操作标签解析器，处理 `@operation` 标签
  */
 export class OperationTagParser extends TagParser {
@@ -30,8 +30,8 @@ export class OperationTagParser extends TagParser {
    */
   protected transformParams(params: ParsedTagParams) {
     const { inline } = params;
-    const [method, path, summary] = inline;
-    return { method, path, summary };
+    const [method, path] = inline;
+    return { method, path };
   }
 
   /**
@@ -40,10 +40,10 @@ export class OperationTagParser extends TagParser {
    * @returns 验证后的参数对象。
    */
   private validateParams(params: unknown) {
-    const message = `\n正确格式:\n  @${JSDocTagName.OPERATION} <METHOD> <path> [summary]\n`;
+    const message = `\n正确格式:\n  @${JSDocTagName.OPERATION} <METHOD> <path>\n`;
 
     const schema = z.object({
-      method: z.enum(VALID_HTTP_METHODS, {
+      method: z.enum(VALID_HTTP_METHODS as HttpMethod[], {
         error: (iss) =>
           iss.input === undefined
             ? `@${JSDocTagName.OPERATION} 标签 method 不能为空`
@@ -53,11 +53,12 @@ export class OperationTagParser extends TagParser {
         error: (iss) =>
           `@${JSDocTagName.OPERATION} 标签 path 格式不正确："${iss.input}"，路径必须以 "/" 开头`,
       }),
-      summary: z.string().optional(),
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -66,11 +67,7 @@ export class OperationTagParser extends TagParser {
    * @param params 验证后的参数。
    * @returns 构建的解析结果。
    */
-  private buildResult(params: {
-    method: HttpMethod;
-    path: string;
-    summary?: string;
-  }): ParsedTagData {
+  private buildResult(params: { method: HttpMethod; path: string }): OperationData {
     return params;
   }
 }

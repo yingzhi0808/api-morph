@@ -2,7 +2,7 @@
 
 import type { JSDocTag, Node, Project, TypeChecker } from "ts-morph";
 import type { HttpMethod } from "@/constants";
-import type { TagParser } from "@/parsers";
+import type { ASTAnalyzer, TagParser } from "@/core";
 import type {
   CallbackObject,
   ExternalDocumentationObject,
@@ -13,7 +13,7 @@ import type {
   SchemaObject,
   SecurityRequirementObject,
   ServerObject,
-} from "./openapi";
+} from "@/types";
 
 /**
  * 解析上下文接口，提供解析过程中需要的所有共享状态和工具
@@ -50,6 +50,15 @@ export interface ParserOptions {
   customParsers?: (new (
     context: ParseContext,
   ) => TagParser)[];
+  /** 自定义AST分析器 */
+  customAnalyzers?: (new (
+    context: ParseContext,
+  ) => ASTAnalyzer)[];
+  /**
+   * 是否启用AST分析
+   * @default true
+   */
+  enableASTAnalysis?: boolean;
 }
 
 /**
@@ -63,9 +72,9 @@ export interface SourceOperationData {
 }
 
 /**
- * 解析后的操作信息
+ * OperationComposer 解析后的结果
  */
-export interface ParsedOperationData {
+export interface ParsedOperation {
   /** API 路径 */
   path: string;
   /** HTTP 方法 */
@@ -75,9 +84,9 @@ export interface ParsedOperationData {
 }
 
 /**
- * 标签解析结果数据，包含解析器可能产生的各种数据类型
+ * TagParser 解析后的结果
  */
-export interface ParsedTagData {
+export interface OperationData {
   /** HTTP 方法 */
   method?: HttpMethod;
   /** API 路径 */
@@ -93,11 +102,11 @@ export interface ParsedTagData {
   /** 操作ID */
   operationId?: string;
   /** 参数定义 */
-  parameter?: ParameterObject;
+  parameters?: ParameterObject[];
   /** 请求体定义 */
   requestBody?: RequestBodyObject;
   /** 响应定义 */
-  response?: { statusCode: string | "default"; response: ResponseObject };
+  responses?: Record<string, ResponseObject>;
   /** 回调定义 */
   callback?: { name: string; callback: CallbackObject };
   /** 操作已废弃标志 */

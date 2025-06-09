@@ -2,9 +2,9 @@ import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
 import { CallbackBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers/zod";
-import type { CallbackTagData, CallbackTagParams, ParsedTagData, ParsedTagParams } from "@/types";
+import type { CallbackTagData, CallbackTagParams, OperationData, ParsedTagParams } from "@/types";
 import { isExtensionKey } from "@/utils";
 
 /**
@@ -60,7 +60,9 @@ export class CallbackTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -69,7 +71,7 @@ export class CallbackTagParser extends TagParser {
    * @param params 回调参数。
    * @returns 构建的回调对象。
    */
-  private buildCallback(params: CallbackTagData): ParsedTagData {
+  private buildCallback(params: CallbackTagData): OperationData {
     const { callbackName, yaml } = params;
     const callbackBuilder = new CallbackBuilder();
 

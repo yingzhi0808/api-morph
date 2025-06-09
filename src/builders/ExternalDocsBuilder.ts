@@ -40,7 +40,9 @@ export class ExternalDocsBuilder implements Builder<ExternalDocumentationObject>
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const externalDocs = this.externalDocs;
-    if (!externalDocs[key]) externalDocs[key] = value;
+    if (!externalDocs[key]) {
+      externalDocs[key] = value;
+    }
     return this;
   }
 }

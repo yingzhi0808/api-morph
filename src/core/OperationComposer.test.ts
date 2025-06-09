@@ -1,31 +1,31 @@
-import {
-  createEmptySourceOperationData,
-  createParseContext,
-  createSourceOperationData,
-} from "@tests/utils";
+import { createParseContext, createSourceOperationData } from "@tests/utils";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TagParser, TagParserRegistry } from "@/core";
+import { ASTAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
+import {
+  CallbackTagParser,
+  DeprecatedTagParser,
+  DescriptionTagParser,
+  ExtensionsTagParser,
+  ExternalDocsTagParser,
+  OperationIdTagParser,
+  OperationTagParser,
+  ParameterTagParser,
+  RequestBodyTagParser,
+  ResponsesExtensionsTagParser,
+  ResponseTagParser,
+  SecurityTagParser,
+  ServerTagParser,
+  SummaryTagParser,
+  TagsTagParser,
+} from "@/parsers";
 import type { ParameterObject, RequestBodyObject, ResponseObject } from "@/types";
-import { CallbackTagParser } from "./CallbackTagParser";
-import { DeprecatedTagParser } from "./DeprecatedTagParser";
-import { DescriptionTagParser } from "./DescriptionTagParser";
-import { ExtensionsTagParser } from "./ExtensionsTagParser";
-import { ExternalDocsTagParser } from "./ExternalDocsTagParser";
-import { OperationIdTagParser } from "./OperationIdTagParser";
-import { OperationParser } from "./OperationParser";
-import { OperationTagParser } from "./OperationTagParser";
-import { ParameterTagParser } from "./ParameterTagParser";
-import { RequestBodyTagParser } from "./RequestBodyTagParser";
-import { ResponsesExtensionsTagParser } from "./ResponsesExtensionsTagParser";
-import { ResponseTagParser } from "./ResponseTagParser";
-import { SecurityTagParser } from "./SecurityTagParser";
-import { ServerTagParser } from "./ServerTagParser";
-import { TagsTagParser } from "./TagsTagParser";
+import { OperationComposer } from "./OperationComposer";
 
-describe("OperationParser", () => {
+describe("OperationComposer", () => {
   const context = createParseContext();
   const tagParserRegistry = new TagParserRegistry();
-  let parser: OperationParser;
+  const astAnalyzerRegistry = new ASTAnalyzerRegistry();
+  let parser: OperationComposer;
 
   tagParserRegistry.register(new ParameterTagParser(context));
   tagParserRegistry.register(new RequestBodyTagParser(context));
@@ -39,30 +39,18 @@ describe("OperationParser", () => {
   tagParserRegistry.register(new ExtensionsTagParser(context));
   tagParserRegistry.register(new ResponsesExtensionsTagParser(context));
   tagParserRegistry.register(new DescriptionTagParser(context));
+  tagParserRegistry.register(new SummaryTagParser(context));
   tagParserRegistry.register(new TagsTagParser(context));
   tagParserRegistry.register(new OperationTagParser(context));
 
   beforeEach(() => {
-    parser = new OperationParser(tagParserRegistry);
+    parser = new OperationComposer(tagParserRegistry, astAnalyzerRegistry);
   });
 
-  describe("parse", () => {
-    it("应该正确解析空标签数组", async () => {
-      const sourceData = createEmptySourceOperationData();
-      const result = await parser.parse(sourceData);
-
-      expect(result).toEqual({
-        operation: {
-          responses: {},
-        },
-        method: "",
-        path: "",
-      });
-    });
-
+  describe("compose", () => {
     it("应该正确解析单个操作标签", async () => {
       const sourceData = createSourceOperationData(["@operation get /users"]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.method).toBe("get");
       expect(result.path).toBe("/users");
@@ -71,13 +59,14 @@ describe("OperationParser", () => {
 
     it("应该正确解析多个不同类型的标签", async () => {
       const sourceData = createSourceOperationData([
-        "@operation post /users 创建新用户",
+        "@operation post /users",
+        "@summary 创建新用户",
         "@description 创建一个新的用户账户",
         "@tags user authentication",
         "@parameter userId path 用户ID",
         "@response 201 创建成功",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.method).toBe("post");
       expect(result.path).toBe("/users");
@@ -112,7 +101,7 @@ describe("OperationParser", () => {
                  name:
                    type: string`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       const requestBody = result.operation.requestBody as RequestBodyObject;
       expect(requestBody).toMatchObject({
@@ -140,7 +129,7 @@ describe("OperationParser", () => {
         "@parameter limit query 每页数量",
         "@parameter sort header 排序字段",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.parameters).toHaveLength(3);
 
@@ -169,7 +158,7 @@ describe("OperationParser", () => {
         "@response 404 用户未找到",
         "@response 500 服务器内部错误",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.responses).toHaveProperty("200");
       expect(result.operation.responses).toHaveProperty("404");
@@ -193,7 +182,7 @@ x-code-samples: true`,
         `@responsesExtensions
 x-nullable: false`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation).toHaveProperty("x-code-samples", true);
       expect(result.operation.responses).toHaveProperty("x-nullable", false);
@@ -204,7 +193,7 @@ x-nullable: false`,
         "@operation get /users",
         "@externalDocs https://example.com/api-docs 详细的API文档",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.externalDocs).toMatchObject({
         url: "https://example.com/api-docs",
@@ -217,14 +206,14 @@ x-nullable: false`,
         "@operation get /users",
         "@operationId getUserList",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.operationId).toBe("getUserList");
     });
 
     it("应该正确处理废弃标签", async () => {
       const sourceData = createSourceOperationData(["@operation get /users", "@deprecated"]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.deprecated).toBe(true);
     });
@@ -251,7 +240,7 @@ x-nullable: false`,
              schema:
                type: object`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       const param = result.operation.parameters?.[0] as ParameterObject;
       expect(param).toMatchObject({
@@ -301,31 +290,33 @@ x-nullable: false`,
 
       const context = createParseContext();
       const tagParserRegistry = new TagParserRegistry();
+      const astAnalyzerRegistry = new ASTAnalyzerRegistry();
       tagParserRegistry.register(new NullReturnParser(context));
 
-      const mockParser = new OperationParser(tagParserRegistry);
+      const mockParser = new OperationComposer(tagParserRegistry, astAnalyzerRegistry);
 
       const sourceData = createSourceOperationData(["@mock test"]);
-      const result = await mockParser.parse(sourceData);
+      const result = await mockParser.compose(sourceData);
 
       expect(result).toEqual({
         operation: {
           responses: {},
         },
-        method: "",
-        path: "",
+        method: undefined,
+        path: undefined,
       });
     });
 
     it("应该在找不到解析器时抛出错误", async () => {
       const sourceData = createSourceOperationData(["@unknownTag some content"]);
 
-      await expect(async () => await parser.parse(sourceData)).rejects.toThrow(/未找到标签/);
+      await expect(async () => await parser.compose(sourceData)).rejects.toThrow(/未找到标签/);
     });
 
     it("应该正确处理所有支持的操作元数据标签", async () => {
       const sourceData = createSourceOperationData([
-        "@operation put /users/{id} 更新用户信息",
+        "@operation put /users/{id}",
+        "@summary 更新用户信息",
         "@description 根据用户ID更新用户的详细信息",
         "@tags user profile",
         "@operationId updateUser",
@@ -336,7 +327,7 @@ x-rate-limit: 100`,
         `@responsesExtensions
 x-cache-ttl: 3600`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.method).toBe("put");
       expect(result.path).toBe("/users/{id}");
@@ -361,7 +352,7 @@ x-cache-ttl: 3600`,
         "@parameter authorization header 认证令牌",
         "@parameter sessionId cookie 会话ID",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.parameters).toHaveLength(4);
 
@@ -413,7 +404,7 @@ x-cache-ttl: 3600`,
                    type: string
                    format: binary`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       const requestBody = result.operation.requestBody as RequestBodyObject;
       expect(requestBody.content).toHaveProperty("application/json");
@@ -447,7 +438,7 @@ x-cache-ttl: 3600`,
              schema:
                type: array`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       const response = result.operation.responses?.["200"] as ResponseObject;
       expect(response.headers).toHaveProperty("x-total-count");
@@ -464,7 +455,7 @@ x-cache-ttl: 3600`,
         "@operation get /users",
         "@response default 默认错误响应",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.responses).toHaveProperty("default");
       expect(result.operation.responses?.default).toMatchObject({
@@ -476,10 +467,11 @@ x-cache-ttl: 3600`,
   describe("边界情况", () => {
     it("应该正确处理只包含描述和摘要的简单操作", async () => {
       const sourceData = createSourceOperationData([
-        "@operation get /health 健康检查",
+        "@operation get /health",
+        "@summary 健康检查",
         "@description 检查服务的健康状态",
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.method).toBe("get");
       expect(result.path).toBe("/health");
@@ -492,10 +484,10 @@ x-cache-ttl: 3600`,
 
     it("应该正确处理只包含响应的操作", async () => {
       const sourceData = createSourceOperationData(["@response 200 成功", "@response 500 错误"]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
-      expect(result.method).toBe("");
-      expect(result.path).toBe("");
+      expect(result.method).toBeUndefined();
+      expect(result.path).toBeUndefined();
       expect(result.operation.responses).toHaveProperty("200");
       expect(result.operation.responses).toHaveProperty("500");
     });
@@ -510,7 +502,7 @@ x-cache-ttl: 3600`,
               200:
                 description: "处理成功"`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.callbacks).toHaveProperty("myCallback");
       expect(result.operation.callbacks?.myCallback).toHaveProperty("{$request.body#/callbackUrl}");
@@ -518,7 +510,7 @@ x-cache-ttl: 3600`,
 
     it("应该正确处理包含security的解析结果", async () => {
       const sourceData = createSourceOperationData(["@security api_key read write"]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.security).toEqual([
         {
@@ -535,7 +527,7 @@ x-cache-ttl: 3600`,
              default: v1
              description: API版本`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation.servers).toEqual([
         {
@@ -559,7 +551,7 @@ x-rate-limit: 100`,
         `@extensions
 x-timeout: 30`,
       ]);
-      const result = await parser.parse(sourceData);
+      const result = await parser.compose(sourceData);
 
       expect(result.operation).toHaveProperty("x-rate-limit", 100);
       expect(result.operation).toHaveProperty("x-timeout", 30);
@@ -570,25 +562,25 @@ x-timeout: 30`,
     it("应该在解析器抛出错误时正确传播错误", async () => {
       const sourceData = createSourceOperationData(["@operation"]);
 
-      await expect(async () => await parser.parse(sourceData)).rejects.toThrow();
+      await expect(async () => await parser.compose(sourceData)).rejects.toThrow();
     });
 
     it("应该在参数解析器抛出错误时正确传播错误", async () => {
       const sourceData = createSourceOperationData(["@parameter"]);
 
-      await expect(async () => await parser.parse(sourceData)).rejects.toThrow(/不能为空/);
+      await expect(async () => await parser.compose(sourceData)).rejects.toThrow(/不能为空/);
     });
 
     it("应该在响应解析器抛出错误时正确传播错误", async () => {
       const sourceData = createSourceOperationData(["@response"]);
 
-      await expect(async () => await parser.parse(sourceData)).rejects.toThrow(/不能为空/);
+      await expect(async () => await parser.compose(sourceData)).rejects.toThrow(/不能为空/);
     });
 
     it("应该在请求体解析器抛出错误时正确传播错误", async () => {
       const sourceData = createSourceOperationData(["@requestBody 描述但没有YAML"]);
 
-      await expect(async () => await parser.parse(sourceData)).rejects.toThrow(
+      await expect(async () => await parser.compose(sourceData)).rejects.toThrow(
         /标签必须包含 YAML 参数/,
       );
     });

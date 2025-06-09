@@ -20,7 +20,9 @@ export class SecurityBuilder implements Builder<SecurityRequirementObject> {
    */
   addScopes(schemeName: string, scopes: string[] = []) {
     const security = this.security;
-    if (!security[schemeName]) security[schemeName] = scopes;
+    if (!security[schemeName]) {
+      security[schemeName] = scopes;
+    }
     return this;
   }
 }

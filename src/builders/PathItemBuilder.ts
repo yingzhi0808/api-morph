@@ -1,4 +1,5 @@
 import { cloneDeep } from "radashi";
+import type { OperationBuilder, ParameterBuilder } from "@/builders";
 import type { HttpMethod } from "@/constants";
 import type { Builder } from "@/core";
 import type {
@@ -9,8 +10,6 @@ import type {
   ServerObject,
 } from "@/types";
 import { isParameterObject } from "@/utils";
-import type { OperationBuilder } from "./OperationBuilder";
-import type { ParameterBuilder } from "./ParameterBuilder";
 
 /**
  * 路径项构建器，用于构建 OpenAPI PathItemObject
@@ -61,7 +60,9 @@ export class PathItemBuilder implements Builder<PathItemObject> {
   addOperation(method: HttpMethod, operation: OperationObject) {
     const pathItem = this.pathItem;
 
-    if (!pathItem[method]) pathItem[method] = operation;
+    if (!pathItem[method]) {
+      pathItem[method] = operation;
+    }
     return this;
   }
 
@@ -82,7 +83,9 @@ export class PathItemBuilder implements Builder<PathItemObject> {
    */
   addServer(server: ServerObject) {
     const pathItem = this.pathItem;
-    if (!pathItem.servers) pathItem.servers = [];
+    if (!pathItem.servers) {
+      pathItem.servers = [];
+    }
     pathItem.servers.push(server);
     return this;
   }
@@ -94,11 +97,15 @@ export class PathItemBuilder implements Builder<PathItemObject> {
    */
   addParameterFromObject(parameter: ParameterObject) {
     const pathItem = this.pathItem;
-    if (!pathItem.parameters) pathItem.parameters = [];
+    if (!pathItem.parameters) {
+      pathItem.parameters = [];
+    }
     const exists = pathItem.parameters.some(
       (p) => isParameterObject(p) && p.name === parameter.name && p.in === parameter.in,
     );
-    if (!exists) pathItem.parameters.push(parameter);
+    if (!exists) {
+      pathItem.parameters.push(parameter);
+    }
 
     return this;
   }
@@ -110,11 +117,15 @@ export class PathItemBuilder implements Builder<PathItemObject> {
    */
   addParameterFromReference(parameter: ReferenceObject) {
     const pathItem = this.pathItem;
-    if (!pathItem.parameters) pathItem.parameters = [];
+    if (!pathItem.parameters) {
+      pathItem.parameters = [];
+    }
     const exists = pathItem.parameters.some(
       (p) => !isParameterObject(p) && p.$ref === parameter.$ref,
     );
-    if (!exists) pathItem.parameters.push(parameter);
+    if (!exists) {
+      pathItem.parameters.push(parameter);
+    }
     return this;
   }
 
@@ -136,7 +147,9 @@ export class PathItemBuilder implements Builder<PathItemObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const pathItem = this.pathItem;
-    if (!pathItem[key]) pathItem[key] = value;
+    if (!pathItem[key]) {
+      pathItem[key] = value;
+    }
     return this;
   }
 }

@@ -6,10 +6,10 @@ import { getZodErrorMessage } from "@/helpers";
 import type { OperationData, ParsedTagParams } from "@/types";
 
 /**
- * 操作ID解析器，处理 `@operationId` 标签
+ * 摘要标签解析器，处理 `@summary` 标签
  */
-export class OperationIdTagParser extends TagParser {
-  tags: string[] = [JSDocTagName.OPERATION_ID];
+export class SummaryTagParser extends TagParser {
+  tags: string[] = [JSDocTagName.SUMMARY];
 
   /**
    * 解析 JSDoc 标签。
@@ -29,26 +29,22 @@ export class OperationIdTagParser extends TagParser {
    * @returns 转换后的参数对象。
    */
   protected transformParams(params: ParsedTagParams) {
-    const { inline } = params;
-    const [operationId] = inline;
-    return { operationId };
+    const { inline, rawText } = params;
+    // 如果有inline参数，使用inline参数；否则使用rawText
+    const summary = inline.length > 0 ? inline.join(" ") : rawText;
+    return { summary };
   }
 
   /**
-   * 验证操作ID标签的参数。
+   * 验证摘要标签的参数。
    * @param params 参数对象。
    * @returns 验证后的参数对象。
    */
   private validateParams(params: unknown) {
-    const message = `\n正确格式:\n  @${JSDocTagName.OPERATION_ID} <operationId>\n`;
+    const message = `\n正确格式:\n  @${JSDocTagName.SUMMARY} <summary>\n`;
 
     const schema = z.object({
-      operationId: z
-        .string(`@${JSDocTagName.OPERATION_ID} 标签 operationId 不能为空`)
-        .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, {
-          error: (iss) =>
-            `@${JSDocTagName.OPERATION_ID} 标签 operationId 格式不正确："${iss.input}"，操作ID必须是有效的标识符（以字母或下划线开头，只能包含字母、数字和下划线）`,
-        }),
+      summary: z.string().min(1, `@${JSDocTagName.SUMMARY} 标签 summary 不能为空`),
     });
 
     const { success, data, error } = schema.safeParse(params);
@@ -63,7 +59,7 @@ export class OperationIdTagParser extends TagParser {
    * @param params 验证后的参数。
    * @returns 构建的解析结果。
    */
-  private buildResult(params: { operationId: string }): OperationData {
+  private buildResult(params: { summary: string }): OperationData {
     return params;
   }
 }

@@ -59,7 +59,7 @@ describe("ParameterTagParser", () => {
         const tag = createJSDocTag(input);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          parameter: expected,
+          parameters: [expected],
         });
       }
     });
@@ -83,7 +83,7 @@ describe("ParameterTagParser", () => {
         };
 
         expect(result).toEqual({
-          parameter: expected,
+          parameters: [expected],
         });
       }
     });
@@ -92,11 +92,13 @@ describe("ParameterTagParser", () => {
       const tag = createJSDocTag("@parameter userId path");
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        parameter: {
-          name: "userId",
-          in: "path",
-          required: true,
-        },
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            required: true,
+          },
+        ],
       });
     });
 
@@ -104,12 +106,14 @@ describe("ParameterTagParser", () => {
       const tag = createJSDocTag("@parameter userId path 用户唯一标识符");
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        parameter: {
-          name: "userId",
-          in: "path",
-          description: "用户唯一标识符",
-          required: true,
-        },
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "用户唯一标识符",
+            required: true,
+          },
+        ],
       });
     });
 
@@ -117,11 +121,13 @@ describe("ParameterTagParser", () => {
       const tag = createJSDocTag("@parameter page query 页码-默认为1，范围1-100");
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        parameter: {
-          name: "page",
-          in: "query",
-          description: "页码-默认为1，范围1-100",
-        },
+        parameters: [
+          {
+            name: "page",
+            in: "query",
+            description: "页码-默认为1，范围1-100",
+          },
+        ],
       });
     });
 
@@ -134,11 +140,11 @@ describe("ParameterTagParser", () => {
          maximum: 100
          default: 1`);
       const result = await parser.parse(tag);
-      expect(result).toHaveProperty("parameter");
-      expect(result?.parameter?.name).toBe("page");
-      expect(result?.parameter?.in).toBe("query");
-      expect(result?.parameter?.required).toBe(true);
-      expect(result?.parameter?.schema).toEqual({
+      expect(result).toHaveProperty("parameters");
+      expect(result?.parameters?.[0]?.name).toBe("page");
+      expect(result?.parameters?.[0]?.in).toBe("query");
+      expect(result?.parameters?.[0]?.required).toBe(true);
+      expect(result?.parameters?.[0]?.schema).toEqual({
         type: "integer",
         minimum: 1,
         maximum: 100,
@@ -151,9 +157,9 @@ describe("ParameterTagParser", () => {
        x-custom-field: custom-value
        x-validation: strict`);
       const result = await parser.parse(tag);
-      expect(result).toHaveProperty("parameter");
-      expect(result?.parameter).toHaveProperty("x-custom-field", "custom-value");
-      expect(result?.parameter).toHaveProperty("x-validation", "strict");
+      expect(result).toHaveProperty("parameters");
+      expect(result?.parameters?.[0]).toHaveProperty("x-custom-field", "custom-value");
+      expect(result?.parameters?.[0]).toHaveProperty("x-validation", "strict");
     });
 
     it("应该正确处理所有 YAML 字段", async () => {
@@ -177,23 +183,23 @@ describe("ParameterTagParser", () => {
        x-validation-rule: required`);
 
       const result = await parser.parse(tag);
-      const parameter = result?.parameter;
+      const parameters = result?.parameters;
 
-      expect(parameter?.description).toBe("用于搜索的关键词");
-      expect(parameter?.required).toBe(true);
-      expect(parameter?.deprecated).toBe(false);
-      expect(parameter?.allowEmptyValue).toBe(true);
-      expect(parameter?.style).toBe("form");
-      expect(parameter?.explode).toBe(true);
-      expect(parameter?.allowReserved).toBe(false);
-      expect(parameter?.schema).toEqual({
+      expect(parameters?.[0]?.description).toBe("用于搜索的关键词");
+      expect(parameters?.[0]?.required).toBe(true);
+      expect(parameters?.[0]?.deprecated).toBe(false);
+      expect(parameters?.[0]?.allowEmptyValue).toBe(true);
+      expect(parameters?.[0]?.style).toBe("form");
+      expect(parameters?.[0]?.explode).toBe(true);
+      expect(parameters?.[0]?.allowReserved).toBe(false);
+      expect(parameters?.[0]?.schema).toEqual({
         type: "string",
         minLength: 1,
         maxLength: 100,
       });
-      expect(parameter?.content).toHaveProperty("application/json");
-      expect(parameter).toHaveProperty("x-custom-header", "custom-value");
-      expect(parameter).toHaveProperty("x-validation-rule", "required");
+      expect(parameters?.[0]?.content).toHaveProperty("application/json");
+      expect(parameters?.[0]).toHaveProperty("x-custom-header", "custom-value");
+      expect(parameters?.[0]).toHaveProperty("x-validation-rule", "required");
     });
 
     it("应该在参数为空时抛出错误", async () => {
@@ -230,7 +236,7 @@ describe("ParameterTagParser", () => {
       for (const name of validNames) {
         const tag = createJSDocTag(`@parameter ${name} query 测试参数`);
         const result = await parser.parse(tag);
-        expect(result?.parameter?.name).toBe(name);
+        expect(result?.parameters?.[0]?.name).toBe(name);
       }
     });
 
@@ -246,16 +252,16 @@ describe("ParameterTagParser", () => {
       const tag = createJSDocTag(`@parameter userId path 原始描述
        description: YAML中的新描述`);
       const result = await parser.parse(tag);
-      expect(result?.parameter?.description).toBe("YAML中的新描述");
+      expect(result?.parameters?.[0]?.description).toBe("YAML中的新描述");
     });
 
     it("应该正确处理空格描述的情况", async () => {
       const tag = createJSDocTag("@parameter userId path   ");
       const result = await parser.parse(tag);
-      expect(result?.parameter?.name).toBe("userId");
-      expect(result?.parameter?.in).toBe("path");
-      expect(result?.parameter?.required).toBe(true);
-      expect(result?.parameter?.description).toBeUndefined();
+      expect(result?.parameters?.[0]?.name).toBe("userId");
+      expect(result?.parameters?.[0]?.in).toBe("path");
+      expect(result?.parameters?.[0]?.required).toBe(true);
+      expect(result?.parameters?.[0]?.description).toBeUndefined();
     });
 
     it("应该正确处理复杂的内容类型配置", async () => {
@@ -275,12 +281,12 @@ describe("ParameterTagParser", () => {
              type: string`);
 
       const result = await parser.parse(tag);
-      const parameter = result?.parameter;
+      const parameters = result?.parameters;
 
-      expect(parameter?.content).toHaveProperty("application/json");
-      expect(parameter?.content).toHaveProperty("application/xml");
-      expect(parameter?.content).toHaveProperty("text/plain");
-      expect(parameter?.content?.["application/json"]?.schema).toEqual({
+      expect(parameters?.[0]?.content).toHaveProperty("application/json");
+      expect(parameters?.[0]?.content).toHaveProperty("application/xml");
+      expect(parameters?.[0]?.content).toHaveProperty("text/plain");
+      expect(parameters?.[0]?.content?.["application/json"]?.schema).toEqual({
         type: "object",
         properties: {
           name: {
@@ -295,7 +301,7 @@ describe("ParameterTagParser", () => {
     it("应该正确处理Unicode字符", async () => {
       const tag = createJSDocTag("@parameter userId path 用户标识符🆔");
       const result = await parser.parse(tag);
-      expect(result?.parameter?.description).toBe("用户标识符🆔");
+      expect(result?.parameters?.[0]?.description).toBe("用户标识符🆔");
     });
 
     it("应该正确处理包含emoji的参数描述", async () => {
@@ -311,14 +317,14 @@ describe("ParameterTagParser", () => {
       for (const { input, expected } of testCases) {
         const tag = createJSDocTag(input);
         const result = await parser.parse(tag);
-        expect(result?.parameter?.description).toBe(expected);
+        expect(result?.parameters?.[0]?.description).toBe(expected);
       }
     });
 
     it("应该正确处理包含数字的描述", async () => {
       const tag = createJSDocTag("@parameter limit query 最多返回100条记录");
       const result = await parser.parse(tag);
-      expect(result?.parameter?.description).toBe("最多返回100条记录");
+      expect(result?.parameters?.[0]?.description).toBe("最多返回100条记录");
     });
 
     it("应该正确处理包含标点符号的描述", async () => {
@@ -331,8 +337,8 @@ describe("ParameterTagParser", () => {
       for (const input of testCases) {
         const tag = createJSDocTag(input);
         const result = await parser.parse(tag);
-        expect(result).toHaveProperty("parameter");
-        expect(result?.parameter).toHaveProperty("description");
+        expect(result).toHaveProperty("parameters");
+        expect(result?.parameters?.[0]).toHaveProperty("description");
       }
     });
 
@@ -344,7 +350,7 @@ describe("ParameterTagParser", () => {
           - 数值范围
           - 日期区间`);
       const result = await parser.parse(tag);
-      expect(result?.parameter?.description).toBe(
+      expect(result?.parameters?.[0]?.description).toBe(
         "支持多种类型：\n- 字符串匹配\n- 数值范围\n- 日期区间\n",
       );
     });
@@ -354,8 +360,8 @@ describe("ParameterTagParser", () => {
        description: 从YAML中获取的描述
        required: true`);
       const result = await parser.parse(tag);
-      expect(result?.parameter?.description).toBe("从YAML中获取的描述");
-      expect(result?.parameter?.required).toBe(true);
+      expect(result?.parameters?.[0]?.description).toBe("从YAML中获取的描述");
+      expect(result?.parameters?.[0]?.required).toBe(true);
     });
 
     it("应该正确处理只有扩展字段的YAML", async () => {
@@ -365,12 +371,12 @@ describe("ParameterTagParser", () => {
        x-deprecated-since: "2.0"`);
 
       const result = await parser.parse(tag);
-      const parameter = result?.parameter;
+      const parameters = result?.parameters;
 
-      expect(parameter?.description).toBeUndefined();
-      expect(parameter).toHaveProperty("x-api-version", "v1");
-      expect(parameter).toHaveProperty("x-required-scope", "read");
-      expect(parameter).toHaveProperty("x-deprecated-since", "2.0");
+      expect(parameters?.[0]?.description).toBeUndefined();
+      expect(parameters?.[0]).toHaveProperty("x-api-version", "v1");
+      expect(parameters?.[0]).toHaveProperty("x-required-scope", "read");
+      expect(parameters?.[0]).toHaveProperty("x-deprecated-since", "2.0");
     });
 
     it("应该正确处理包含冒号但不是YAML的文本", async () => {
@@ -378,7 +384,7 @@ describe("ParameterTagParser", () => {
         "@parameter timestamp query 时间格式:2023-12-25T10:30:00Z这不是YAML",
       );
       const result = await parser.parse(tag);
-      expect(result?.parameter?.description).toBe("时间格式:2023-12-25T10:30:00Z这不是YAML");
+      expect(result?.parameters?.[0]?.description).toBe("时间格式:2023-12-25T10:30:00Z这不是YAML");
     });
 
     it("应该正确处理复杂的参数名格式", async () => {
@@ -393,7 +399,7 @@ describe("ParameterTagParser", () => {
       for (const name of complexNames) {
         const tag = createJSDocTag(`@parameter ${name} query 复杂参数`);
         const result = await parser.parse(tag);
-        expect(result?.parameter?.name).toBe(name);
+        expect(result?.parameters?.[0]?.name).toBe(name);
       }
     });
 
@@ -406,13 +412,13 @@ describe("ParameterTagParser", () => {
        allowReserved: true`);
 
       const result = await parser.parse(tag);
-      const parameter = result?.parameter;
+      const parameters = result?.parameters;
 
-      expect(parameter?.required).toBe(false);
-      expect(parameter?.deprecated).toBe(true);
-      expect(parameter?.allowEmptyValue).toBe(false);
-      expect(parameter?.explode).toBe(false);
-      expect(parameter?.allowReserved).toBe(true);
+      expect(parameters?.[0]?.required).toBe(false);
+      expect(parameters?.[0]?.deprecated).toBe(true);
+      expect(parameters?.[0]?.allowEmptyValue).toBe(false);
+      expect(parameters?.[0]?.explode).toBe(false);
+      expect(parameters?.[0]?.allowReserved).toBe(true);
     });
   });
 });

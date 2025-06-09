@@ -453,7 +453,7 @@ describe("ParameterBuilder", () => {
         style: "form",
         explode: true,
         allowReserved: false,
-        schema: schema,
+        schema,
         content: {
           "application/json": mediaTypeObject,
         },

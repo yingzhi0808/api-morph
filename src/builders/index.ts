@@ -1,8 +1,8 @@
 /* v8 ignore start */
 
 export * from "./CallbackBuilder";
-export * from "./DocumentBuilder";
 export * from "./ExternalDocsBuilder";
+export * from "./OpenAPIBuilder";
 export * from "./OperationBuilder";
 export * from "./ParameterBuilder";
 export * from "./PathItemBuilder";

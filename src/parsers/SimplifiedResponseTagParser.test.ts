@@ -62,9 +62,8 @@ describe("SimplifiedResponseTagParser", () => {
         const jsDocTag = createJSDocTag(tag);
         const result = await parser.parse(jsDocTag);
         expect(result).toEqual({
-          response: {
-            statusCode: expectedStatusCode,
-            response: {
+          responses: {
+            [expectedStatusCode]: {
               description: expectedDescription,
             },
           },
@@ -97,9 +96,8 @@ describe("SimplifiedResponseTagParser", () => {
         const jsDocTag = createJSDocTag(tag);
         const result = await parser.parse(jsDocTag);
         expect(result).toEqual({
-          response: {
-            statusCode: expectedStatusCode,
-            response: {
+          responses: {
+            [expectedStatusCode]: {
               description: expectedDescription,
             },
           },
@@ -114,9 +112,8 @@ describe("SimplifiedResponseTagParser", () => {
         const tag = createJSDocTag("@createdResponse application/json 创建成功");
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "201",
-            response: {
+          responses: {
+            "201": {
               description: "创建成功",
               content: {
                 "application/json": {},
@@ -132,9 +129,8 @@ describe("SimplifiedResponseTagParser", () => {
         const tag = createJSDocTag("@createdResponse application/json 创建成功");
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "201",
-            response: {
+          responses: {
+            "201": {
               description: "创建成功",
               content: {
                 "application/json": {},
@@ -150,9 +146,8 @@ describe("SimplifiedResponseTagParser", () => {
         const tag = createJSDocTag("@notFoundResponse 资源不存在");
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "404",
-            response: {
+          responses: {
+            "404": {
               description: "资源不存在",
             },
           },
@@ -163,9 +158,8 @@ describe("SimplifiedResponseTagParser", () => {
         const tag = createJSDocTag("@unauthorizedResponse");
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "401",
-            response: {
+          responses: {
+            "401": {
               description: "Unauthorized",
             },
           },
@@ -181,9 +175,8 @@ describe("SimplifiedResponseTagParser", () => {
               type: string`);
         const result = await parser.parse(tag);
         expect(result).toEqual({
-          response: {
-            statusCode: "500",
-            response: {
+          responses: {
+            "500": {
               description: "服务器错误",
               headers: {
                 "x-error-code": {
@@ -205,9 +198,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = createJSDocTag("@okResponse application/vnd.api+json API响应");
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             description: "API响应",
             content: {
               "application/vnd.api+json": {},
@@ -221,9 +213,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = createJSDocTag("@conflictResponse application/json 资源冲突，请检查数据后重试");
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "409",
-          response: {
+        responses: {
+          "409": {
             description: "资源冲突，请检查数据后重试",
             content: {
               "application/json": {},
@@ -265,9 +256,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             description: "用户登录成功",
             content: {
               "application/json": {
@@ -296,9 +286,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "201",
-          response: {
+        responses: {
+          "201": {
             description: "用户创建成功",
             content: {
               "application/json": {
@@ -327,9 +316,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "400",
-          response: {
+        responses: {
+          "400": {
             description: "请求参数错误",
             content: {
               "application/json": {
@@ -358,9 +346,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             description: "OK",
             content: {
               "application/json": {
@@ -389,9 +376,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             content: {
               "application/json": {
                 schema: {
@@ -420,9 +406,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             description: "API响应",
             content: {
               "application/vnd.api+json": {
@@ -451,9 +436,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "409",
-          response: {
+        responses: {
+          "409": {
             description: "资源冲突，请检查数据后重试",
             content: {
               "application/json": {
@@ -482,9 +466,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             content: {
               "application/json": {
                 schema: {
@@ -513,9 +496,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "200",
-          response: {
+        responses: {
+          "200": {
             content: {
               "application/json": {
                 schema: {
@@ -544,9 +526,8 @@ describe("SimplifiedResponseTagParser", () => {
       const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        response: {
-          statusCode: "201",
-          response: {
+        responses: {
+          "201": {
             content: {
               "application/json": {
                 schema: {

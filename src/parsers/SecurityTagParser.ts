@@ -2,9 +2,9 @@ import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
 import { SecurityBuilder } from "@/builders";
 import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core";
+import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
-import type { ParsedTagData, ParsedTagParams, SecurityTagData, SecurityTagParams } from "@/types";
+import type { OperationData, ParsedTagParams, SecurityTagData, SecurityTagParams } from "@/types";
 
 /**
  * 安全标签解析器，处理 `@security` 标签
@@ -54,7 +54,9 @@ export class SecurityTagParser extends TagParser {
     });
 
     const { success, data, error } = schema.safeParse(params);
-    if (!success) throw new Error(getZodErrorMessage(error) + message);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
+    }
     return data;
   }
 
@@ -63,7 +65,7 @@ export class SecurityTagParser extends TagParser {
    * @param params 安全需求参数。
    * @returns 解析结果。
    */
-  private buildSecurity(params: SecurityTagData): ParsedTagData {
+  private buildSecurity(params: SecurityTagData): OperationData {
     const { schemeName, scopes } = params;
     const securityBuilder = new SecurityBuilder();
     securityBuilder.addScopes(schemeName, scopes);

@@ -3,10 +3,11 @@ import type { JSDocTag } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import YAML from "yaml";
 import z from "zod/v4";
+import type { JSDocTagName } from "@/constants";
 import { findSchemaJSDocLinks, isZodType } from "@/helpers";
 import type {
+  OperationData,
   ParseContext,
-  ParsedTagData,
   ParsedTagParams,
   ParseTagParamsWithYamlOptions,
   SchemaObject,
@@ -18,7 +19,7 @@ import { tokenizeString } from "@/utils";
  */
 export abstract class TagParser {
   /** 解析器支持的 JSDoc 标签名称列表 */
-  abstract readonly tags: string[];
+  abstract readonly tags: (JSDocTagName | (string & {}))[];
 
   /**
    * 创建标签解析器实例。
@@ -39,7 +40,7 @@ export abstract class TagParser {
    * @param tag JSDoc 标签对象。
    * @returns 解析结果。
    */
-  abstract parse(tag: JSDocTag): Promise<ParsedTagData | null> | ParsedTagData | null;
+  abstract parse(tag: JSDocTag): Promise<OperationData | null> | OperationData | null;
 
   /**
    * 获取标签的完整多行内容。
@@ -83,7 +84,9 @@ export abstract class TagParser {
 
     const rawText = tag.getCommentText()?.trim() ?? "";
     const lines = this.extractTagContentLines(processedTag);
-    if (lines.length === 0) return { inline: [], rawText };
+    if (lines.length === 0) {
+      return { inline: [], rawText };
+    }
 
     // 第一行作为 inline 参数
     const firstLine = lines[0];
@@ -98,7 +101,9 @@ export abstract class TagParser {
       if (yamlContent) {
         try {
           const parsed = YAML.parse(yamlContent);
-          if (isPlainObject(parsed)) parsedYaml = parsed as Record<string, unknown>;
+          if (isPlainObject(parsed)) {
+            parsedYaml = parsed as Record<string, unknown>;
+          }
         } catch {
           // 忽略 YAML 解析异常
         }
@@ -116,16 +121,24 @@ export abstract class TagParser {
     let replacedText = tag.getFullText();
 
     const jsDocLinks = findSchemaJSDocLinks(tag);
-    if (jsDocLinks.length === 0) return tag;
+    if (jsDocLinks.length === 0) {
+      return tag;
+    }
 
     for (const jsDocLink of jsDocLinks) {
       const identifier = jsDocLink.getFirstDescendantByKind(SyntaxKind.Identifier);
-      if (!identifier) continue;
+      if (!identifier) {
+        continue;
+      }
 
       const definitionNode = identifier.getDefinitionNodes()[0];
-      if (!definitionNode) continue;
+      if (!definitionNode) {
+        continue;
+      }
 
-      if (!isZodType(definitionNode)) continue;
+      if (!isZodType(definitionNode)) {
+        continue;
+      }
 
       const filePath = definitionNode.getSourceFile().getFilePath();
       const module = await import(filePath);

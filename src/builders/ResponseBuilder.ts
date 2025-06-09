@@ -37,11 +37,17 @@ export class ResponseBuilder implements Builder<ResponseObject> {
    */
   addHeader(name: string, header: HeaderObject | ReferenceObject) {
     const response = this.response;
-    if (!response.headers) response.headers = {};
+    if (!response.headers) {
+      response.headers = {};
+    }
 
     const lowerName = name.toLowerCase();
-    if (lowerName === "content-type") return this;
-    if (!response.headers[lowerName]) response.headers[lowerName] = header;
+    if (lowerName === "content-type") {
+      return this;
+    }
+    if (!response.headers[lowerName]) {
+      response.headers[lowerName] = header;
+    }
     return this;
   }
 
@@ -53,8 +59,12 @@ export class ResponseBuilder implements Builder<ResponseObject> {
    */
   addContent(mediaType: string, mediaTypeObject: MediaTypeObject) {
     const response = this.response;
-    if (!response.content) response.content = {};
-    if (!response.content[mediaType]) response.content[mediaType] = mediaTypeObject;
+    if (!response.content) {
+      response.content = {};
+    }
+    if (!response.content[mediaType]) {
+      response.content[mediaType] = mediaTypeObject;
+    }
     return this;
   }
 
@@ -66,8 +76,12 @@ export class ResponseBuilder implements Builder<ResponseObject> {
    */
   addLink(name: string, link: LinkObject | ReferenceObject) {
     const response = this.response;
-    if (!response.links) response.links = {};
-    if (!response.links[name]) response.links[name] = link;
+    if (!response.links) {
+      response.links = {};
+    }
+    if (!response.links[name]) {
+      response.links[name] = link;
+    }
     return this;
   }
 
@@ -79,7 +93,9 @@ export class ResponseBuilder implements Builder<ResponseObject> {
    */
   addExtension(key: `x-${string}`, value: unknown) {
     const response = this.response;
-    if (!response[key]) response[key] = value;
+    if (!response[key]) {
+      response[key] = value;
+    }
     return this;
   }
 }

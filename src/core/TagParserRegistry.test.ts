@@ -1,52 +1,47 @@
 import { createParseContext } from "@tests/utils";
 import type { JSDocTag } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TagParser } from "@/core";
-import type { ParsedTagData } from "@/types";
+import { TagParser } from "@/core/TagParser";
+import type { OperationData } from "@/types";
 import { TagParserRegistry } from "./TagParserRegistry";
 
 // 测试用的解析器类
 class TestParser1 extends TagParser {
   tags = ["test1", "test2"];
-  priority = 1;
 
-  parse(_tag: JSDocTag): ParsedTagData | null {
+  parse(_tag: JSDocTag): OperationData | null {
     return { description: "test1 data" };
   }
 }
 
 class TestParser2 extends TagParser {
   tags = ["test3"];
-  priority = 2;
 
-  parse(_tag: JSDocTag): ParsedTagData | null {
+  parse(_tag: JSDocTag): OperationData | null {
     return { description: "test2 data" };
   }
 }
 
 class ConflictParser extends TagParser {
   tags = ["test1"]; // 与 TestParser1 冲突
-  priority = 3;
 
-  parse(_tag: JSDocTag): ParsedTagData | null {
+  parse(_tag: JSDocTag): OperationData | null {
     return { description: "conflict data" };
   }
 }
 
 class MultiConflictParser extends TagParser {
   tags = ["test1", "test3"]; // 与多个解析器冲突
-  priority = 4;
 
-  parse(_tag: JSDocTag): ParsedTagData | null {
+  parse(_tag: JSDocTag): OperationData | null {
     return { description: "multi conflict data" };
   }
 }
 
 class EmptyTagsParser extends TagParser {
   tags: string[] = [];
-  priority = 1;
 
-  parse(): ParsedTagData | null {
+  parse(): OperationData | null {
     return null;
   }
 }
