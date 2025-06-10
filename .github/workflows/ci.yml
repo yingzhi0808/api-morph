@@ -45,8 +45,14 @@ jobs:
         run: pnpm check:type
         if: runner.os == 'Linux' && matrix.node_version == 'latest'
 
-      - name: Test
-        run: pnpm test
+      - name: Run tests and collect coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: yingzhi0808/globload
 
       - name: Build
         run: pnpm build
