@@ -37,6 +37,25 @@ describe("ExpressFrameworkAnalyzer", () => {
       const node = createTestNode('app.invalid("/test", handler);');
       expect(analyzer.canAnalyzeFramework(node)).toBe(false);
     });
+
+    it("应该拒绝非Express对象的同名方法调用", () => {
+      const node = createTestNode('console.get("/test", handler);');
+      expect(analyzer.canAnalyzeFramework(node)).toBe(false);
+    });
+
+    it("应该拒绝其他对象的HTTP方法调用", () => {
+      const node = createTestNode('otherObject.post("/test", handler);');
+      expect(analyzer.canAnalyzeFramework(node)).toBe(false);
+    });
+
+    it("应该接受常见的Express变量名", () => {
+      const expressVariables = ["app", "express", "server", "application"];
+
+      for (const varName of expressVariables) {
+        const node = createTestNode(`${varName}.get("/test", handler);`);
+        expect(analyzer.canAnalyzeFramework(node)).toBe(true);
+      }
+    });
   });
 
   describe("analyze", () => {

@@ -39,7 +39,17 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
       return false;
     }
 
-    return VALID_HTTP_METHODS.includes(methodName);
+    // 检查是否是有效的HTTP方法
+    if (!VALID_HTTP_METHODS.includes(methodName)) {
+      return false;
+    }
+
+    // 检查调用对象是否为Express类型
+    const objectExpression = propertyAccess.getFirstChild();
+    if (!objectExpression) {
+      return false;
+    }
+    return this.isExpressType(objectExpression);
   }
 
   /**
@@ -105,5 +115,44 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
    */
   private convertExpressPathToOpenAPI(expressPath: string) {
     return expressPath.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "{$1}");
+  }
+
+  /**
+   * 检查节点是否为Express类型
+   * @param node 要检查的节点
+   * @returns 如果是Express类型返回true
+   */
+  private isExpressType(node: Node) {
+    const nodeType = node.getType();
+    const expressType = this.getExpressType();
+    return nodeType.isAssignableTo(expressType);
+  }
+
+  /**
+   * 获取 Express 的类型对象。
+   * 通过创建虚拟文件导入Express类型来获取类型信息
+   * @returns Express 的 Type 对象，如果获取失败则返回 null。
+   */
+  private getExpressType() {
+    const project = this.context.project;
+
+    const tempFileName = "__temp_express_resolve__.ts";
+    const tempFile = project.createSourceFile(
+      tempFileName,
+      `
+        import express from "express";
+        const app = express();
+      `,
+    );
+
+    try {
+      const variableDeclaration = tempFile.getFirstDescendantByKindOrThrow(
+        SyntaxKind.VariableDeclaration,
+      );
+      const type = variableDeclaration.getType();
+      return type;
+    } finally {
+      project.removeSourceFile(tempFile);
+    }
   }
 }
