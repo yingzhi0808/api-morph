@@ -1,4 +1,3 @@
-import type { Node } from "ts-morph";
 import type { ASTAnalyzer } from "./ASTAnalyzer";
 
 /**
@@ -21,11 +20,10 @@ export class ASTAnalyzerRegistry {
   }
 
   /**
-   * 获取能够分析指定节点的所有分析器
-   * @param node AST节点
-   * @returns 能够分析该节点的分析器数组
+   * 获取所有注册的分析器
+   * @returns 所有分析器数组
    */
-  getAnalyzers(node: Node) {
-    return Array.from(this.nameToAnalyzer.values()).filter((analyzer) => analyzer.canAnalyze(node));
+  getAllAnalyzers() {
+    return Array.from(this.nameToAnalyzer.values());
   }
 }

@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.static(getSwaggerUIAssetInfo().assetPath));
 
 /**
- * @operation post /login1
+ * @operation
  * @summary 用户登录接口
  * @description 提供用户登录功能，校验用户名和密码，登录成功后返回用户ID和认证令牌
  * @tags 认证与授权

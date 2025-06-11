@@ -27,7 +27,7 @@ export class FrameworkAnalyzerRegistry {
    */
   getFirstMatchingAnalyzer(node: Node) {
     for (const analyzer of this.nameToAnalyzer.values()) {
-      if (analyzer.canAnalyzeFramework(node)) {
+      if (analyzer.canAnalyze(node)) {
         return analyzer;
       }
     }

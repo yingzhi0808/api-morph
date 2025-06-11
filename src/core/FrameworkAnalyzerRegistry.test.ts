@@ -10,7 +10,7 @@ import { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 class TestFrameworkAnalyzer1 extends FrameworkAnalyzer {
   frameworkName = "TestFramework1";
 
-  canAnalyzeFramework(node: Node): boolean {
+  canAnalyze(node: Node): boolean {
     // 模拟检测逻辑：检查是否包含特定的方法调用
     if (!node.isKind(SyntaxKind.ExpressionStatement)) {
       return false;
@@ -31,7 +31,7 @@ class TestFrameworkAnalyzer1 extends FrameworkAnalyzer {
   }
 
   async analyze(node: Node): Promise<OperationData | null> {
-    if (!this.canAnalyzeFramework(node)) {
+    if (!this.canAnalyze(node)) {
       return null;
     }
 
@@ -46,7 +46,7 @@ class TestFrameworkAnalyzer1 extends FrameworkAnalyzer {
 class TestFrameworkAnalyzer2 extends FrameworkAnalyzer {
   frameworkName = "TestFramework2";
 
-  canAnalyzeFramework(node: Node): boolean {
+  canAnalyze(node: Node): boolean {
     if (!node.isKind(SyntaxKind.ExpressionStatement)) {
       return false;
     }
@@ -66,7 +66,7 @@ class TestFrameworkAnalyzer2 extends FrameworkAnalyzer {
   }
 
   async analyze(node: Node): Promise<OperationData | null> {
-    if (!this.canAnalyzeFramework(node)) {
+    if (!this.canAnalyze(node)) {
       return null;
     }
 
@@ -81,7 +81,7 @@ class TestFrameworkAnalyzer2 extends FrameworkAnalyzer {
 class ConflictFrameworkAnalyzer extends FrameworkAnalyzer {
   frameworkName = "TestFramework1"; // 与 TestFrameworkAnalyzer1 冲突
 
-  canAnalyzeFramework(): boolean {
+  canAnalyze(): boolean {
     return false;
   }
 
@@ -93,7 +93,7 @@ class ConflictFrameworkAnalyzer extends FrameworkAnalyzer {
 class AlwaysMatchAnalyzer extends FrameworkAnalyzer {
   frameworkName = "AlwaysMatch";
 
-  canAnalyzeFramework(): boolean {
+  canAnalyze(): boolean {
     return true; // 总是匹配
   }
 

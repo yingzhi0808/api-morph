@@ -15,16 +15,9 @@ export abstract class ASTAnalyzer {
   constructor(protected readonly context: ParseContext) {}
 
   /**
-   * 判断当前分析器是否能够分析给定的AST节点
-   * @param node AST节点
-   * @returns 如果能够分析返回true，否则返回false
-   */
-  abstract canAnalyze(node: Node): boolean;
-
-  /**
    * 分析AST节点并提取API信息
    * @param node AST节点
-   * @returns 解析后的标签数据，如果无法解析返回null
+   * @returns 解析后的操作数据，如果无法解析返回null
    */
-  abstract analyze(node: Node): Promise<OperationData | null>;
+  abstract analyze(node: Node): Promise<OperationData | null> | OperationData | null;
 }

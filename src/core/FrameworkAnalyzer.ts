@@ -21,7 +21,7 @@ export abstract class FrameworkAnalyzer {
    * @param node AST节点
    * @returns 如果属于该框架返回true，否则返回false
    */
-  abstract canAnalyzeFramework(node: Node): boolean;
+  abstract canAnalyze(node: Node): boolean;
 
   /**
    * 分析框架节点并提取API信息
@@ -29,5 +29,5 @@ export abstract class FrameworkAnalyzer {
    * @param node AST节点
    * @returns 解析后的操作数据，如果无法解析返回null
    */
-  abstract analyze(node: Node): Promise<OperationData | null>;
+  abstract analyze(node: Node): Promise<OperationData | null> | OperationData | null;
 }
