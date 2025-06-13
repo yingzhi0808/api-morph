@@ -10,7 +10,6 @@
 - [ ] 支持在注释中通过 @link 引用 TypeScript 类型并生成 schema
 - [ ] 根据被注释的代码结构提取有用的信息自动生成文档的一些对象
 - [ ] 支持使用 new Router() 定义路由，并对tag分组，需要新设计 API
-- [ ] 支持自定义生成 operationId 的方法
 - [ ] 支持通过 zod 或 ClassValidator 校验请求参数并生成 schema
 - [ ] 支持将 handler 写在单独的地方，需要查找引用
 - [ ] 实现从 OpenAPI 生成客户端代码

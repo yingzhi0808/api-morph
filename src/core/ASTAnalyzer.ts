@@ -19,5 +19,5 @@ export abstract class ASTAnalyzer {
    * @param node AST节点
    * @returns 解析后的操作数据，如果无法解析返回null
    */
-  abstract analyze(node: Node): Promise<OperationData | null> | OperationData | null;
+  abstract analyze(node: Node): Promise<OperationData> | OperationData;
 }

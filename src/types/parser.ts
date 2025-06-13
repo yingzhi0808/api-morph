@@ -24,10 +24,20 @@ export interface ParseContext {
   /** ts-morph TypeChecker 实例 */
   typeChecker: TypeChecker;
   /** 全局 Schema 缓存，避免重复转换同一类型 */
-  schemas: Map<string, SchemaObject>;
+  readonly schemas: Map<string, SchemaObject>;
   /** 解析选项 */
   readonly options: ParserOptions;
 }
+
+/**
+ * 自定义 operationId 生成函数类型
+ */
+export type GenerateOperationIdFunction = (
+  method: HttpMethod,
+  path: string,
+  fileName: string,
+  functionName?: string,
+) => string | null;
 
 /**
  * 解析选项
@@ -59,6 +69,11 @@ export interface ParserOptions {
    * @default true
    */
   enableASTAnalysis?: boolean;
+  /**
+   * 自定义 `operationId` 生成函数，如果提供，将使用此函数生成 `operationId`。
+   * 返回 `null` 表示不生成 `operationId`。
+   */
+  generateOperationId?: GenerateOperationIdFunction;
 }
 
 /**

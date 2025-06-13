@@ -3,7 +3,7 @@ import { SyntaxKind } from "typescript";
 import { VALID_HTTP_METHODS } from "@/constants";
 import { ASTAnalyzerRegistry, FrameworkAnalyzer } from "@/core";
 import type { OperationData, ParseContext } from "@/types";
-import { BasicInfoASTAnalyzer } from "./BasicInfoASTAnalyzer";
+import { ExpressRouteASTAnalyzer } from "./ExpressRouteASTAnalyzer";
 
 /**
  * Express框架分析器，用于分析Express应用的各种节点类型。
@@ -19,7 +19,7 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   constructor(context: ParseContext) {
     super(context);
     this.astAnalyzerRegistry = new ASTAnalyzerRegistry();
-    this.astAnalyzerRegistry.register(new BasicInfoASTAnalyzer(context));
+    this.astAnalyzerRegistry.register(new ExpressRouteASTAnalyzer(context));
   }
 
   /**

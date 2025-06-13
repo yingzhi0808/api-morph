@@ -11,7 +11,6 @@ app.use(express.static(getSwaggerUIAssetInfo().assetPath));
  * @summary 用户登录接口
  * @description 提供用户登录功能，校验用户名和密码，登录成功后返回用户ID和认证令牌
  * @tags 认证与授权
- * @operationId login
  * @requestBody
  * description: 用户登录所需的用户名和密码
  * required: true
