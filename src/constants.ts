@@ -31,3 +31,5 @@ export const VALID_HTTP_METHODS = [
 export type HttpMethod = "get" | "post" | "put" | "delete" | "patch" | "options" | "head" | "trace";
 
 export const VALID_PARAMETER_IN = ["query", "header", "path", "cookie"];
+
+export type ParameterIn = "query" | "header" | "path" | "cookie";

@@ -4,6 +4,7 @@ import { VALID_HTTP_METHODS } from "@/constants";
 import { ASTAnalyzerRegistry, FrameworkAnalyzer } from "@/core";
 import type { OperationData, ParseContext } from "@/types";
 import { ExpressRouteASTAnalyzer } from "./ExpressRouteASTAnalyzer";
+import { ZodValidationASTAnalyzer } from "./ZodValidationASTAnalyzer";
 
 /**
  * Express框架分析器，用于分析Express应用的各种节点类型。
@@ -20,6 +21,7 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
     super(context);
     this.astAnalyzerRegistry = new ASTAnalyzerRegistry();
     this.astAnalyzerRegistry.register(new ExpressRouteASTAnalyzer(context));
+    this.astAnalyzerRegistry.register(new ZodValidationASTAnalyzer(context));
   }
 
   /**
