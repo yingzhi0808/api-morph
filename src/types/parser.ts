@@ -316,5 +316,5 @@ export interface RequestBodyTagData {
   /** 请求体描述 */
   description?: string;
   /** YAML参数对象 */
-  yaml: RequestBodyObject;
+  yaml?: RequestBodyObject;
 }

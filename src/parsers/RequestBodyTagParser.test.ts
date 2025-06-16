@@ -227,8 +227,14 @@ describe("RequestBodyTagParser", () => {
     });
 
     it("应该在无效的简化语法时回退到原始语法验证", async () => {
+      // 创建禁用AST分析的上下文
+      const contextWithoutAST = createParseContext({ enableASTAnalysis: false });
+      const parserWithoutAST = new RequestBodyTagParser(contextWithoutAST);
+
       const tag = createJSDocTag("@requestBody 这只是描述");
-      await expect(parser.parse(tag)).rejects.toThrow(/@requestBody 标签必须包含 YAML 参数/);
+      await expect(parserWithoutAST.parse(tag)).rejects.toThrow(
+        /@requestBody 标签必须包含 YAML 参数/,
+      );
     });
   });
 
@@ -427,15 +433,50 @@ describe("RequestBodyTagParser", () => {
       });
     });
 
-    it("应该在没有YAML参数时抛出错误", async () => {
+    it("应该在没有YAML参数时抛出错误（禁用AST分析时）", async () => {
+      // 创建禁用AST分析的上下文
+      const contextWithoutAST = createParseContext({ enableASTAnalysis: false });
+      const parserWithoutAST = new RequestBodyTagParser(contextWithoutAST);
+
       const tag = createJSDocTag("@requestBody 用户注册信息");
-      await expect(parser.parse(tag)).rejects.toThrow(/@requestBody 标签必须包含 YAML 参数/);
+      await expect(parserWithoutAST.parse(tag)).rejects.toThrow(
+        /@requestBody 标签必须包含 YAML 参数/,
+      );
     });
 
-    it("应该在YAML参数为空时抛出错误", async () => {
+    it("应该在YAML参数为空时抛出错误（禁用AST分析时）", async () => {
+      // 创建禁用AST分析的上下文
+      const contextWithoutAST = createParseContext({ enableASTAnalysis: false });
+      const parserWithoutAST = new RequestBodyTagParser(contextWithoutAST);
+
       const tag = createJSDocTag(`@requestBody 用户注册信息
        # 空的YAML参数`);
-      await expect(parser.parse(tag)).rejects.toThrow(/@requestBody 标签必须包含 YAML 参数/);
+      await expect(parserWithoutAST.parse(tag)).rejects.toThrow(
+        /@requestBody 标签必须包含 YAML 参数/,
+      );
+    });
+
+    it("应该在启用AST分析时允许没有YAML参数", async () => {
+      const tag = createJSDocTag("@requestBody 用户注册信息");
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        requestBody: {
+          description: "用户注册信息",
+          content: {},
+        },
+      });
+    });
+
+    it("应该在启用AST分析时允许空的YAML参数", async () => {
+      const tag = createJSDocTag(`@requestBody 用户注册信息
+       # 空的YAML参数`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        requestBody: {
+          description: "用户注册信息",
+          content: {},
+        },
+      });
     });
   });
 

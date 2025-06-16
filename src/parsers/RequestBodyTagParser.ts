@@ -147,21 +147,37 @@ export class RequestBodyTagParser extends TagParser {
       `  required?: boolean\n` +
       `  [key: \`x-\${string}\`]: any\n`;
 
-    // @ts-ignore
-    const schema: z.ZodType<RequestBodyTagData> = z.object({
-      description: z.string().optional(),
-      yaml: z.record(
-        z.string(),
-        z.unknown(),
-        `@${JSDocTagName.REQUEST_BODY} 标签必须包含 YAML 参数`,
-      ),
-    });
+    // 当启用AST分析时，允许yaml为空，因为可以从AST中获取requestBody信息
+    if (this.context.options.enableASTAnalysis) {
+      // @ts-ignore
+      const schema: z.ZodType<RequestBodyTagData> = z.object({
+        description: z.string().optional(),
+        yaml: z.record(z.string(), z.unknown()).optional(),
+      });
 
-    const { success, data, error } = schema.safeParse(params);
-    if (!success) {
-      throw new Error(getZodErrorMessage(error) + message);
+      const { success, data, error } = schema.safeParse(params);
+      if (!success) {
+        throw new Error(getZodErrorMessage(error) + message);
+      }
+      return data;
+    } else {
+      // 当未启用AST分析时，yaml必须提供
+      // @ts-ignore
+      const schema: z.ZodType<RequestBodyTagData> = z.object({
+        description: z.string().optional(),
+        yaml: z.record(
+          z.string(),
+          z.unknown(),
+          `@${JSDocTagName.REQUEST_BODY} 标签必须包含 YAML 参数`,
+        ),
+      });
+
+      const { success, data, error } = schema.safeParse(params);
+      if (!success) {
+        throw new Error(getZodErrorMessage(error) + message);
+      }
+      return data;
     }
-    return data;
   }
 
   /**
@@ -174,28 +190,32 @@ export class RequestBodyTagParser extends TagParser {
     const requestBodyBuilder = new RequestBodyBuilder();
 
     let finalDescription = description;
-    if (yaml.description) {
-      finalDescription = yaml.description;
-    }
-    if (finalDescription) {
-      requestBodyBuilder.setDescription(finalDescription);
-    }
 
-    if (yaml.content) {
-      Object.entries(yaml.content).forEach(([mediaType, mediaTypeObject]) => {
-        requestBodyBuilder.addContent(mediaType, mediaTypeObject);
+    if (yaml) {
+      if (yaml.description) {
+        finalDescription = yaml.description;
+      }
+
+      if (yaml.content) {
+        Object.entries(yaml.content).forEach(([mediaType, mediaTypeObject]) => {
+          requestBodyBuilder.addContent(mediaType, mediaTypeObject);
+        });
+      }
+
+      if (yaml.required !== undefined) {
+        requestBodyBuilder.setRequired(yaml.required);
+      }
+
+      Object.entries(yaml).forEach(([key, value]) => {
+        if (isExtensionKey(key)) {
+          requestBodyBuilder.addExtension(key, value);
+        }
       });
     }
 
-    if (yaml.required !== undefined) {
-      requestBodyBuilder.setRequired(yaml.required);
+    if (finalDescription) {
+      requestBodyBuilder.setDescription(finalDescription);
     }
-
-    Object.entries(yaml).forEach(([key, value]) => {
-      if (isExtensionKey(key)) {
-        requestBodyBuilder.addExtension(key, value);
-      }
-    });
 
     return {
       requestBody: requestBodyBuilder.build(),

@@ -1,6 +1,8 @@
 import { createParseContext, createSourceOperationData } from "@tests/utils";
+import type { Node } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
-import { FrameworkAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
+import type { HttpMethod } from "@/constants";
+import { FrameworkAnalyzer, FrameworkAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
 import {
   CallbackTagParser,
   DeprecatedTagParser,
@@ -556,6 +558,211 @@ x-timeout: 30`,
       expect(result.operation).toHaveProperty("x-rate-limit", 100);
       expect(result.operation).toHaveProperty("x-timeout", 30);
     });
+
+    it("应该正确进行 requestBody 的浅合并", async () => {
+      // 创建一个模拟的框架分析器，提供基础的 requestBody
+      class MockFrameworkAnalyzer extends FrameworkAnalyzer {
+        frameworkName = "mock";
+
+        canAnalyze() {
+          return true;
+        }
+
+        async analyze(_node: Node) {
+          return {
+            method: "post" as HttpMethod,
+            path: "/users",
+            requestBody: {
+              description: "来自框架分析的描述",
+              required: false,
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object" as const,
+                    properties: {
+                      name: { type: "string" as const },
+                    },
+                  },
+                },
+                "application/xml": {
+                  schema: {
+                    type: "object" as const,
+                    properties: {
+                      id: { type: "number" as const },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+      }
+
+      // 注册模拟分析器
+      const mockFrameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
+      mockFrameworkAnalyzerRegistry.register(new MockFrameworkAnalyzer(context));
+      const mockParser = new OperationComposer(tagParserRegistry, mockFrameworkAnalyzerRegistry);
+
+      const sourceData = createSourceOperationData([
+        `@requestBody 来自标签解析的描述
+         required: true
+         content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 email:
+                   type: string
+           text/plain:
+             schema:
+               type: string`,
+      ]);
+
+      const result = await mockParser.compose(sourceData);
+      const requestBody = result.operation.requestBody as RequestBodyObject;
+
+      // 验证浅合并结果
+      expect(requestBody.description).toBe("来自标签解析的描述"); // 标签解析优先
+      expect(requestBody.required).toBe(true); // 标签解析优先
+      expect(requestBody.content).toHaveProperty("application/json");
+      expect(requestBody.content).toHaveProperty("application/xml"); // 来自框架分析
+      expect(requestBody.content).toHaveProperty("text/plain"); // 来自标签解析
+
+      // 验证 application/json 内容被标签解析覆盖
+      expect(requestBody.content["application/json"].schema).toEqual({
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+      });
+
+      // 验证 application/xml 内容保留自框架分析
+      expect(requestBody.content["application/xml"].schema).toEqual({
+        type: "object",
+        properties: {
+          id: { type: "number" },
+        },
+      });
+
+      // 验证 text/plain 内容来自标签解析
+      expect(requestBody.content["text/plain"].schema).toEqual({
+        type: "string",
+      });
+    });
+
+    it("应该正确处理单个 mediaType 的智能合并", async () => {
+      // 创建一个模拟的框架分析器，提供基础的 requestBody
+      class MockFrameworkAnalyzer extends FrameworkAnalyzer {
+        frameworkName = "mock";
+
+        canAnalyze() {
+          return true;
+        }
+
+        async analyze(_node: Node) {
+          return {
+            method: "post" as HttpMethod,
+            path: "/users",
+            requestBody: {
+              description: "来自框架分析的描述",
+              required: false,
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/UserLoginDto",
+                  },
+                },
+              },
+            },
+          };
+        }
+      }
+
+      // 注册模拟分析器
+      const mockFrameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
+      mockFrameworkAnalyzerRegistry.register(new MockFrameworkAnalyzer(context));
+      const mockParser = new OperationComposer(tagParserRegistry, mockFrameworkAnalyzerRegistry);
+
+      const sourceData = createSourceOperationData([
+        `@requestBody 来自标签解析的描述
+         required: true
+         content:
+           application/xml: {}`,
+      ]);
+
+      const result = await mockParser.compose(sourceData);
+      const requestBody = result.operation.requestBody as RequestBodyObject;
+
+      // 验证智能合并结果：使用标签的 mediaType，但保留 AST 的 schema
+      expect(requestBody.description).toBe("来自标签解析的描述");
+      expect(requestBody.required).toBe(true);
+      expect(requestBody.content).toHaveProperty("application/xml");
+      expect(requestBody.content).not.toHaveProperty("application/json"); // 原来的 mediaType 被替换
+
+      // 验证 schema 被保留并应用到新的 mediaType
+      expect(requestBody.content["application/xml"].schema).toEqual({
+        $ref: "#/components/schemas/UserLoginDto",
+      });
+    });
+
+    it("应该在标签已有完整 schema 时不进行 schema 合并", async () => {
+      // 创建一个模拟的框架分析器，提供基础的 requestBody
+      class MockFrameworkAnalyzer extends FrameworkAnalyzer {
+        frameworkName = "mock";
+
+        canAnalyze() {
+          return true;
+        }
+
+        async analyze(_node: Node) {
+          return {
+            method: "post" as HttpMethod,
+            path: "/users",
+            requestBody: {
+              description: "来自框架分析的描述",
+              required: false,
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/UserLoginDto",
+                  },
+                },
+              },
+            },
+          };
+        }
+      }
+
+      // 注册模拟分析器
+      const mockFrameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
+      mockFrameworkAnalyzerRegistry.register(new MockFrameworkAnalyzer(context));
+      const mockParser = new OperationComposer(tagParserRegistry, mockFrameworkAnalyzerRegistry);
+
+      const sourceData = createSourceOperationData([
+        `@requestBody 来自标签解析的描述
+         required: true
+         content:
+           application/xml:
+             schema:
+               type: object
+               properties:
+                 customField:
+                   type: string`,
+      ]);
+
+      const result = await mockParser.compose(sourceData);
+      const requestBody = result.operation.requestBody as RequestBodyObject;
+
+      // 验证标签的完整 schema 被保留，不使用 AST 的 schema
+      expect(requestBody.content).toHaveProperty("application/xml");
+      expect(requestBody.content).not.toHaveProperty("application/json");
+      expect(requestBody.content["application/xml"].schema).toEqual({
+        type: "object",
+        properties: {
+          customField: { type: "string" },
+        },
+      });
+    });
   });
 
   describe("错误处理", () => {
@@ -608,12 +815,47 @@ x-timeout: 30`,
       await expect(async () => await parser.compose(sourceData)).rejects.toThrow(/不能为空/);
     });
 
-    it("应该在请求体解析器抛出错误时正确传播错误", async () => {
+    it("应该在请求体解析器抛出错误时正确传播错误（禁用AST分析时）", async () => {
+      // 创建禁用AST分析的上下文
+      const contextWithoutAST = createParseContext({ enableASTAnalysis: false });
+      const tagParserRegistryWithoutAST = new TagParserRegistry();
+
+      tagParserRegistryWithoutAST.register(new ParameterTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new RequestBodyTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ResponseTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ExternalDocsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new SecurityTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ServerTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new CallbackTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new OperationIdTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new DeprecatedTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ExtensionsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new ResponsesExtensionsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new DescriptionTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new SummaryTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new TagsTagParser(contextWithoutAST));
+      tagParserRegistryWithoutAST.register(new OperationTagParser(contextWithoutAST));
+
+      const parserWithoutAST = new OperationComposer(
+        tagParserRegistryWithoutAST,
+        frameworkAnalyzerRegistry,
+      );
       const sourceData = createSourceOperationData(["@requestBody 描述但没有YAML"]);
 
-      await expect(async () => await parser.compose(sourceData)).rejects.toThrow(
+      await expect(async () => await parserWithoutAST.compose(sourceData)).rejects.toThrow(
         /标签必须包含 YAML 参数/,
       );
+    });
+
+    it("应该在启用AST分析时允许没有YAML参数的requestBody", async () => {
+      const sourceData = createSourceOperationData(["@requestBody 描述但没有YAML"]);
+      const result = await parser.compose(sourceData);
+
+      expect(result).toHaveProperty("operation");
+      expect(result.operation.requestBody).toEqual({
+        description: "描述但没有YAML",
+        content: {},
+      });
     });
   });
 });
