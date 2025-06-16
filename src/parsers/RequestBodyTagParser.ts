@@ -58,7 +58,7 @@ export class RequestBodyTagParser extends TagParser {
   }
 
   /**
-   * 解析简化语法，格式：`[mediaType] [schema] [description]`
+   * 解析简化语法，格式：`[mediaType] [schema] [description] [required]`
    * @param inlineParams 内联参数数组
    * @returns 解析结果或null
    */
@@ -70,6 +70,7 @@ export class RequestBodyTagParser extends TagParser {
     let mediaType: string | undefined;
     let schemaRef: string | undefined;
     let description: string | undefined;
+    let required: boolean | undefined;
 
     const parts = [...inlineParams];
 
@@ -77,6 +78,13 @@ export class RequestBodyTagParser extends TagParser {
     const schemaIndex = parts.findIndex((part) => part.includes("$ref:"));
     if (schemaIndex !== -1) {
       schemaRef = parts.splice(schemaIndex, 1)[0];
+    }
+
+    // 检查是否包含 required 参数
+    const requiredIndex = parts.findIndex((part) => part === "required");
+    if (requiredIndex !== -1) {
+      required = true;
+      parts.splice(requiredIndex, 1);
     }
 
     // 检查第一个参数是否为 media type
@@ -125,6 +133,11 @@ export class RequestBodyTagParser extends TagParser {
         // 只有 mediaType，没有 schema，创建空的 content
         yaml.content = { [mediaType]: {} };
       }
+    }
+
+    // 设置 required 属性
+    if (required !== undefined) {
+      yaml.required = required;
     }
 
     return {
