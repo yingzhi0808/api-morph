@@ -34,8 +34,6 @@ export class ResponseTagParser extends TagParser {
    * @returns 转换后的参数对象。
    */
   protected transformParams(params: ParsedTagParams, _tag: JSDocTag) {
-    console.log(params);
-
     const { inline, yaml = {} } = params;
 
     let mediaType = this.context.options.defaultResponseMediaType!;
