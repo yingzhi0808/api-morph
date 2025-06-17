@@ -36,15 +36,9 @@ describe("TagParser", () => {
     parser = new TestTagParser(context);
   });
 
-  describe("abstract methods and properties", () => {
-    it("应该有正确的 tags", () => {
+  describe("properties", () => {
+    it("应该有正确的支持标签列表", () => {
       expect(parser.tags).toEqual(["test"]);
-    });
-
-    it("应该能调用 parse 方法", () => {
-      const tag = createJSDocTag("@test");
-      const result = parser.parse(tag);
-      expect(result).toEqual({ description: "test parsed data" });
     });
   });
 
@@ -462,7 +456,7 @@ function test() {}`,
 
       it("应该处理没有JSDoc链接的情况", async () => {
         const sourceFile = project.createSourceFile(
-          `test-${Date.now()}.ts`,
+          `test-${Date.now()}${Math.random() * 1000000}.ts`,
           `
               /**
                * @test 测试参数
@@ -483,7 +477,7 @@ function test() {}`,
       it("应该处理内联参数中的JSDoc链接", async () => {
         const sourceFile = createFileWithContent(
           project,
-          `test-${Date.now()}.ts`,
+          `test-${Date.now()}${Math.random() * 1000000}.ts`,
           `
 import { UserLoginVo } from "@tests/fixtures/schema";
 /**

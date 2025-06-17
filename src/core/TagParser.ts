@@ -94,9 +94,13 @@ export abstract class TagParser {
       const yamlContent = yamlLines.join("\n");
 
       if (yamlContent) {
-        const parsed = YAML.parse(yamlContent);
-        if (isPlainObject(parsed)) {
-          parsedYaml = parsed as Record<string, unknown>;
+        try {
+          const parsed = YAML.parse(yamlContent);
+          if (isPlainObject(parsed)) {
+            parsedYaml = parsed as Record<string, unknown>;
+          }
+        } catch {
+          // 忽略 YAML 解析异常
         }
       }
     }
