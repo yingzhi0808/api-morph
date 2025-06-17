@@ -34,7 +34,7 @@ export abstract class TagParser {
    * @param tag JSDoc 标签对象。
    * @returns 解析结果。
    */
-  abstract parse(tag: JSDocTag): Promise<OperationData | null> | OperationData | null;
+  abstract parse(tag: JSDocTag): Promise<OperationData> | OperationData;
 
   /**
    * 转换参数的钩子方法，子类可以重写此方法来完全控制参数转换。

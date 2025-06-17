@@ -20,7 +20,13 @@ import {
   SummaryTagParser,
   TagsTagParser,
 } from "@/parsers";
-import type { ParameterObject, ParsedTagParams, RequestBodyObject, ResponseObject } from "@/types";
+import type {
+  OperationData,
+  ParameterObject,
+  ParsedTagParams,
+  RequestBodyObject,
+  ResponseObject,
+} from "@/types";
 import { OperationComposer } from "./OperationComposer";
 
 describe("OperationComposer", () => {
@@ -286,8 +292,8 @@ x-nullable: false`,
       class NullReturnParser extends TagParser {
         tags = ["mock"];
 
-        parse() {
-          return null;
+        parse(_tag: JSDocTag): OperationData {
+          return { description: "null return data" };
         }
 
         transformParams(_params: ParsedTagParams, _tag: JSDocTag) {}

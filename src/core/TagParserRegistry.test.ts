@@ -38,8 +38,8 @@ class ConflictParser extends TagParser {
 class EmptyTagsParser extends TagParser {
   tags: string[] = [];
 
-  parse() {
-    return null;
+  parse(_tag: JSDocTag): OperationData {
+    return { description: "empty tags data" };
   }
 
   transformParams(_params: ParsedTagParams, _tag: JSDocTag) {}
