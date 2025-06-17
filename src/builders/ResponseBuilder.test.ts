@@ -12,13 +12,23 @@ describe("ResponseBuilder", () => {
         description: "",
       });
     });
+
+    it("应该在多次调用 build 方法时返回不同的对象引用", () => {
+      const builder = new ResponseBuilder();
+      builder.setDescription("测试描述");
+
+      const result1 = builder.build();
+      const result2 = builder.build();
+
+      expect(result1).toEqual(result2);
+      expect(result1).not.toBe(result2);
+    });
   });
 
   describe("setDescription", () => {
     it("应该正确设置响应描述", () => {
       const builder = new ResponseBuilder();
       const description = "成功响应";
-
       const result = builder.setDescription(description).build();
 
       expect(result.description).toBe(description);
@@ -39,7 +49,6 @@ describe("ResponseBuilder", () => {
         description: "自定义头信息",
         schema: { type: "string" },
       };
-
       const result = builder.addHeader("x-custom-header", headerObject).build();
 
       expect(result.headers).toEqual({
@@ -52,7 +61,6 @@ describe("ResponseBuilder", () => {
       const referenceObject: ReferenceObject = {
         $ref: "#/components/headers/CustomHeader",
       };
-
       const result = builder.addHeader("x-ref-header", referenceObject).build();
 
       expect(result.headers).toEqual({
@@ -65,7 +73,6 @@ describe("ResponseBuilder", () => {
       const headerObject: HeaderObject = {
         description: "大写头信息",
       };
-
       const result = builder.addHeader("X-UPPERCASE-HEADER", headerObject).build();
 
       expect(result.headers).toEqual({
@@ -78,7 +85,6 @@ describe("ResponseBuilder", () => {
       const headerObject: HeaderObject = {
         description: "内容类型头",
       };
-
       const result = builder.addHeader("content-type", headerObject).build();
 
       expect(result.headers).toEqual({});
@@ -89,7 +95,6 @@ describe("ResponseBuilder", () => {
       const headerObject: HeaderObject = {
         description: "内容类型头",
       };
-
       const result = builder.addHeader("Content-Type", headerObject).build();
 
       expect(result.headers).toEqual({});
@@ -100,7 +105,6 @@ describe("ResponseBuilder", () => {
       const headerObject: HeaderObject = {
         description: "内容类型头",
       };
-
       const result = builder.addHeader("CONTENT-TYPE", headerObject).build();
 
       expect(result.headers).toEqual({});
@@ -114,7 +118,6 @@ describe("ResponseBuilder", () => {
       const secondHeader: HeaderObject = {
         description: "第二个头信息",
       };
-
       const result = builder
         .addHeader("x-duplicate", firstHeader)
         .addHeader("x-duplicate", secondHeader)
@@ -130,7 +133,6 @@ describe("ResponseBuilder", () => {
       const headerObject: HeaderObject = {
         description: "测试头信息",
       };
-
       const returnValue = builder.addHeader("x-test", headerObject);
 
       expect(returnValue).toBe(builder);
@@ -144,7 +146,6 @@ describe("ResponseBuilder", () => {
         schema: { type: "object" },
         example: { message: "success" },
       };
-
       const result = builder.addContent("application/json", mediaTypeObject).build();
 
       expect(result.content).toEqual({
@@ -162,7 +163,6 @@ describe("ResponseBuilder", () => {
         schema: { type: "object" },
         example: { message: "second" },
       };
-
       const result = builder
         .addContent("application/json", firstMediaType)
         .addContent("application/json", secondMediaType)
@@ -181,7 +181,6 @@ describe("ResponseBuilder", () => {
       const xmlMediaType: MediaTypeObject = {
         schema: { type: "string" },
       };
-
       const result = builder
         .addContent("application/json", jsonMediaType)
         .addContent("application/xml", xmlMediaType)
@@ -198,7 +197,6 @@ describe("ResponseBuilder", () => {
       const mediaTypeObject: MediaTypeObject = {
         schema: { type: "object" },
       };
-
       const returnValue = builder.addContent("application/json", mediaTypeObject);
 
       expect(returnValue).toBe(builder);
@@ -213,7 +211,6 @@ describe("ResponseBuilder", () => {
         parameters: { id: "$response.body#/id" },
         description: "获取用户详情的链接",
       };
-
       const result = builder.addLink("userDetails", linkObject).build();
 
       expect(result.links).toEqual({
@@ -226,7 +223,6 @@ describe("ResponseBuilder", () => {
       const referenceObject: ReferenceObject = {
         $ref: "#/components/links/UserDetailsLink",
       };
-
       const result = builder.addLink("userRef", referenceObject).build();
 
       expect(result.links).toEqual({
@@ -244,7 +240,6 @@ describe("ResponseBuilder", () => {
         operationId: "secondOperation",
         description: "第二个链接",
       };
-
       const result = builder
         .addLink("duplicate", firstLink)
         .addLink("duplicate", secondLink)
@@ -260,7 +255,6 @@ describe("ResponseBuilder", () => {
       const linkObject: LinkObject = {
         operationId: "testOperation",
       };
-
       const returnValue = builder.addLink("test", linkObject);
 
       expect(returnValue).toBe(builder);
@@ -271,7 +265,6 @@ describe("ResponseBuilder", () => {
     it("应该添加有效的扩展字段", () => {
       const builder = new ResponseBuilder();
       const extensionValue = { customData: "test" };
-
       const result = builder.addExtension("x-custom-extension", extensionValue).build();
 
       expect(result["x-custom-extension"]).toStrictEqual(extensionValue);
@@ -281,7 +274,6 @@ describe("ResponseBuilder", () => {
       const builder = new ResponseBuilder();
       const extension1 = "value1";
       const extension2 = { data: "value2" };
-
       const result = builder
         .addExtension("x-extension-1", extension1)
         .addExtension("x-extension-2", extension2)
@@ -295,7 +287,6 @@ describe("ResponseBuilder", () => {
       const builder = new ResponseBuilder();
       const firstValue = "first";
       const secondValue = "second";
-
       const result = builder
         .addExtension("x-duplicate", firstValue)
         .addExtension("x-duplicate", secondValue)
@@ -306,57 +297,9 @@ describe("ResponseBuilder", () => {
 
     it("应该支持链式调用", () => {
       const builder = new ResponseBuilder();
-
       const returnValue = builder.addExtension("x-test", "value");
 
       expect(returnValue).toBe(builder);
-    });
-  });
-
-  describe("复杂场景测试", () => {
-    it("应该支持所有方法的链式调用组合", () => {
-      const builder = new ResponseBuilder();
-      const headerObject: HeaderObject = {
-        description: "自定义头信息",
-      };
-      const mediaTypeObject: MediaTypeObject = {
-        schema: { type: "object" },
-      };
-      const linkObject: LinkObject = {
-        operationId: "getDetails",
-      };
-
-      const result = builder
-        .setDescription("复合响应")
-        .addHeader("x-rate-limit", headerObject)
-        .addContent("application/json", mediaTypeObject)
-        .addLink("details", linkObject)
-        .addExtension("x-custom", "value")
-        .build();
-
-      expect(result).toEqual({
-        description: "复合响应",
-        headers: {
-          "x-rate-limit": headerObject,
-        },
-        content: {
-          "application/json": mediaTypeObject,
-        },
-        links: {
-          details: linkObject,
-        },
-        "x-custom": "value",
-      });
-    });
-
-    it("应该在多次调用 build 方法时返回不同的对象引用", () => {
-      const builder = new ResponseBuilder();
-      builder.setDescription("测试描述");
-
-      const result1 = builder.build();
-      const result2 = builder.build();
-
-      expect(result1).not.toBe(result2);
     });
   });
 });

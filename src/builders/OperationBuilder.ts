@@ -157,11 +157,6 @@ export class OperationBuilder implements Builder<OperationObject> {
    */
   addResponse(statusCode: string | "default", response: ResponseObject | ReferenceObject) {
     const operation = this.operation;
-    // 因为 operation.responses 是必填字段，所以它永远不会为空，这里的判断只是为了代码的一致性
-    /* v8 ignore next */
-    if (!operation.responses) {
-      operation.responses = {};
-    }
     if (!operation.responses[statusCode]) {
       operation.responses[statusCode] = response;
     }

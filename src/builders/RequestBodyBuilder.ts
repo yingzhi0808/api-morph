@@ -30,11 +30,6 @@ export class RequestBodyBuilder implements Builder<RequestBodyObject> {
    */
   addContent(mediaType: string, mediaTypeObject: MediaTypeObject) {
     const requestBody = this.requestBody;
-    // 因为 requestBody.content 是必填字段，所以它永远不会为空，这里的判断只是为了代码的一致性
-    /* v8 ignore next */
-    if (!requestBody.content) {
-      requestBody.content = {};
-    }
     if (!requestBody.content[mediaType]) {
       requestBody.content[mediaType] = mediaTypeObject;
     }

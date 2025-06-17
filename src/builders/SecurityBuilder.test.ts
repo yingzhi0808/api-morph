@@ -9,6 +9,17 @@ describe("SecurityBuilder", () => {
 
       expect(result).toEqual({});
     });
+
+    it("多次调用 build 应该返回不同的对象引用", () => {
+      const builder = new SecurityBuilder();
+      builder.addScopes("bearerAuth").addScopes("oauth2", ["read"]);
+
+      const result1 = builder.build();
+      const result2 = builder.build();
+
+      expect(result1).toEqual(result2);
+      expect(result1).not.toBe(result2);
+    });
   });
 
   describe("addScopes", () => {
@@ -62,18 +73,6 @@ describe("SecurityBuilder", () => {
       const returnValue = builder.addScopes("bearerAuth");
 
       expect(returnValue).toBe(builder);
-    });
-  });
-
-  describe("复杂场景测试", () => {
-    it("多次调用 build 应该返回不同的对象引用", () => {
-      const builder = new SecurityBuilder();
-      builder.addScopes("bearerAuth").addScopes("oauth2", ["read"]);
-
-      const result1 = builder.build();
-      const result2 = builder.build();
-
-      expect(result1).not.toBe(result2);
     });
   });
 });
