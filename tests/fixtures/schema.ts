@@ -1,5 +1,9 @@
 import z from "zod/v4";
 
+export const UserIdVo = z.object({
+  id: z.string().meta({ description: "用户ID" }),
+});
+
 /**
  * 用户登录响应数据
  */

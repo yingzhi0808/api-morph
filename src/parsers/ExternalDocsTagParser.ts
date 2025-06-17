@@ -16,7 +16,7 @@ import { isExtensionKey } from "@/utils";
  * 外部文档标签解析器，处理 `@externalDocs` 标签
  */
 export class ExternalDocsTagParser extends TagParser {
-  tags = [JSDocTagName.EXTERNAL_DOCS];
+  tags: string[] = [JSDocTagName.EXTERNAL_DOCS];
 
   /**
    * 解析 JSDoc 标签。
@@ -47,7 +47,7 @@ export class ExternalDocsTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 验证后的参数对象。
    */
-  protected validateParams(params: unknown) {
+  private validateParams(params: unknown) {
     const message =
       `\n正确格式:\n` +
       `  @${JSDocTagName.EXTERNAL_DOCS} <url> [description]\n` +
@@ -83,16 +83,23 @@ export class ExternalDocsTagParser extends TagParser {
     const externalDocsBuilder = new ExternalDocsBuilder();
 
     externalDocsBuilder.setUrl(url);
-    if (description !== undefined) {
-      externalDocsBuilder.setDescription(description);
-    }
+
+    let finalDescription = description;
 
     if (yaml) {
+      if (yaml.description) {
+        finalDescription = yaml.description;
+      }
+
       for (const [key, value] of Object.entries(yaml)) {
         if (isExtensionKey(key)) {
           externalDocsBuilder.addExtension(key, value);
         }
       }
+    }
+
+    if (finalDescription !== undefined) {
+      externalDocsBuilder.setDescription(finalDescription);
     }
 
     return {

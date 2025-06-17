@@ -10,7 +10,7 @@ import type { OperationData, ParsedTagParams, SecurityTagData, SecurityTagParams
  * 安全标签解析器，处理 `@security` 标签
  */
 export class SecurityTagParser extends TagParser {
-  tags = [JSDocTagName.SECURITY];
+  tags: string[] = [JSDocTagName.SECURITY];
 
   /**
    * 解析 JSDoc 标签。
@@ -40,16 +40,11 @@ export class SecurityTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 转换后的参数对象。
    */
-  protected validateParams(params: unknown) {
+  private validateParams(params: unknown) {
     const message = `\n正确格式：\n  @${JSDocTagName.SECURITY} <schemeName> [...scopes]\n`;
 
     const schema: z.ZodType<SecurityTagData> = z.object({
-      schemeName: z
-        .string(`@${JSDocTagName.SECURITY} 标签 schemeName 不能为空`)
-        .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, {
-          error: (iss) =>
-            `@${JSDocTagName.SECURITY} 标签 schemeName 格式不正确："${iss.input}"，必须是有效的标识符（以字母或下划线开头，只能包含字母、数字和下划线）`,
-        }),
+      schemeName: z.string(`@${JSDocTagName.SECURITY} 标签 schemeName 不能为空`),
       scopes: z.array(z.string()).optional(),
     });
 

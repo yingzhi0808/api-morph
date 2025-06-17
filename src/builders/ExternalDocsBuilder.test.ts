@@ -189,7 +189,7 @@ describe("ExternalDocsBuilder", () => {
   });
 
   describe("综合测试", () => {
-    it("应该支持完整的外部文档配置", () => {
+    it("应该支持完整的外部文档参数", () => {
       const builder = new ExternalDocsBuilder();
       const result = builder
         .setUrl("https://docs.example.com/api")

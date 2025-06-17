@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: any is used for extension */
 
 import type { JsonSchemaDraft202012Object } from "@hyperjump/json-schema/draft-2020-12";
+import type { ParameterIn, ParameterStyle } from "@/constants";
 
 /**
  * This is the root object of the [OpenAPI Description](https://spec.openapis.org/oas/v3.1.1#openapi-description).
@@ -537,7 +538,7 @@ export interface ParameterObject {
   /**
    * **REQUIRED**. The location of the parameter. Possible values are `"query"`, `"header"`, `"path"` or `"cookie"`.
    */
-  in: "query" | "header" | "path" | "cookie";
+  in: ParameterIn;
 
   /**
    * A brief description of the parameter. This could contain examples of use. CommonMark syntax MAY be used for rich
@@ -572,14 +573,7 @@ export interface ParameterObject {
    * values (based on value of `in`): for `"query"` - `"form"`; for `"path"` - `"simple"`; for `"header"` -
    * `"simple"`; for `"cookie"` - `"form"`.
    */
-  style?:
-    | "matrix"
-    | "label"
-    | "simple"
-    | "form"
-    | "spaceDelimited"
-    | "pipeDelimited"
-    | "deepObject";
+  style?: ParameterStyle;
 
   /**
    * When this is true, parameter values of type `array` or `object` generate separate parameters for each value of

@@ -149,17 +149,6 @@ export interface ParsedTagParams {
 }
 
 /**
- * parseTagParamsWithYaml 选项
- */
-export interface ParseTagParamsWithYamlOptions {
-  /**
-   * 是否预处理JSDoc链接
-   * @default true
-   */
-  preprocessJSDocLinks?: boolean;
-}
-
-/**
  * 响应标签内联参数类型
  */
 export interface ResponseTagParams {
@@ -256,7 +245,7 @@ export interface ServerTagParams {
   /** 服务器描述 */
   description?: string;
   /** YAML参数对象 */
-  yaml: Record<string, unknown>;
+  yaml?: Record<string, unknown>;
 }
 
 /**
@@ -268,53 +257,5 @@ export interface ServerTagData {
   /** 服务器描述 */
   description?: string;
   /** YAML参数对象 */
-  yaml: ServerObject;
-}
-
-/**
- * 参数标签内联参数类型
- */
-export interface ParameterTagParams {
-  /** 参数名称 */
-  name: string;
-  /** 参数位置 */
-  paramIn: string;
-  /** 参数描述 */
-  description?: string;
-  /** YAML参数对象 */
-  yaml?: Record<string, unknown>;
-}
-
-/**
- * 参数标签参数类型
- */
-export interface ParameterTagData {
-  /** 参数名称 */
-  name: string;
-  /** 参数位置 */
-  paramIn: "query" | "header" | "path" | "cookie";
-  /** 参数描述 */
-  description?: string;
-  /** YAML参数对象 */
-  yaml?: ParameterObject;
-}
-
-/**
- * 请求体标签内联参数类型
- */
-export interface RequestBodyTagParams {
-  /** 请求体描述 */
-  description?: string;
-  /** YAML参数对象 */
-  yaml: Record<string, unknown>;
-}
-
-/**
- * 请求体标签参数类型
- */
-export interface RequestBodyTagData {
-  /** 请求体描述 */
-  description?: string;
-  /** YAML参数对象 */
-  yaml?: RequestBodyObject;
+  yaml?: ServerObject;
 }

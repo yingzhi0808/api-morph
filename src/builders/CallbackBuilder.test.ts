@@ -119,7 +119,7 @@ describe("CallbackBuilder", () => {
   });
 
   describe("复杂场景测试", () => {
-    it("应该支持完整的回调配置", () => {
+    it("应该支持完整的回调参数", () => {
       const builder = new CallbackBuilder();
       const pathItemBuilder = new PathItemBuilder();
       pathItemBuilder.setDescription("支付回调接口").addExtension("x-callback-type", "payment");

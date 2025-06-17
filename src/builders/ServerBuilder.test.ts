@@ -207,7 +207,7 @@ describe("ServerBuilder", () => {
   });
 
   describe("复杂场景测试", () => {
-    it("应该支持完整的服务器配置", () => {
+    it("应该支持完整的服务器参数", () => {
       const builder = new ServerBuilder();
       const result = builder
         .setUrl("https://{environment}.api.example.com/{version}")

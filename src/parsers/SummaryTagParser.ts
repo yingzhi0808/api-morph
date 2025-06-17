@@ -29,9 +29,8 @@ export class SummaryTagParser extends TagParser {
    * @returns 转换后的参数对象。
    */
   protected transformParams(params: ParsedTagParams) {
-    const { inline, rawText } = params;
-    // 如果有inline参数，使用inline参数；否则使用rawText
-    const summary = inline.length > 0 ? inline.join(" ") : rawText;
+    const { inline } = params;
+    const [summary] = inline;
     return { summary };
   }
 
@@ -44,7 +43,7 @@ export class SummaryTagParser extends TagParser {
     const message = `\n正确格式:\n  @${JSDocTagName.SUMMARY} <summary>\n`;
 
     const schema = z.object({
-      summary: z.string().min(1, `@${JSDocTagName.SUMMARY} 标签 summary 不能为空`),
+      summary: z.string(`@${JSDocTagName.SUMMARY} 标签 summary 不能为空`),
     });
 
     const { success, data, error } = schema.safeParse(params);

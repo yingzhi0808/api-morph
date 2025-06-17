@@ -1,28 +1,30 @@
-import { createJSDocTag, createParseContext } from "@tests/utils";
+import {
+  createFileWithContent,
+  createJSDocTag,
+  createParseContext,
+  createProject,
+} from "@tests/utils";
 import type { JSDocTag } from "ts-morph";
-import { Project, SyntaxKind } from "ts-morph";
+import { SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
 import { TagParser } from "@/core/TagParser";
-import type { OperationData, ParseContext, ParseTagParamsWithYamlOptions } from "@/types";
+import type { OperationData, ParseContext, ParsedTagParams, SchemaObject } from "@/types";
 
-/**
- * 具体的 TagParser 实现，用于测试抽象类的功能
- */
 class TestTagParser extends TagParser {
   tags = ["test"];
 
-  parse(_tag: JSDocTag): OperationData | null {
+  parse(_tag: JSDocTag): OperationData {
     return { description: "test parsed data" };
   }
 
-  // 新增 public 方法用于测试
+  transformParams(_params: ParsedTagParams, _tag: JSDocTag) {}
+
   public getTagContentLines(tag: JSDocTag) {
     return this.extractTagContentLines(tag);
   }
 
-  // 新增 public 方法用于测试
-  public getTagParamsWithYaml(tag: JSDocTag, options?: ParseTagParamsWithYamlOptions) {
-    return this.parseTagParamsWithYaml(tag, options);
+  public getTagParamsWithYaml(tag: JSDocTag) {
+    return this.parseTagParamsWithYaml(tag);
   }
 }
 
@@ -34,6 +36,25 @@ describe("TagParser", () => {
     parser = new TestTagParser(context);
   });
 
+  describe("abstract methods and properties", () => {
+    it("应该有正确的 tags", () => {
+      expect(parser.tags).toEqual(["test"]);
+    });
+
+    it("应该能调用 parse 方法", () => {
+      const tag = createJSDocTag("@test");
+      const result = parser.parse(tag);
+      expect(result).toEqual({ description: "test parsed data" });
+    });
+  });
+
+  describe("getTags", () => {
+    it("getTags 应该返回支持的标签数组", () => {
+      const result = parser.getTags();
+      expect(result).toEqual(["test"]);
+    });
+  });
+
   describe("extractTagContentLines", () => {
     it("应该解析单行标签内容", () => {
       const tag = createJSDocTag("@test 单行内容");
@@ -42,7 +63,7 @@ describe("TagParser", () => {
       expect(result).toEqual(["单行内容"]);
     });
 
-    it("应该解析多行标签内容并保留格式", () => {
+    it("应该解析多行标签内容", () => {
       const tag = createJSDocTag(`@test 第一行
        * 第二行
        * 第三行`);
@@ -107,7 +128,7 @@ describe("TagParser", () => {
   });
 
   describe("parseTagParamsWithYaml", () => {
-    it("应该解析纯参数内容", async () => {
+    it("应该处理只有内联参数的情况", async () => {
       const tag = createJSDocTag(`@param arg1 arg2 'quoted arg'`);
       const result = await parser.getTagParamsWithYaml(tag);
 
@@ -118,7 +139,23 @@ describe("TagParser", () => {
       });
     });
 
-    it("应该解析带 YAML 的内容", async () => {
+    it("应该处理只有YAML参数的情况", async () => {
+      const tag = createJSDocTag(`@param
+type: string
+required: true`);
+      const result = await parser.getTagParamsWithYaml(tag);
+
+      expect(result).toEqual({
+        inline: [],
+        yaml: {
+          type: "string",
+          required: true,
+        },
+        rawText: ": string\nrequired: true",
+      });
+    });
+
+    it("应该处理内联参数和YAML参数都存在的情况", async () => {
       const tag = createJSDocTag(`@param arg1 arg2
 type: object
 required: true`);
@@ -131,6 +168,45 @@ required: true`);
           required: true,
         },
         rawText: "arg2\ntype: object\nrequired: true",
+      });
+    });
+
+    it("应该处理内联参数和YAML参数都为空的情况", async () => {
+      const tag = createJSDocTag("@param");
+      const result = await parser.getTagParamsWithYaml(tag);
+
+      expect(result).toEqual({
+        inline: [],
+        yaml: undefined,
+        rawText: "",
+      });
+    });
+
+    it("应该处理内联参数和YAML参数之间有空行的情况", async () => {
+      const tag = createJSDocTag(`@param arg1
+
+type: string`);
+      const result = await parser.getTagParamsWithYaml(tag);
+
+      expect(result).toEqual({
+        inline: ["arg1"],
+        yaml: {
+          type: "string",
+        },
+        rawText: "type: string",
+      });
+    });
+
+    it("应该处理无效的YAML语法", async () => {
+      const tag = createJSDocTag(`@param param
+invalid: yaml: syntax:
+another: line`);
+      const result = await parser.getTagParamsWithYaml(tag);
+
+      expect(result).toEqual({
+        inline: ["param"],
+        yaml: undefined,
+        rawText: "invalid: yaml: syntax:\nanother: line",
       });
     });
 
@@ -157,114 +233,6 @@ schema:
           },
         },
         rawText: "schema:\ntype: object\nproperties:\nname:\ntype: string\nage:\ntype: number",
-      });
-    });
-
-    it("应该处理第一行参数，剩余行无效 YAML", async () => {
-      const tag = createJSDocTag(`@param param
-这是描述: 不是YAML
-继续描述`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["param"],
-        yaml: undefined,
-        rawText: "这是描述: 不是YAML\n继续描述",
-      });
-    });
-
-    it("应该处理第一行参数，剩余行包含引号内容", async () => {
-      const tag = createJSDocTag(`@param param
-"key: value"
-'another: line'`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["param"],
-        yaml: undefined,
-        rawText: "\"key: value\"\n'another: line'",
-      });
-    });
-
-    it("应该处理第一行参数，剩余行包含无效 YAML 语法", async () => {
-      const tag = createJSDocTag(`@param param
-invalid: yaml: syntax:
-another: line`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["param"],
-        yaml: undefined,
-        rawText: "invalid: yaml: syntax:\nanother: line",
-      });
-    });
-
-    it("应该处理空标签", async () => {
-      const tag = createJSDocTag("@param");
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: [],
-        yaml: undefined,
-        rawText: "",
-      });
-    });
-
-    it("应该处理只有空行的标签", async () => {
-      const tag = createJSDocTag(`@param
-
-        `);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: [],
-        yaml: undefined,
-        rawText: "",
-      });
-    });
-
-    it("应该处理第一行为多个参数", async () => {
-      const tag = createJSDocTag(`@param arg1 arg2 arg3
-type: string`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["arg1", "arg2", "arg3"],
-        yaml: {
-          type: "string",
-        },
-        rawText: "arg2 arg3\ntype: string",
-      });
-    });
-
-    it("应该处理第一行参数，剩余行为有效 YAML", async () => {
-      const tag = createJSDocTag(`@param param
-type: string
-another: yaml`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["param"],
-        yaml: {
-          type: "string",
-          another: "yaml",
-        },
-        rawText: "type: string\nanother: yaml",
-      });
-    });
-
-    it("应该处理第一行参数和空行，剩余行为 YAML", async () => {
-      const tag = createJSDocTag(`@param arg1
-
-type: string`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["arg1"],
-        yaml: {
-          type: "string",
-        },
-        rawText: "type: string",
       });
     });
 
@@ -302,39 +270,26 @@ default: 50`);
       });
     });
 
-    it("应该处理第一行就包含有效 YAML 的情况", async () => {
-      const tag = createJSDocTag(`@param
-type: string
-required: true`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: [],
-        yaml: {
-          type: "string",
-          required: true,
-        },
-        rawText: ": string\nrequired: true",
-      });
-    });
-
-    it("应该处理第一行参数，第二行无效 YAML，第三行有效", async () => {
+    it("应该处理包含字符串的 YAML", async () => {
       const tag = createJSDocTag(`@param param
-invalid{ yaml
-type: string`);
+example: "0"
+default: "1"`);
       const result = await parser.getTagParamsWithYaml(tag);
 
       expect(result).toEqual({
         inline: ["param"],
-        yaml: undefined,
-        rawText: "invalid{ yaml\ntype: string",
+        yaml: {
+          example: "0",
+          default: "1",
+        },
+        rawText: 'example: "0"\ndefault: "1"',
       });
     });
 
-    it("应该正确处理行的 trim 操作", async () => {
-      const tag = createJSDocTag(`@param param
+    it("应该去除首尾空格", async () => {
+      const tag = createJSDocTag(`    @param param
   spaced: value
-  other: data  `);
+  other: data    `);
       const result = await parser.getTagParamsWithYaml(tag);
 
       expect(result).toEqual({
@@ -347,146 +302,210 @@ type: string`);
       });
     });
 
-    it("应该处理第一行多个参数，剩余行包含无效 YAML", async () => {
-      const tag = createJSDocTag(`@param param arg2
-invalid: yaml: bad: syntax
-good: value`);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toEqual({
-        inline: ["param", "arg2"],
-        yaml: undefined,
-        rawText: "arg2\ninvalid: yaml: bad: syntax\ngood: value",
+    describe("应该处理包含JSDoc链接的标签", () => {
+      const project = createProject({
+        tsConfigFilePath: "tsconfig.json",
+        useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
       });
-    });
-  });
+      let parser: TestTagParser;
+      let context: ParseContext;
 
-  describe("getTags", () => {
-    it("getTags 应该返回支持的标签数组", () => {
-      const result = parser.getTags();
+      project.addDirectoryAtPath("tests/fixtures");
 
-      expect(result).toEqual(["test"]);
-      expect(result).toBe(parser.tags);
-    });
-  });
-
-  describe("abstract methods and properties", () => {
-    it("应该有正确的 tags", () => {
-      expect(parser.tags).toEqual(["test"]);
-    });
-
-    it("应该能调用 parse 方法", () => {
-      const tag = createJSDocTag("@test");
-      const result = parser.parse(tag);
-
-      expect(result).toEqual({ description: "test parsed data" });
-    });
-  });
-
-  describe("preprocessJSDocLinks 错误处理", () => {
-    const project = new Project({
-      tsConfigFilePath: "tsconfig.json",
-      useInMemoryFileSystem: false,
-      skipAddingFilesFromTsConfig: true,
-    });
-    let parser: TestTagParser;
-    let context: ParseContext;
-
-    beforeEach(() => {
-      context = createParseContext({}, project);
-      parser = new TestTagParser(context);
-    });
-
-    project.addDirectoryAtPath("tests/fixtures");
-
-    it("应该处理JSDoc链接中的 zod schema", async () => {
-      const sourceFile = project.createSourceFile(
-        `test-${Date.now()}.ts`,
-        `
-        import { UserLoginVo } from "@tests/fixtures/schema";
-        /**
-         * @test 测试参数
-         * schema: {@link UserLoginVo}
-         */
-        function test() {}
-        `,
-      );
-
-      const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
-      const result = await parser.getTagParamsWithYaml(tag);
-
-      expect(result).toBeDefined();
-      expect(result.inline).toEqual(["测试参数"]);
-      expect(result.yaml).toEqual({
-        schema: { $ref: "#/components/schemas/UserLoginVo" },
+      beforeEach(() => {
+        context = createParseContext({}, project);
+        parser = new TestTagParser(context);
       });
-    });
 
-    it("应该处理没有标识符的JSDoc链接", async () => {
-      const sourceFile = project.createSourceFile(
-        `test-${Date.now()}.ts`,
-        `
-        /**
-         * @test 测试参数
-         * schema: {@link}
-         */
-        function test() {}
-        `,
-      );
+      it("应该处理JSDoc链接中的 zod schema", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+import { UserLoginVo } from "@tests/fixtures/schema";
+/**
+ * @test 测试参数
+ * schema: {@link UserLoginVo}
+ */
+function test() {}`,
+        );
 
-      const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
-      const result = await parser.getTagParamsWithYaml(tag);
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
 
-      expect(result).toBeDefined();
-      expect(result.inline).toEqual(["测试参数"]);
-      expect(result.yaml).toBeUndefined();
-      expect(result.rawText).includes("@link");
-    });
+        expect(result.inline).toEqual(["测试参数"]);
+        expect(result.yaml).toEqual({
+          schema: { $ref: "#/components/schemas/UserLoginVo" },
+        });
+        expect(result.rawText).toEqual(
+          `测试参数\nschema: { $ref: "#/components/schemas/UserLoginVo" }`,
+        );
+        expect(context.schemas.has("UserLoginVo")).toBe(true);
+      });
 
-    it("应该处理没有定义节点的JSDoc链接", async () => {
-      const sourceFile = project.createSourceFile(
-        `test-${Date.now()}.ts`,
-        `
-        /**
-         * @test 测试参数
-         * schema: {@link UndefinedType}
-         */
-        function test() {}
-        `,
-      );
+      it("应该处理没有标识符的JSDoc链接", async () => {
+        const sourceFile = project.createSourceFile(
+          `test-${Date.now()}.ts`,
+          `
+            /**
+             * @test 测试参数
+             * schema: {@link}
+             */
+            function test() {}
+            `,
+        );
 
-      const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
-      const result = await parser.getTagParamsWithYaml(tag);
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
 
-      expect(result).toBeDefined();
-      expect(result.inline).toEqual(["测试参数"]);
-      expect(result.yaml).toBeUndefined();
-      expect(result.rawText).includes("@link UndefinedType");
-    });
+        expect(result.inline).toEqual(["测试参数"]);
+        expect(result.yaml).toBeUndefined();
+      });
 
-    it("应该处理非Zod类型的JSDoc链接", async () => {
-      const sourceFile = project.createSourceFile(
-        `test-${Date.now()}.ts`,
-        `
-        interface NonZodType {
-          name: string;
-        }
+      it("应该处理没有定义节点的JSDoc链接", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+/**
+ * @test 测试参数
+ * schema: {@link UndefinedType}
+ */
+function test() {}`,
+        );
 
-        /**
-         * @test 测试参数
-         * schema: {@link NonZodType}
-         */
-        function test() {}
-        `,
-      );
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
 
-      const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
-      const result = await parser.getTagParamsWithYaml(tag);
+        expect(result.inline).toEqual(["测试参数"]);
+        expect(result.yaml).toBeUndefined();
+        expect(result.rawText).toEqual("测试参数\nschema: {@link UndefinedType}");
+      });
 
-      expect(result).toBeDefined();
-      expect(result.inline).toEqual(["测试参数"]);
-      expect(result.yaml).toBeUndefined();
-      expect(result.rawText).includes("@link NonZodType");
+      it("应该处理非Zod类型的JSDoc链接", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+export interface NonZodType {
+  name: string;
+}
+/**
+ * @test 测试参数
+ * schema: {@link NonZodType}
+ */
+function test() {}`,
+        );
+
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
+
+        expect(result.inline).toEqual(["测试参数"]);
+        expect(result.yaml).toBeUndefined();
+        expect(result.rawText).toEqual("测试参数\nschema: {@link NonZodType}");
+      });
+
+      it("应该处理多个JSDoc链接", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+import { UserLoginVo, UserVo } from "@tests/fixtures/schema";
+/**
+ * @test 测试参数
+ * login: {@link UserLoginVo}
+ * user: {@link UserVo}
+ */
+function test() {}`,
+        );
+
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
+
+        expect(result.inline).toEqual(["测试参数"]);
+        expect(result.yaml).toEqual({
+          login: { $ref: "#/components/schemas/UserLoginVo" },
+          user: { $ref: "#/components/schemas/UserVo" },
+        });
+        expect(result.rawText).toEqual(
+          `测试参数\nlogin: { $ref: "#/components/schemas/UserLoginVo" }\nuser: { $ref: "#/components/schemas/UserVo" }`,
+        );
+        expect(context.schemas.has("UserLoginVo")).toBe(true);
+        expect(context.schemas.has("UserVo")).toBe(true);
+      });
+
+      it("应该处理schema已存在于context的情况", async () => {
+        const existingSchema: SchemaObject = { type: "object" };
+        context.schemas.set("UserLoginVo", existingSchema);
+
+        const sourceFile = project.createSourceFile(
+          `test-${Date.now()}.ts`,
+          `
+              import { UserLoginVo } from "@tests/fixtures/schema";
+              /**
+               * @test 测试参数
+               * schema: {@link UserLoginVo}
+               */
+              function test() {}
+              `,
+        );
+
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
+
+        expect(result.yaml).toEqual({
+          schema: { $ref: "#/components/schemas/UserLoginVo" },
+        });
+        expect(context.schemas.get("UserLoginVo")).toBe(existingSchema);
+      });
+
+      it("应该处理没有JSDoc链接的情况", async () => {
+        const sourceFile = project.createSourceFile(
+          `test-${Date.now()}.ts`,
+          `
+              /**
+               * @test 测试参数
+               * type: string
+               */
+              function test() {}
+              `,
+        );
+
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
+
+        expect(result.inline).toEqual(["测试参数"]);
+        expect(result.yaml).toEqual({ type: "string" });
+        expect(result.rawText).toEqual("测试参数\ntype: string");
+      });
+
+      it("应该处理内联参数中的JSDoc链接", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+import { UserLoginVo } from "@tests/fixtures/schema";
+/**
+ * @test param1 {@link UserLoginVo} param3
+ */
+function test() {}`,
+        );
+
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
+        const result = await parser.getTagParamsWithYaml(tag);
+
+        expect(result.inline).toEqual([
+          "param1",
+          `$ref: "#/components/schemas/UserLoginVo"`,
+          "param3",
+        ]);
+        expect(result.yaml).toBeUndefined();
+        expect(result.rawText).toEqual(
+          `param1 { $ref: "#/components/schemas/UserLoginVo" } param3`,
+        );
+        expect(context.schemas.has("UserLoginVo")).toBe(true);
+      });
     });
   });
 });

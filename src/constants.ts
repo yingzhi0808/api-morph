@@ -33,3 +33,22 @@ export type HttpMethod = "get" | "post" | "put" | "delete" | "patch" | "options"
 export const VALID_PARAMETER_IN = ["query", "header", "path", "cookie"];
 
 export type ParameterIn = "query" | "header" | "path" | "cookie";
+
+export type ParameterStyle =
+  | "matrix"
+  | "label"
+  | "simple"
+  | "form"
+  | "spaceDelimited"
+  | "pipeDelimited"
+  | "deepObject";
+
+export const VALID_PARAMETER_STYLE = [
+  "matrix",
+  "label",
+  "simple",
+  "form",
+  "spaceDelimited",
+  "pipeDelimited",
+  "deepObject",
+];

@@ -6,12 +6,7 @@ import { JSDocTagName } from "@/constants";
 import { TagParser } from "@/core/TagParser";
 import { getZodErrorMessage } from "@/helpers";
 import { normalizeMediaType } from "@/helpers/mediaType";
-import type {
-  OperationData,
-  ParsedTagParams,
-  RequestBodyTagData,
-  RequestBodyTagParams,
-} from "@/types";
+import type { MediaTypeObject, OperationData, ParsedTagParams, RequestBodyObject } from "@/types";
 import { isExtensionKey } from "@/utils";
 
 /**
@@ -21,7 +16,7 @@ import { isExtensionKey } from "@/utils";
  * 当省略 mediaType 但提供了 schema 时，会自动使用默认的请求体媒体类型。
  */
 export class RequestBodyTagParser extends TagParser {
-  tags = [JSDocTagName.REQUEST_BODY];
+  tags: string[] = [JSDocTagName.REQUEST_BODY];
 
   /**
    * 解析 JSDoc 标签。
@@ -40,39 +35,15 @@ export class RequestBodyTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 转换后的参数对象。
    */
-  protected transformParams(params: ParsedTagParams): Partial<RequestBodyTagParams> {
-    const { inline, yaml } = params;
+  protected transformParams(params: ParsedTagParams) {
+    const { inline, yaml = {} } = params;
 
-    // 尝试解析简化语法
-    const simplified = this.parseSimplifiedSyntax(inline);
-    if (simplified) {
-      return {
-        description: simplified.description,
-        yaml: simplified.yaml,
-      };
-    }
-
-    // 回退到原始语法
-    const [description] = inline;
-    return { description, yaml };
-  }
-
-  /**
-   * 解析简化语法，格式：`[mediaType] [schema] [description] [required]`
-   * @param inlineParams 内联参数数组
-   * @returns 解析结果或null
-   */
-  private parseSimplifiedSyntax(inlineParams: string[]) {
-    if (inlineParams.length === 0) {
-      return null;
-    }
-
-    let mediaType: string | undefined;
+    let mediaType = this.context.options.defaultRequestMediaType!;
     let schemaRef: string | undefined;
-    let description: string | undefined;
+    let content: Record<string, MediaTypeObject> | undefined;
     let required: boolean | undefined;
 
-    const parts = [...inlineParams];
+    const parts = [...inline];
 
     // 先查找包含 $ref 的参数作为 schema
     const schemaIndex = parts.findIndex((part) => part.includes("$ref:"));
@@ -87,7 +58,7 @@ export class RequestBodyTagParser extends TagParser {
       parts.splice(requiredIndex, 1);
     }
 
-    // 检查第一个参数是否为 media type
+    // 检查第一个剩余参数是否为 media type
     if (parts.length > 0) {
       const normalizedMediaType = normalizeMediaType(parts[0]);
       if (normalizedMediaType) {
@@ -96,101 +67,61 @@ export class RequestBodyTagParser extends TagParser {
       }
     }
 
-    // 剩余部分作为描述
-    if (parts.length > 0) {
-      description = parts[0];
-    }
+    // 剩余的第一个参数作为描述
+    const description = parts[0];
 
-    // 如果有 schema 但没有 mediaType，使用默认的请求体媒体类型
-    if (schemaRef && !mediaType) {
-      mediaType = this.context.options.defaultRequestMediaType;
-    }
-
-    // 简化语法必须包含 mediaType 或 schemaRef
-    // 如果两者都没有，说明不是简化语法（比如只有描述），返回 null 使用原始语法
-    if (!mediaType && !schemaRef) {
-      return null;
-    }
-
-    // 构建 yaml 参数（简化语法总是需要生成 yaml）
-    const yaml: Record<string, unknown> = {};
-
-    if (mediaType) {
-      if (schemaRef) {
-        let schema: unknown;
-        try {
-          // 解析预处理后的 schema 引用
-          schema = YAML.parse(schemaRef);
-        } catch {
-          // 如果解析失败，返回 null 使用原始语法
-          return null;
-        }
-
-        if (schema) {
-          yaml.content = { [mediaType]: { schema } };
-        }
-      } else {
-        // 只有 mediaType，没有 schema，创建空的 content
-        yaml.content = { [mediaType]: {} };
-      }
-    }
-
-    // 设置 required 属性
-    if (required !== undefined) {
-      yaml.required = required;
+    // 构建 content 对象
+    if (schemaRef) {
+      const schema = YAML.parse(schemaRef);
+      content = { [mediaType]: { schema } };
+    } else {
+      content = { [mediaType]: {} };
     }
 
     return {
       description,
-      yaml,
+      content,
+      required,
+      ...yaml,
     };
   }
 
   /**
-   * 验证请求体标签的参数和YAML参数。
+   * 验证转换后的请求体参数。
    * @param params 参数对象。
    * @returns 验证后的数据对象。
    */
-  protected validateParams(params: unknown) {
+  private validateParams(params: unknown) {
     const message =
       `\n正确格式:\n` +
-      `  @${JSDocTagName.REQUEST_BODY} [mediaType] [schema] [description]\n` +
+      `  @${JSDocTagName.REQUEST_BODY} [mediaType] [schema] [description] [required]\n` +
       `  description?: string\n` +
-      `  content?: Record<string, MediaTypeObject>\n` +
       `  required?: boolean\n` +
+      `  content?: Record<string, MediaTypeObject>\n` +
       `  [key: \`x-\${string}\`]: any\n`;
 
-    // 当启用AST分析时，允许yaml为空，因为可以从AST中获取requestBody信息
-    if (this.context.options.enableASTAnalysis) {
-      // @ts-ignore
-      const schema: z.ZodType<RequestBodyTagData> = z.object({
+    const schema: z.ZodType<RequestBodyObject> = z
+      .looseObject({
         description: z.string().optional(),
-        yaml: z.record(z.string(), z.unknown()).optional(),
-      });
+        content: z.record(z.string(), z.any()),
+        required: z.boolean().optional(),
+      })
+      .refine(
+        (data) => {
+          const knownKeys = ["description", "content", "required"];
+          const extraKeys = Object.keys(data).filter((key) => !knownKeys.includes(key));
+          return extraKeys.every((key) => key.startsWith("x-"));
+        },
+        {
+          error: (iss) => `未知的 key: "${iss.key}"，扩展字段必须以 "x-" 开头`,
+        },
+      );
 
-      const { success, data, error } = schema.safeParse(params);
-      if (!success) {
-        throw new Error(getZodErrorMessage(error) + message);
-      }
-      return data;
-    } else {
-      // 当未启用AST分析时，yaml必须提供
-      // @ts-ignore
-      const schema: z.ZodType<RequestBodyTagData> = z.object({
-        description: z.string().optional(),
-        yaml: z.record(
-          z.string(),
-          z.unknown(),
-          `@${JSDocTagName.REQUEST_BODY} 标签必须包含 YAML 参数`,
-        ),
-      });
-
-      const { success, data, error } = schema.safeParse(params);
-      if (!success) {
-        throw new Error(getZodErrorMessage(error) + message);
-      }
-      return data;
+    const { success, data, error } = schema.safeParse(params);
+    if (!success) {
+      throw new Error(getZodErrorMessage(error) + message);
     }
+    return data;
   }
 
   /**
@@ -198,37 +129,26 @@ export class RequestBodyTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 构建的请求体对象。
    */
-  private buildRequestBody(params: RequestBodyTagData): OperationData {
-    const { description, yaml } = params;
+  private buildRequestBody(params: RequestBodyObject): OperationData {
     const requestBodyBuilder = new RequestBodyBuilder();
 
-    let finalDescription = description;
-
-    if (yaml) {
-      if (yaml.description) {
-        finalDescription = yaml.description;
-      }
-
-      if (yaml.content) {
-        Object.entries(yaml.content).forEach(([mediaType, mediaTypeObject]) => {
-          requestBodyBuilder.addContent(mediaType, mediaTypeObject);
-        });
-      }
-
-      if (yaml.required !== undefined) {
-        requestBodyBuilder.setRequired(yaml.required);
-      }
-
-      Object.entries(yaml).forEach(([key, value]) => {
-        if (isExtensionKey(key)) {
-          requestBodyBuilder.addExtension(key, value);
-        }
-      });
+    if (params.description) {
+      requestBodyBuilder.setDescription(params.description);
     }
 
-    if (finalDescription) {
-      requestBodyBuilder.setDescription(finalDescription);
+    if (params.required !== undefined) {
+      requestBodyBuilder.setRequired(params.required);
     }
+
+    Object.entries(params.content).forEach(([mediaType, mediaTypeObject]) => {
+      requestBodyBuilder.addContent(mediaType, mediaTypeObject);
+    });
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (isExtensionKey(key)) {
+        requestBodyBuilder.addExtension(key, value);
+      }
+    });
 
     return {
       requestBody: requestBodyBuilder.build(),

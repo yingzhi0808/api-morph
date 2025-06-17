@@ -1,6 +1,12 @@
-import { createJSDocTag, createParseContext } from "@tests/utils";
+import {
+  createFileWithContent,
+  createJSDocTag,
+  createParseContext,
+  createProject,
+} from "@tests/utils";
+import { SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
-import { JSDocTagName } from "@/constants";
+import type { ParseContext } from "@/types";
 import { ParameterTagParser } from "./ParameterTagParser";
 
 describe("ParameterTagParser", () => {
@@ -11,414 +17,461 @@ describe("ParameterTagParser", () => {
     parser = new ParameterTagParser(context);
   });
 
-  describe("基本属性", () => {
+  describe("properties", () => {
     it("应该有正确的支持标签列表", () => {
-      expect(parser.tags).toEqual([JSDocTagName.PARAMETER]);
+      expect(parser.tags).toEqual(["parameter"]);
     });
   });
 
   describe("parse", () => {
-    it("应该正确解析有效的参数标签", async () => {
-      const validCases = [
-        {
-          input: "@parameter userId path 用户ID",
-          expected: {
+    it("应该正确解析基本的参数标签", async () => {
+      const tag = createJSDocTag("@parameter userId query");
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+          },
+        ],
+      });
+    });
+
+    it("应该在参数名为空时抛出验证错误", async () => {
+      const tag = createJSDocTag("@parameter");
+      await expect(parser.parse(tag)).rejects.toThrow(/name 不能为空/);
+    });
+
+    it("应该在参数名格式不正确时抛出验证错误", async () => {
+      const invalidNames = ["123invalid", "-invalid", "invalid space", "invalid@symbol"];
+
+      for (const name of invalidNames) {
+        const tag = createJSDocTag(`@parameter "${name}" path 测试参数`);
+        await expect(parser.parse(tag)).rejects.toThrow(/name 格式不正确/);
+      }
+    });
+
+    it("应该在参数位置为空时抛出验证错误", async () => {
+      const tag = createJSDocTag("@parameter userId");
+      await expect(parser.parse(tag)).rejects.toThrow(/in 不能为空/);
+    });
+
+    it("应该在参数位置不正确时抛出验证错误", async () => {
+      const invalidIns = ["body", "form", "invalid"];
+
+      for (const paramIn of invalidIns) {
+        const tag = createJSDocTag(`@parameter userId ${paramIn} 测试参数`);
+        await expect(parser.parse(tag)).rejects.toThrow(/in 值不正确/);
+      }
+    });
+
+    it("应该正确解析带描述的参数标签", async () => {
+      const tag = createJSDocTag("@parameter userId query 用户ID");
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            description: "用户ID",
+          },
+        ],
+      });
+    });
+
+    it("应该正确解析带 required 的参数标签", async () => {
+      const tag = createJSDocTag("@parameter userId query required");
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            required: true,
+          },
+        ],
+      });
+    });
+
+    it("应该正确解析带 schema 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter userId query {$ref: "#/components/schemas/UserId"}`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            schema: {
+              $ref: "#/components/schemas/UserId",
+            },
+          },
+        ],
+      });
+    });
+
+    it("应该正确解析同时指定 required、schema 和 description 的参数标签", async () => {
+      const tag = createJSDocTag(
+        `@parameter userId query required {$ref: "#/components/schemas/UserId"} 用户ID`,
+      );
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            required: true,
+            description: "用户ID",
+            schema: {
+              $ref: "#/components/schemas/UserId",
+            },
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理参数顺序不同的情况", async () => {
+      const tag = createJSDocTag(
+        `@parameter userId query {$ref: "#/components/schemas/UserId"} 用户ID required`,
+      );
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            required: true,
+            description: "用户ID",
+            schema: {
+              $ref: "#/components/schemas/UserId",
+            },
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理各种参数位置", async () => {
+      const parameterIns = ["query", "header", "path", "cookie"];
+
+      for (const paramIn of parameterIns) {
+        const tag = createJSDocTag(`@parameter testParam ${paramIn} 测试参数`);
+        const result = await parser.parse(tag);
+        const expected: Record<string, unknown> = {
+          name: "testParam",
+          in: paramIn,
+          description: "测试参数",
+        };
+
+        // path 参数自动设置 required: true
+        if (paramIn === "path") {
+          expected.required = true;
+        }
+
+        expect(result).toEqual({
+          parameters: [expected],
+        });
+      }
+    });
+
+    it("应该正确处理没有内联参数但有 YAML 的情况", async () => {
+      const tag = createJSDocTag(`@parameter
+        name: userId
+        in: path
+        description: 仅来自YAML的描述
+        required: true
+        schema:
+          type: string
+          format: uuid`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "仅来自YAML的描述",
+            required: true,
+            schema: {
+              type: "string",
+              format: "uuid",
+            },
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理带 deprecated 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter userId path 用户ID
+        deprecated: true`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
             name: "userId",
             in: "path",
             description: "用户ID",
             required: true,
+            deprecated: true,
           },
-        },
-        {
-          input: "@parameter page query 页码",
-          expected: {
-            name: "page",
+        ],
+      });
+    });
+
+    it("应该正确处理带 allowEmptyValue 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter filter query 过滤条件
+        allowEmptyValue: true`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "filter",
             in: "query",
-            description: "页码",
+            description: "过滤条件",
+            allowEmptyValue: true,
           },
-        },
-        {
-          input: "@parameter Authorization header 认证令牌",
-          expected: {
-            name: "Authorization",
+        ],
+      });
+    });
+
+    it("应该正确处理带 style 的参数标签", async () => {
+      const validStyles = [
+        "matrix",
+        "label",
+        "simple",
+        "form",
+        "spaceDelimited",
+        "pipeDelimited",
+        "deepObject",
+      ];
+
+      for (const style of validStyles) {
+        const tag = createJSDocTag(`@parameter testParam query 测试参数
+          style: ${style}`);
+        const result = await parser.parse(tag);
+        expect(result).toEqual({
+          parameters: [
+            {
+              name: "testParam",
+              in: "query",
+              description: "测试参数",
+              style,
+            },
+          ],
+        });
+      }
+    });
+
+    it("应该正确处理无效的 style 值", async () => {
+      const tag = createJSDocTag(`@parameter filter query 过滤条件
+        style: invalidStyle`);
+      await expect(parser.parse(tag)).rejects.toThrow(/Invalid option/);
+    });
+
+    it("应该正确处理带 explode 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter tags query 标签列表
+        explode: true`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "tags",
+            in: "query",
+            description: "标签列表",
+            explode: true,
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理带 allowReserved 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter url query URL地址
+        allowReserved: true`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "url",
+            in: "query",
+            description: "URL地址",
+            allowReserved: true,
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理带 content 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter metadata header 元数据
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+          application/xml:
+            schema:
+              type: string`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "metadata",
             in: "header",
-            description: "认证令牌",
-          },
-        },
-        {
-          input: "@parameter sessionId cookie 会话ID",
-          expected: {
-            name: "sessionId",
-            in: "cookie",
-            description: "会话ID",
-          },
-        },
-      ];
-
-      for (const { input, expected } of validCases) {
-        const tag = createJSDocTag(input);
-        const result = await parser.parse(tag);
-        expect(result).toEqual({
-          parameters: [expected],
-        });
-      }
-    });
-
-    it("应该正确解析所有支持的参数位置", async () => {
-      const validPositions = [
-        { position: "query", expectRequired: undefined },
-        { position: "header", expectRequired: undefined },
-        { position: "path", expectRequired: true },
-        { position: "cookie", expectRequired: undefined },
-      ];
-
-      for (const { position, expectRequired } of validPositions) {
-        const tag = createJSDocTag(`@parameter testParam ${position} 测试参数`);
-        const result = await parser.parse(tag);
-        const expected = {
-          name: "testParam",
-          in: position,
-          description: "测试参数",
-          required: expectRequired,
-        };
-
-        expect(result).toEqual({
-          parameters: [expected],
-        });
-      }
-    });
-
-    it("应该正确解析不带描述的参数", async () => {
-      const tag = createJSDocTag("@parameter userId path");
-      const result = await parser.parse(tag);
-      expect(result).toEqual({
-        parameters: [
-          {
-            name: "userId",
-            in: "path",
-            required: true,
+            description: "元数据",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    version: {
+                      type: "string",
+                    },
+                  },
+                },
+              },
+              "application/xml": {
+                schema: {
+                  type: "string",
+                },
+              },
+            },
           },
         ],
       });
     });
 
-    it("应该正确处理多个单词的描述", async () => {
-      const tag = createJSDocTag("@parameter userId path 用户唯一标识符");
-      const result = await parser.parse(tag);
-      expect(result).toEqual({
-        parameters: [
-          {
-            name: "userId",
-            in: "path",
-            description: "用户唯一标识符",
-            required: true,
-          },
-        ],
-      });
-    });
-
-    it("应该正确处理包含特殊字符的描述", async () => {
-      const tag = createJSDocTag("@parameter page query 页码-默认为1，范围1-100");
-      const result = await parser.parse(tag);
-      expect(result).toEqual({
-        parameters: [
-          {
-            name: "page",
-            in: "query",
-            description: "页码-默认为1，范围1-100",
-          },
-        ],
-      });
-    });
-
-    it("应该正确处理带 YAML 参数的参数", async () => {
-      const tag = createJSDocTag(`@parameter page query 页码
-       required: true
-       schema:
-         type: integer
-         minimum: 1
-         maximum: 100
-         default: 1`);
-      const result = await parser.parse(tag);
-      expect(result).toHaveProperty("parameters");
-      expect(result?.parameters?.[0]?.name).toBe("page");
-      expect(result?.parameters?.[0]?.in).toBe("query");
-      expect(result?.parameters?.[0]?.required).toBe(true);
-      expect(result?.parameters?.[0]?.schema).toEqual({
-        type: "integer",
-        minimum: 1,
-        maximum: 100,
-        default: 1,
-      });
-    });
-
-    it("应该正确处理带扩展属性的 YAML 参数", async () => {
+    it("应该正确解析带扩展字段的参数标签", async () => {
       const tag = createJSDocTag(`@parameter userId path 用户ID
-       x-custom-field: custom-value
-       x-validation: strict`);
+        x-custom-field: custom-value
+        x-validation: strict`);
       const result = await parser.parse(tag);
-      expect(result).toHaveProperty("parameters");
-      expect(result?.parameters?.[0]).toHaveProperty("x-custom-field", "custom-value");
-      expect(result?.parameters?.[0]).toHaveProperty("x-validation", "strict");
-    });
-
-    it("应该正确处理所有 YAML 字段", async () => {
-      const tag = createJSDocTag(`@parameter searchQuery query 搜索查询
-       description: 用于搜索的关键词
-       required: true
-       deprecated: false
-       allowEmptyValue: true
-       style: form
-       explode: true
-       allowReserved: false
-       schema:
-         type: string
-         minLength: 1
-         maxLength: 100
-       content:
-         application/json:
-           schema:
-             type: string
-       x-custom-header: custom-value
-       x-validation-rule: required`);
-
-      const result = await parser.parse(tag);
-      const parameters = result?.parameters;
-
-      expect(parameters?.[0]?.description).toBe("用于搜索的关键词");
-      expect(parameters?.[0]?.required).toBe(true);
-      expect(parameters?.[0]?.deprecated).toBe(false);
-      expect(parameters?.[0]?.allowEmptyValue).toBe(true);
-      expect(parameters?.[0]?.style).toBe("form");
-      expect(parameters?.[0]?.explode).toBe(true);
-      expect(parameters?.[0]?.allowReserved).toBe(false);
-      expect(parameters?.[0]?.schema).toEqual({
-        type: "string",
-        minLength: 1,
-        maxLength: 100,
-      });
-      expect(parameters?.[0]?.content).toHaveProperty("application/json");
-      expect(parameters?.[0]).toHaveProperty("x-custom-header", "custom-value");
-      expect(parameters?.[0]).toHaveProperty("x-validation-rule", "required");
-    });
-
-    it("应该在参数为空时抛出错误", async () => {
-      const tag = createJSDocTag("@parameter");
-      await expect(parser.parse(tag)).rejects.toThrow(/@parameter 标签 name 不能为空/);
-    });
-
-    it("应该在参数数量不足时抛出错误", async () => {
-      const tag = createJSDocTag("@parameter userId");
-      await expect(parser.parse(tag)).rejects.toThrow(/@parameter 标签 in 不能为空/);
-    });
-
-    it("应该在参数名格式无效时抛出错误", async () => {
-      const invalidNames = ["123id", "-invalid", "invalid@name"];
-      for (const name of invalidNames) {
-        const tag = createJSDocTag(`@parameter ${name} path 测试参数`);
-        await expect(parser.parse(tag)).rejects.toThrow(/@parameter 标签 name 格式不正确/);
-      }
-    });
-
-    it("应该接受所有有效的参数名格式", async () => {
-      const validNames = [
-        "userId",
-        "user_id",
-        "user-name",
-        "api.version",
-        "_private",
-        "a",
-        "_",
-        "userId123",
-        "user_name_123",
-      ];
-
-      for (const name of validNames) {
-        const tag = createJSDocTag(`@parameter ${name} query 测试参数`);
-        const result = await parser.parse(tag);
-        expect(result?.parameters?.[0]?.name).toBe(name);
-      }
-    });
-
-    it("应该在参数位置无效时抛出错误", async () => {
-      const invalidPositions = ["body", "form", "invalid", ""];
-      for (const position of invalidPositions) {
-        const tag = createJSDocTag(`@parameter testParam ${position} 测试参数`);
-        await expect(parser.parse(tag)).rejects.toThrow(/@parameter 标签 in 值不正确/);
-      }
-    });
-
-    it("应该正确处理 YAML 中覆盖描述的情况", async () => {
-      const tag = createJSDocTag(`@parameter userId path 原始描述
-       description: YAML中的新描述`);
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.description).toBe("YAML中的新描述");
-    });
-
-    it("应该正确处理空格描述的情况", async () => {
-      const tag = createJSDocTag("@parameter userId path   ");
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.name).toBe("userId");
-      expect(result?.parameters?.[0]?.in).toBe("path");
-      expect(result?.parameters?.[0]?.required).toBe(true);
-      expect(result?.parameters?.[0]?.description).toBeUndefined();
-    });
-
-    it("应该正确处理复杂的内容类型配置", async () => {
-      const tag = createJSDocTag(`@parameter data query 复杂数据
-       content:
-         application/json:
-           schema:
-             type: object
-             properties:
-               name:
-                 type: string
-         application/xml:
-           schema:
-             type: object
-         text/plain:
-           schema:
-             type: string`);
-
-      const result = await parser.parse(tag);
-      const parameters = result?.parameters;
-
-      expect(parameters?.[0]?.content).toHaveProperty("application/json");
-      expect(parameters?.[0]?.content).toHaveProperty("application/xml");
-      expect(parameters?.[0]?.content).toHaveProperty("text/plain");
-      expect(parameters?.[0]?.content?.["application/json"]?.schema).toEqual({
-        type: "object",
-        properties: {
-          name: {
-            type: "string",
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "用户ID",
+            required: true,
+            "x-custom-field": "custom-value",
+            "x-validation": "strict",
           },
-        },
+        ],
       });
     });
-  });
 
-  describe("边界情况", () => {
-    it("应该正确处理Unicode字符", async () => {
-      const tag = createJSDocTag("@parameter userId path 用户标识符🆔");
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.description).toBe("用户标识符🆔");
+    it("应该在扩展字段不以 x- 开头时抛出验证错误", async () => {
+      const tag = createJSDocTag(`@parameter userId path 用户ID
+        custom-field: "should fail"`);
+      await expect(parser.parse(tag)).rejects.toThrow(/未知的 key/);
     });
 
-    it("应该正确处理包含emoji的参数描述", async () => {
-      const testCases = [
-        { input: "@parameter page query ✅页码参数", expected: "✅页码参数" },
-        { input: "@parameter limit query 📊分页大小", expected: "📊分页大小" },
-        {
-          input: "@parameter status query 🔄状态过滤",
-          expected: "🔄状态过滤",
-        },
-      ];
+    it("应该正确处理 YAML 中覆盖内联参数的情况", async () => {
+      const tag = createJSDocTag(`@parameter userId path required 原始描述
+        name: userId2
+        in: query
+        description: 覆盖描述
+        required: false`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId2",
+            in: "query",
+            description: "覆盖描述",
+            required: false,
+          },
+        ],
+      });
+    });
 
-      for (const { input, expected } of testCases) {
-        const tag = createJSDocTag(input);
+    describe("应该处理包含 Zod Schema 的情况", () => {
+      const project = createProject({
+        tsConfigFilePath: "tsconfig.json",
+        useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
+      });
+      let parser: ParameterTagParser;
+      let context: ParseContext;
+
+      project.addDirectoryAtPath("tests/fixtures");
+
+      beforeEach(() => {
+        context = createParseContext({}, project);
+        parser = new ParameterTagParser(context);
+      });
+
+      it("应该正确处理内联参数中的 Zod Schema", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+import { UserIdVo } from "@tests/fixtures/schema";
+/**
+ * @parameter userId path {@link UserIdVo} 用户ID
+ */
+function test() {}`,
+        );
+
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
         const result = await parser.parse(tag);
-        expect(result?.parameters?.[0]?.description).toBe(expected);
-      }
-    });
 
-    it("应该正确处理包含数字的描述", async () => {
-      const tag = createJSDocTag("@parameter limit query 最多返回100条记录");
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.description).toBe("最多返回100条记录");
-    });
+        expect(result).toEqual({
+          parameters: [
+            {
+              name: "userId",
+              in: "path",
+              description: "用户ID",
+              required: true,
+              schema: {
+                $ref: "#/components/schemas/UserIdVo",
+              },
+            },
+          ],
+        });
+        expect(context.schemas.has("UserIdVo")).toBe(true);
+      });
 
-    it("应该正确处理包含标点符号的描述", async () => {
-      const testCases = [
-        "@parameter page query 页码（默认为1）",
-        "@parameter sort query 排序字段：name, age, created_at",
-        "@parameter filter query 过滤条件，支持多种格式！",
-      ];
+      it("应该正确处理 YAML 参数中的 Zod Schema", async () => {
+        const sourceFile = createFileWithContent(
+          project,
+          `test-${Date.now()}.ts`,
+          `
+import { UserVo, ErrorVo } from "@tests/fixtures/schema";
+/**
+ * @parameter userId path 用户ID
+ * required: true
+ * schema: {@link UserVo}
+ * content:
+ *   application/json:
+ *     schema: {@link ErrorVo}
+ */
+function test() {}`,
+        );
 
-      for (const input of testCases) {
-        const tag = createJSDocTag(input);
+        const tag = sourceFile.getFirstDescendantByKindOrThrow(SyntaxKind.JSDocTag);
         const result = await parser.parse(tag);
-        expect(result).toHaveProperty("parameters");
-        expect(result?.parameters?.[0]).toHaveProperty("description");
-      }
-    });
 
-    it("应该正确处理多行描述文本", async () => {
-      const tag = createJSDocTag(`@parameter filter query
-        description: |
-          支持多种类型：
-          - 字符串匹配
-          - 数值范围
-          - 日期区间`);
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.description).toBe(
-        "支持多种类型：\n- 字符串匹配\n- 数值范围\n- 日期区间\n",
-      );
-    });
-
-    it("应该正确处理不带描述只有YAML的情况", async () => {
-      const tag = createJSDocTag(`@parameter userId path
-       description: 从YAML中获取的描述
-       required: true`);
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.description).toBe("从YAML中获取的描述");
-      expect(result?.parameters?.[0]?.required).toBe(true);
-    });
-
-    it("应该正确处理只有扩展字段的YAML", async () => {
-      const tag = createJSDocTag(`@parameter apiKey header
-       x-api-version: v1
-       x-required-scope: read
-       x-deprecated-since: "2.0"`);
-
-      const result = await parser.parse(tag);
-      const parameters = result?.parameters;
-
-      expect(parameters?.[0]?.description).toBeUndefined();
-      expect(parameters?.[0]).toHaveProperty("x-api-version", "v1");
-      expect(parameters?.[0]).toHaveProperty("x-required-scope", "read");
-      expect(parameters?.[0]).toHaveProperty("x-deprecated-since", "2.0");
-    });
-
-    it("应该正确处理包含冒号但不是YAML的文本", async () => {
-      const tag = createJSDocTag(
-        "@parameter timestamp query 时间格式:2023-12-25T10:30:00Z这不是YAML",
-      );
-      const result = await parser.parse(tag);
-      expect(result?.parameters?.[0]?.description).toBe("时间格式:2023-12-25T10:30:00Z这不是YAML");
-    });
-
-    it("应该正确处理复杂的参数名格式", async () => {
-      const complexNames = [
-        "X-Custom-Header",
-        "api.v2.version",
-        "_internal_param",
-        "user123_data",
-        "filter-by-name",
-      ];
-
-      for (const name of complexNames) {
-        const tag = createJSDocTag(`@parameter ${name} query 复杂参数`);
-        const result = await parser.parse(tag);
-        expect(result?.parameters?.[0]?.name).toBe(name);
-      }
-    });
-
-    it("应该正确处理布尔类型的YAML值", async () => {
-      const tag = createJSDocTag(`@parameter optional query 可选参数
-       required: false
-       deprecated: true
-       allowEmptyValue: false
-       explode: false
-       allowReserved: true`);
-
-      const result = await parser.parse(tag);
-      const parameters = result?.parameters;
-
-      expect(parameters?.[0]?.required).toBe(false);
-      expect(parameters?.[0]?.deprecated).toBe(true);
-      expect(parameters?.[0]?.allowEmptyValue).toBe(false);
-      expect(parameters?.[0]?.explode).toBe(false);
-      expect(parameters?.[0]?.allowReserved).toBe(true);
+        expect(result).toEqual({
+          parameters: [
+            {
+              name: "userId",
+              in: "path",
+              description: "用户ID",
+              required: true,
+              schema: {
+                $ref: "#/components/schemas/UserVo",
+              },
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/ErrorVo",
+                  },
+                },
+              },
+            },
+          ],
+        });
+        expect(context.schemas.has("UserVo")).toBe(true);
+        expect(context.schemas.has("ErrorVo")).toBe(true);
+      });
     });
   });
 });

@@ -1,5 +1,5 @@
 import { createParseContext, createSourceOperationData } from "@tests/utils";
-import type { Node } from "ts-morph";
+import type { JSDocTag, Node } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { HttpMethod } from "@/constants";
 import { FrameworkAnalyzer, FrameworkAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
@@ -20,7 +20,7 @@ import {
   SummaryTagParser,
   TagsTagParser,
 } from "@/parsers";
-import type { ParameterObject, RequestBodyObject, ResponseObject } from "@/types";
+import type { ParameterObject, ParsedTagParams, RequestBodyObject, ResponseObject } from "@/types";
 import { OperationComposer } from "./OperationComposer";
 
 describe("OperationComposer", () => {
@@ -285,9 +285,12 @@ x-nullable: false`,
     it("应该正确处理标签解析器返回null的情况", async () => {
       class NullReturnParser extends TagParser {
         tags = ["mock"];
+
         parse() {
           return null;
         }
+
+        transformParams(_params: ParsedTagParams, _tag: JSDocTag) {}
       }
 
       const context = createParseContext();

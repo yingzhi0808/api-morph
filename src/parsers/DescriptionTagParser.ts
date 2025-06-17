@@ -17,9 +17,7 @@ export class DescriptionTagParser extends TagParser {
    * @returns 解析结果。
    */
   async parse(tag: JSDocTag) {
-    const params = await this.parseTagParamsWithYaml(tag, {
-      preprocessJSDocLinks: false,
-    });
+    const params = await this.parseTagParamsWithYaml(tag);
     const transformedParams = this.transformParams(params);
     const validatedParams = this.validateParams(transformedParams);
     return this.buildResult(validatedParams);

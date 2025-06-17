@@ -11,7 +11,7 @@ import { isExtensionKey } from "@/utils";
  * 回调标签解析器，处理 `@callback` 标签
  */
 export class CallbackTagParser extends TagParser {
-  tags = [JSDocTagName.CALLBACK];
+  tags: string[] = [JSDocTagName.CALLBACK];
 
   /**
    * 解析 JSDoc 标签。
@@ -41,7 +41,7 @@ export class CallbackTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 验证后的参数对象。
    */
-  protected validateParams(params: unknown) {
+  private validateParams(params: unknown) {
     const message =
       `\n正确格式:\n` +
       `  @${JSDocTagName.CALLBACK} <callbackName>\n` +
@@ -50,12 +50,7 @@ export class CallbackTagParser extends TagParser {
 
     // @ts-ignore
     const schema: z.ZodType<CallbackTagData> = z.object({
-      callbackName: z
-        .string(`@${JSDocTagName.CALLBACK} 标签 callbackName 不能为空`)
-        .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, {
-          error: (iss) =>
-            `@${JSDocTagName.CALLBACK} 标签 callbackName 格式不正确："${iss.input}"，必须是有效的标识符（以字母或下划线开头，只能包含字母、数字和下划线）`,
-        }),
+      callbackName: z.string(`@${JSDocTagName.CALLBACK} 标签 callbackName 不能为空`),
       yaml: z.record(z.string(), z.unknown(), `@${JSDocTagName.CALLBACK} 标签必须包含 YAML 参数`),
     });
 

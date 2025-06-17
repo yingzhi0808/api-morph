@@ -1,17 +1,11 @@
 import { isPlainObject } from "radashi";
-import type { JSDocTag } from "ts-morph";
+import type { JSDocLink, JSDocTag } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import YAML from "yaml";
 import z from "zod/v4";
 import type { JSDocTagName } from "@/constants";
-import { findSchemaJSDocLinks, isZodType } from "@/helpers";
-import type {
-  OperationData,
-  ParseContext,
-  ParsedTagParams,
-  ParseTagParamsWithYamlOptions,
-  SchemaObject,
-} from "@/types";
+import { isZodType } from "@/helpers";
+import type { OperationData, ParseContext, ParsedTagParams, SchemaObject } from "@/types";
 import { tokenizeString } from "@/utils";
 
 /**
@@ -43,6 +37,14 @@ export abstract class TagParser {
   abstract parse(tag: JSDocTag): Promise<OperationData | null> | OperationData | null;
 
   /**
+   * 转换参数的钩子方法，子类可以重写此方法来完全控制参数转换。
+   * @param params 参数对象。
+   * @param tag JSDoc 标签对象。
+   * @returns 转换后的参数对象。
+   */
+  protected abstract transformParams(params: ParsedTagParams, tag: JSDocTag): unknown;
+
+  /**
    * 获取标签的完整多行内容。
    * @param tag JSDoc 标签对象。
    * @returns 标签的所有行文本内容，保留缩进格式，去掉星号和星号前空格，去掉尾部连续的空行。
@@ -67,20 +69,13 @@ export abstract class TagParser {
   /**
    * 解析标签 inline 和 YAML 参数。
    * @param tag JSDoc 标签对象。
-   * @param options 解析选项。
    * @returns 返回一个对象，包含：
    * - `inline`: inline 参数数组（通常为标签行的参数部分）
-   * - `yaml`: YAML 参数对象（如果存在 YAML 参数，否则为 null）
+   * - `yaml`: YAML 参数对象（如果存在 YAML 参数并解析成功，否则为 undefined）
    * - `rawText`: 标签的原始注释文本内容
    */
-  protected async parseTagParamsWithYaml(
-    tag: JSDocTag,
-    options: ParseTagParamsWithYamlOptions = { preprocessJSDocLinks: true },
-  ): Promise<ParsedTagParams> {
-    let processedTag = tag;
-    if (options.preprocessJSDocLinks) {
-      processedTag = await this.preprocessJSDocLinks(processedTag);
-    }
+  protected async parseTagParamsWithYaml(tag: JSDocTag): Promise<ParsedTagParams> {
+    const processedTag = await this.preprocessJSDocLinks(tag);
 
     const rawText = tag.getCommentText()?.trim() ?? "";
     const lines = this.extractTagContentLines(processedTag);
@@ -99,18 +94,41 @@ export abstract class TagParser {
       const yamlContent = yamlLines.join("\n");
 
       if (yamlContent) {
-        try {
-          const parsed = YAML.parse(yamlContent);
-          if (isPlainObject(parsed)) {
-            parsedYaml = parsed as Record<string, unknown>;
-          }
-        } catch {
-          // 忽略 YAML 解析异常
+        const parsed = YAML.parse(yamlContent);
+        if (isPlainObject(parsed)) {
+          parsedYaml = parsed as Record<string, unknown>;
         }
       }
     }
 
     return { inline, yaml: parsedYaml, rawText };
+  }
+
+  /**
+   * 查找标签中的 JSDocLink 节点
+   * @param tag JSDoc 标签对象
+   * @returns JSDocLink 节点数组
+   */
+  private findSchemaJSDocLinks(tag: JSDocTag) {
+    const comment = tag.getComment();
+    const schemaLinks: JSDocLink[] = [];
+
+    if (!Array.isArray(comment)) {
+      return schemaLinks;
+    }
+
+    for (let i = 0; i < comment.length; i++) {
+      const item = comment[i];
+
+      if (item?.isKind(SyntaxKind.JSDocText)) {
+        const nextItem = comment[i + 1];
+        if (nextItem?.isKind(SyntaxKind.JSDocLink)) {
+          schemaLinks.push(nextItem);
+        }
+      }
+    }
+
+    return schemaLinks;
   }
 
   /**
@@ -120,7 +138,7 @@ export abstract class TagParser {
   private async preprocessJSDocLinks(tag: JSDocTag) {
     let replacedText = tag.getFullText();
 
-    const jsDocLinks = findSchemaJSDocLinks(tag);
+    const jsDocLinks = this.findSchemaJSDocLinks(tag);
     if (jsDocLinks.length === 0) {
       return tag;
     }

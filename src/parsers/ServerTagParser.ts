@@ -11,7 +11,7 @@ import { isExtensionKey } from "@/utils";
  * 服务器标签解析器，处理 `@server` 标签
  */
 export class ServerTagParser extends TagParser {
-  tags = [JSDocTagName.SERVER];
+  tags: string[] = [JSDocTagName.SERVER];
 
   /**
    * 解析 JSDoc 标签。
@@ -41,7 +41,7 @@ export class ServerTagParser extends TagParser {
    * @param params 参数对象。
    * @returns 验证后的数据对象。
    */
-  protected validateParams(params: unknown) {
+  private validateParams(params: unknown) {
     const message =
       `\n正确格式:\n` +
       `  @${JSDocTagName.SERVER} <url> [description]\n` +
@@ -58,7 +58,7 @@ export class ServerTagParser extends TagParser {
             : `@${JSDocTagName.SERVER} 标签提供的 url 格式无效: "${iss.input}"`,
       }),
       description: z.string().optional(),
-      yaml: z.record(z.string(), z.unknown(), `@${JSDocTagName.SERVER} 标签必须包含 YAML 参数`),
+      yaml: z.record(z.string(), z.unknown()).optional(),
     });
 
     const { success, data, error } = schema.safeParse(params);
@@ -78,20 +78,29 @@ export class ServerTagParser extends TagParser {
     const serverBuilder = new ServerBuilder();
 
     serverBuilder.setUrl(url);
-    if (description) {
-      serverBuilder.setDescription(description);
-    }
 
-    if (yaml.variables) {
-      for (const [name, variable] of Object.entries(yaml.variables)) {
-        serverBuilder.addVariable(name, variable);
+    let finalDescription = description;
+
+    if (yaml) {
+      if (yaml.description) {
+        finalDescription = yaml.description;
+      }
+
+      if (yaml.variables) {
+        for (const [name, variable] of Object.entries(yaml.variables)) {
+          serverBuilder.addVariable(name, variable);
+        }
+      }
+
+      for (const [key, value] of Object.entries(yaml)) {
+        if (isExtensionKey(key)) {
+          serverBuilder.addExtension(key, value);
+        }
       }
     }
 
-    for (const [key, value] of Object.entries(yaml)) {
-      if (isExtensionKey(key)) {
-        serverBuilder.addExtension(key, value);
-      }
+    if (finalDescription !== undefined) {
+      serverBuilder.setDescription(finalDescription);
     }
 
     return {

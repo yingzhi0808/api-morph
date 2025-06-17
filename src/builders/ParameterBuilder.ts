@@ -1,4 +1,5 @@
 import { cloneDeep } from "radashi";
+import type { ParameterIn } from "@/constants";
 import type { Builder } from "@/core";
 import type { MediaTypeObject, ParameterObject } from "@/types";
 
@@ -13,7 +14,7 @@ export class ParameterBuilder implements Builder<ParameterObject> {
    * @param name 参数名称。
    * @param paramIn 参数位置。
    */
-  constructor(name: string, paramIn: ParameterObject["in"]) {
+  constructor(name: string, paramIn: ParameterIn) {
     this.parameter = {
       name,
       in: paramIn,

@@ -1,9 +1,9 @@
 import { createFileWithContent, createProject } from "@tests/utils";
-import { Project } from "ts-morph";
+import { type JSDocTag, Project } from "ts-morph";
 import { describe, expect, it } from "vitest";
 import { OpenAPIBuilder } from "@/builders";
 import { TagParser } from "@/core/TagParser";
-import type { OpenAPIObject, ParserOptions } from "@/types";
+import type { OpenAPIObject, ParsedTagParams, ParserOptions } from "@/types";
 import { OpenAPIParser } from "./OpenAPIParser";
 
 function createDefaultOpenAPIBuilder() {
@@ -40,6 +40,7 @@ describe("OpenAPIParser", () => {
 
       class CustomParser extends TagParser {
         tags = ["custom"];
+
         parse() {
           return {
             extensions: {
@@ -47,6 +48,8 @@ describe("OpenAPIParser", () => {
             },
           };
         }
+
+        transformParams(_params: ParsedTagParams, _tag: JSDocTag) {}
       }
 
       const customOptions: ParserOptions = {
@@ -596,6 +599,8 @@ describe("OpenAPIParser", () => {
             },
           };
         }
+
+        transformParams(_params: ParsedTagParams, _tag: JSDocTag) {}
       }
 
       const customOptions: ParserOptions = {
