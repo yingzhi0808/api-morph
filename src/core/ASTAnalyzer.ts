@@ -1,3 +1,5 @@
+/* v8 ignore start */
+
 import type { Node } from "ts-morph";
 import type { OperationData, ParseContext } from "@/types";
 
@@ -17,7 +19,7 @@ export abstract class ASTAnalyzer {
   /**
    * 分析AST节点并提取API信息
    * @param node AST节点
-   * @returns 解析后的操作数据，如果无法解析返回null
+   * @returns 解析后的操作数据
    */
   abstract analyze(node: Node): Promise<OperationData> | OperationData;
 }

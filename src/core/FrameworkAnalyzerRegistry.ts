@@ -26,12 +26,7 @@ export class FrameworkAnalyzerRegistry {
    * @returns 第一个能够处理该节点的框架分析器，如果没有找到返回null
    */
   getFirstMatchingAnalyzer(node: Node) {
-    for (const analyzer of this.nameToAnalyzer.values()) {
-      if (analyzer.canAnalyze(node)) {
-        return analyzer;
-      }
-    }
-    return null;
+    return [...this.nameToAnalyzer.values()].find((analyzer) => analyzer.canAnalyze(node)) ?? null;
   }
 
   /**

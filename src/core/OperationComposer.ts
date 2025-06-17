@@ -88,8 +88,8 @@ export class OperationComposer {
 
   /**
    * 智能合并 requestBody 的 content 字段。
-   * 当 tagContent 只有一项时，使用标签中的 mediaType 替换 AST 分析的 mediaType，但保留 schema 内容。
-   * 当 tagContent 有多项时，进行叠加合并。
+   * - 当 tagContent 只有一项时，使用标签中的 mediaType 替换 AST 分析的 mediaType，但保留 schema 内容。
+   * - 当 tagContent 有多项时，进行叠加合并。
    * @param astContent AST 分析得到的 content。
    * @param tagContent 标签解析得到的 content。
    * @returns 合并后的 content。

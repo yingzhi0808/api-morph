@@ -25,9 +25,8 @@ export abstract class FrameworkAnalyzer {
 
   /**
    * 分析框架节点并提取API信息
-   * 内部会根据节点类型分发到具体的分析方法
    * @param node AST节点
-   * @returns 解析后的操作数据，如果无法解析返回null
+   * @returns 解析后的操作数据
    */
-  abstract analyze(node: Node): Promise<OperationData | null> | OperationData | null;
+  abstract analyze(node: Node): Promise<OperationData> | OperationData;
 }

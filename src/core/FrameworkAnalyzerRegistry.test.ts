@@ -1,309 +1,233 @@
 import { createParseContext } from "@tests/utils";
 import type { Node } from "ts-morph";
-import { Project, SyntaxKind } from "ts-morph";
-import { beforeEach, describe, expect, it } from "vitest";
-import type { OperationData } from "@/types";
+import { describe, expect, it } from "vitest";
+import type { OperationData, ParseContext } from "@/types";
 import { FrameworkAnalyzer } from "./FrameworkAnalyzer";
 import { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 
-// 测试用的框架分析器类
-class TestFrameworkAnalyzer1 extends FrameworkAnalyzer {
-  frameworkName = "TestFramework1";
-
-  canAnalyze(node: Node): boolean {
-    // 模拟检测逻辑：检查是否包含特定的方法调用
-    if (!node.isKind(SyntaxKind.ExpressionStatement)) {
-      return false;
-    }
-
-    const expression = node.getFirstChildByKind(SyntaxKind.CallExpression);
-    if (!expression) {
-      return false;
-    }
-
-    const propertyAccess = expression.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
-    if (!propertyAccess) {
-      return false;
-    }
-
-    const methodName = propertyAccess.getLastChildByKind(SyntaxKind.Identifier)?.getText();
-    return methodName === "testMethod1";
+class MockFrameworkAnalyzer extends FrameworkAnalyzer {
+  constructor(
+    context: ParseContext,
+    public readonly frameworkName: string,
+    private readonly shouldAnalyze: boolean = true,
+  ) {
+    super(context);
   }
 
-  async analyze(node: Node): Promise<OperationData | null> {
-    if (!this.canAnalyze(node)) {
-      return null;
-    }
+  canAnalyze(_node: Node): boolean {
+    return this.shouldAnalyze;
+  }
 
+  analyze(_node: Node): OperationData {
     return {
       method: "get",
-      path: "/test1",
-      description: "TestFramework1 analysis result",
+      path: "/test",
+      summary: `框架 ${this.frameworkName} 的测试`,
     };
   }
 }
 
-class TestFrameworkAnalyzer2 extends FrameworkAnalyzer {
-  frameworkName = "TestFramework2";
-
-  canAnalyze(node: Node): boolean {
-    if (!node.isKind(SyntaxKind.ExpressionStatement)) {
-      return false;
-    }
-
-    const expression = node.getFirstChildByKind(SyntaxKind.CallExpression);
-    if (!expression) {
-      return false;
-    }
-
-    const propertyAccess = expression.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
-    if (!propertyAccess) {
-      return false;
-    }
-
-    const methodName = propertyAccess.getLastChildByKind(SyntaxKind.Identifier)?.getText();
-    return methodName === "testMethod2";
+class AnotherMockFrameworkAnalyzer extends FrameworkAnalyzer {
+  constructor(
+    context: ParseContext,
+    public readonly frameworkName: string,
+    private readonly shouldAnalyze: boolean = true,
+  ) {
+    super(context);
   }
 
-  async analyze(node: Node): Promise<OperationData | null> {
-    if (!this.canAnalyze(node)) {
-      return null;
-    }
+  canAnalyze(_node: Node): boolean {
+    return this.shouldAnalyze;
+  }
 
+  analyze(_node: Node): OperationData {
     return {
       method: "post",
-      path: "/test2",
-      description: "TestFramework2 analysis result",
-    };
-  }
-}
-
-class ConflictFrameworkAnalyzer extends FrameworkAnalyzer {
-  frameworkName = "TestFramework1"; // 与 TestFrameworkAnalyzer1 冲突
-
-  canAnalyze(): boolean {
-    return false;
-  }
-
-  async analyze(): Promise<OperationData | null> {
-    return null;
-  }
-}
-
-class AlwaysMatchAnalyzer extends FrameworkAnalyzer {
-  frameworkName = "AlwaysMatch";
-
-  canAnalyze(): boolean {
-    return true; // 总是匹配
-  }
-
-  async analyze(): Promise<OperationData | null> {
-    return {
-      method: "get",
-      path: "/always",
-      description: "Always match result",
+      path: "/another",
+      summary: `另一个框架 ${this.frameworkName} 的测试`,
     };
   }
 }
 
 describe("FrameworkAnalyzerRegistry", () => {
-  let registry: FrameworkAnalyzerRegistry;
-  let analyzer1: TestFrameworkAnalyzer1;
-  let analyzer2: TestFrameworkAnalyzer2;
   const context = createParseContext();
-
-  function createTestNode(code: string) {
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile("test.ts", code);
-    return sourceFile.getFirstChildByKind(SyntaxKind.ExpressionStatement)!;
-  }
-
-  beforeEach(() => {
-    registry = new FrameworkAnalyzerRegistry();
-    analyzer1 = new TestFrameworkAnalyzer1(context);
-    analyzer2 = new TestFrameworkAnalyzer2(context);
-  });
+  const mockNode = {} as Node;
 
   describe("register", () => {
     it("应该成功注册单个框架分析器", () => {
-      registry.register(analyzer1);
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer = new MockFrameworkAnalyzer(context, "express");
 
-      const node = createTestNode("obj.testMethod1();");
-      expect(registry.getFirstMatchingAnalyzer(node)).toBe(analyzer1);
+      registry.register(analyzer);
+
+      const allAnalyzers = registry.getAllAnalyzers();
+      expect(allAnalyzers).toHaveLength(1);
+      expect(allAnalyzers[0]).toBe(analyzer);
+      expect(allAnalyzers[0].frameworkName).toBe("express");
     });
 
-    it("应该成功注册多个不冲突的框架分析器", () => {
+    it("应该成功注册多个不同框架的分析器", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "express");
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify");
+
+      registry.register(analyzer1);
+      registry.register(analyzer2);
+
+      const allAnalyzers = registry.getAllAnalyzers();
+      expect(allAnalyzers).toHaveLength(2);
+      expect(allAnalyzers).toContain(analyzer1);
+      expect(allAnalyzers).toContain(analyzer2);
+    });
+
+    it("当注册重复框架名称的分析器时应该抛出错误", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "express");
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "express");
+
+      registry.register(analyzer1);
+
+      expect(() => {
+        registry.register(analyzer2);
+      }).toThrow('框架分析器名称冲突：框架 "express" 已经被注册。');
+    });
+
+    it("应该正确处理具有相同类型但不同框架名称的分析器", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "framework-1");
+      const analyzer2 = new MockFrameworkAnalyzer(context, "framework-2");
+
       registry.register(analyzer1);
       registry.register(analyzer2);
 
-      const node1 = createTestNode("obj.testMethod1();");
-      const node2 = createTestNode("obj.testMethod2();");
-
-      expect(registry.getFirstMatchingAnalyzer(node1)).toBe(analyzer1);
-      expect(registry.getFirstMatchingAnalyzer(node2)).toBe(analyzer2);
-    });
-
-    it("应该在重复注册同一框架名称时抛出错误", () => {
-      registry.register(analyzer1);
-      const conflictAnalyzer = new ConflictFrameworkAnalyzer(context);
-
-      expect(() => registry.register(conflictAnalyzer)).toThrow(
-        '框架分析器名称冲突：框架 "TestFramework1" 已经被注册。',
-      );
-    });
-
-    it("应该在重复注册同一实例时抛出错误", () => {
-      registry.register(analyzer1);
-
-      expect(() => registry.register(analyzer1)).toThrow(
-        '框架分析器名称冲突：框架 "TestFramework1" 已经被注册。',
-      );
-    });
-  });
-
-  describe("getFirstMatchingAnalyzer", () => {
-    beforeEach(() => {
-      registry.register(analyzer1);
-      registry.register(analyzer2);
-    });
-
-    it("应该返回第一个匹配的分析器", () => {
-      const node1 = createTestNode("obj.testMethod1();");
-      const node2 = createTestNode("obj.testMethod2();");
-
-      expect(registry.getFirstMatchingAnalyzer(node1)).toBe(analyzer1);
-      expect(registry.getFirstMatchingAnalyzer(node2)).toBe(analyzer2);
-    });
-
-    it("应该在没有匹配的分析器时返回null", () => {
-      const node = createTestNode("obj.unknownMethod();");
-
-      expect(registry.getFirstMatchingAnalyzer(node)).toBeNull();
-    });
-
-    it("应该返回第一个匹配的分析器（优先级测试）", () => {
-      // 注册一个总是匹配的分析器在第一位
-      const alwaysMatch = new AlwaysMatchAnalyzer(context);
-      const newRegistry = new FrameworkAnalyzerRegistry();
-
-      newRegistry.register(alwaysMatch); // 先注册总是匹配的
-      newRegistry.register(analyzer1); // 后注册特定匹配的
-
-      const node = createTestNode("obj.testMethod1();");
-
-      // 应该返回第一个注册的分析器，即使后面的也匹配
-      expect(newRegistry.getFirstMatchingAnalyzer(node)).toBe(alwaysMatch);
-    });
-
-    it("应该按注册顺序进行匹配", () => {
-      const newRegistry = new FrameworkAnalyzerRegistry();
-
-      // 改变注册顺序
-      newRegistry.register(analyzer2); // 先注册analyzer2
-      newRegistry.register(analyzer1); // 后注册analyzer1
-
-      const node1 = createTestNode("obj.testMethod1();");
-      const node2 = createTestNode("obj.testMethod2();");
-
-      // analyzer1的方法应该仍然被analyzer1处理
-      expect(newRegistry.getFirstMatchingAnalyzer(node1)).toBe(analyzer1);
-      // analyzer2的方法应该被analyzer2处理
-      expect(newRegistry.getFirstMatchingAnalyzer(node2)).toBe(analyzer2);
+      const allAnalyzers = registry.getAllAnalyzers();
+      expect(allAnalyzers).toHaveLength(2);
+      expect(allAnalyzers[0].frameworkName).toBe("framework-1");
+      expect(allAnalyzers[1].frameworkName).toBe("framework-2");
     });
   });
 
   describe("getAllAnalyzers", () => {
-    it("应该返回空数组当没有注册分析器时", () => {
-      expect(registry.getAllAnalyzers()).toEqual([]);
+    it("当没有注册任何分析器时应该返回空数组", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const allAnalyzers = registry.getAllAnalyzers();
+
+      expect(allAnalyzers).toEqual([]);
+      expect(allAnalyzers).toHaveLength(0);
     });
 
-    it("应该返回所有注册的分析器", () => {
+    it("应该返回所有已注册分析器的副本", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "express");
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify");
+
       registry.register(analyzer1);
       registry.register(analyzer2);
 
-      const analyzers = registry.getAllAnalyzers();
-      expect(analyzers).toHaveLength(2);
-      expect(analyzers).toContain(analyzer1);
-      expect(analyzers).toContain(analyzer2);
-    });
+      const allAnalyzers1 = registry.getAllAnalyzers();
+      const allAnalyzers2 = registry.getAllAnalyzers();
 
-    it("应该按注册顺序返回分析器", () => {
+      // 应该返回不同的数组实例
+      expect(allAnalyzers1).not.toBe(allAnalyzers2);
+      // 但内容应该相同
+      expect(allAnalyzers1).toEqual(allAnalyzers2);
+      expect(allAnalyzers1).toHaveLength(2);
+    });
+  });
+
+  describe("getFirstMatchingAnalyzer", () => {
+    it("应该返回第一个能够处理节点的分析器", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "express", true);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify", true);
+
       registry.register(analyzer1);
       registry.register(analyzer2);
 
-      const analyzers = registry.getAllAnalyzers();
-      expect(analyzers[0]).toBe(analyzer1);
-      expect(analyzers[1]).toBe(analyzer2);
+      const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
+      expect(matchingAnalyzer).toBe(analyzer1);
+      expect(matchingAnalyzer?.frameworkName).toBe("express");
     });
-  });
 
-  describe("边界情况", () => {
-    it("应该处理相同类型的不同实例", () => {
-      const anotherAnalyzer1 = new TestFrameworkAnalyzer1(context);
+    it("应该跳过不能处理节点的分析器", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "express", false);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify", true);
+      const analyzer3 = new MockFrameworkAnalyzer(context, "koa", true);
 
       registry.register(analyzer1);
+      registry.register(analyzer2);
+      registry.register(analyzer3);
 
-      // 不同实例但相同框架名，应该失败
-      expect(() => registry.register(anotherAnalyzer1)).toThrow(/框架分析器名称冲突/);
+      const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
+      expect(matchingAnalyzer).toBe(analyzer2);
+      expect(matchingAnalyzer?.frameworkName).toBe("fastify");
     });
 
-    it("应该正确处理不是ExpressionStatement的节点", () => {
+    it("当没有分析器能够处理节点时应该返回null", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "express", false);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify", false);
+
       registry.register(analyzer1);
+      registry.register(analyzer2);
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile("test.ts", "const x = 1;");
-      const node = sourceFile.getFirstChildByKind(SyntaxKind.VariableStatement)!;
-
-      expect(registry.getFirstMatchingAnalyzer(node)).toBeNull();
+      const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
+      expect(matchingAnalyzer).toBeNull();
     });
 
-    it("应该正确处理没有方法调用的ExpressionStatement", () => {
+    it("当没有注册任何分析器时应该返回null", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
+      expect(matchingAnalyzer).toBeNull();
+    });
+
+    it("应该保持注册顺序进行匹配", () => {
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer1 = new MockFrameworkAnalyzer(context, "first", false);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "second", true);
+      const analyzer3 = new MockFrameworkAnalyzer(context, "third", true);
+
       registry.register(analyzer1);
+      registry.register(analyzer2);
+      registry.register(analyzer3);
 
-      const node = createTestNode("1 + 1;");
-
-      expect(registry.getFirstMatchingAnalyzer(node)).toBeNull();
+      const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
+      expect(matchingAnalyzer).toBe(analyzer2);
+      expect(matchingAnalyzer?.frameworkName).toBe("second");
     });
-  });
 
-  describe("实际使用场景", () => {
-    it("应该正确模拟多框架环境", async () => {
-      // 模拟一个既有Express又有其他框架的环境
-      registry.register(analyzer1); // 模拟Express
-      registry.register(analyzer2); // 模拟NestJS
+    it("应该正确处理同步canAnalyze方法", () => {
+      class SyncFrameworkAnalyzer extends FrameworkAnalyzer {
+        constructor(
+          context: ParseContext,
+          public readonly frameworkName: string,
+          private readonly shouldAnalyze: boolean = true,
+        ) {
+          super(context);
+        }
 
-      const expressNode = createTestNode("obj.testMethod1();");
-      const nestNode = createTestNode("obj.testMethod2();");
-      const unknownNode = createTestNode("obj.unknownMethod();");
+        canAnalyze(_node: Node): boolean {
+          return this.shouldAnalyze;
+        }
 
-      // Express节点应该被Express分析器处理
-      const expressAnalyzer = registry.getFirstMatchingAnalyzer(expressNode);
-      expect(expressAnalyzer).toBe(analyzer1);
-
-      if (expressAnalyzer) {
-        const result = await expressAnalyzer.analyze(expressNode);
-        expect(result).toEqual({
-          method: "get",
-          path: "/test1",
-          description: "TestFramework1 analysis result",
-        });
+        analyze(_node: Node): OperationData {
+          return {
+            method: "get",
+            path: "/sync",
+            summary: `同步框架 ${this.frameworkName} 的测试`,
+          };
+        }
       }
 
-      // NestJS节点应该被NestJS分析器处理
-      const nestAnalyzer = registry.getFirstMatchingAnalyzer(nestNode);
-      expect(nestAnalyzer).toBe(analyzer2);
+      const registry = new FrameworkAnalyzerRegistry();
+      const analyzer = new SyncFrameworkAnalyzer(context, "sync-framework", true);
 
-      if (nestAnalyzer) {
-        const result = await nestAnalyzer.analyze(nestNode);
-        expect(result).toEqual({
-          method: "post",
-          path: "/test2",
-          description: "TestFramework2 analysis result",
-        });
-      }
+      registry.register(analyzer);
 
-      // 未知节点不应该被任何分析器处理
-      expect(registry.getFirstMatchingAnalyzer(unknownNode)).toBeNull();
+      const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
+      expect(matchingAnalyzer).toBe(analyzer);
+      expect(matchingAnalyzer?.frameworkName).toBe("sync-framework");
     });
   });
 });
