@@ -64,8 +64,7 @@ describe("generateDocument", () => {
     });
 
     it("应该正确处理完全空的 OpenAPIObject", async () => {
-      const config: OpenAPIObject = {} as OpenAPIObject;
-
+      const config: Partial<OpenAPIObject> = {};
       const options: GenerateDocumentOptions = {
         parserOptions: {
           include: [], // 不包含任何文件
