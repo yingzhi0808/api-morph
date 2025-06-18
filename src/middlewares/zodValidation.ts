@@ -43,6 +43,9 @@ export interface ValidationOptions<
   onError?: ErrorRequestHandler;
 }
 
+/**
+ * 错误请求处理函数
+ */
 export type ErrorRequestHandler<
   P = unknown,
   ResBody = unknown,

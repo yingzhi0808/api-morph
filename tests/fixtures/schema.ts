@@ -1,4 +1,4 @@
-import z from "zod/v4";
+import { z } from "zod/v4";
 
 export const UserIdVo = z.object({
   id: z.string().meta({ description: "用户ID" }),
@@ -83,3 +83,22 @@ export const UserNotFoundVo = z.object({
     }),
   }),
 });
+
+export const SpecialAttributesVo = z.object({
+  deprecatedField: z.string().meta({
+    description: "已废弃的字段",
+    deprecated: true,
+    allowEmptyValue: true,
+    example: "old-value",
+    examples: {
+      example1: { value: "value1", description: "示例1" },
+      example2: { value: "value2", description: "示例2" },
+    },
+  }),
+  optionalField: z.string().optional().meta({
+    description: "可选字段",
+  }),
+});
+
+// 创建一个特殊的schema来测试非对象类型的属性处理
+export const NonObjectSchemaVo = z.string();

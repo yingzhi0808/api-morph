@@ -7,9 +7,6 @@ import type { OperationData, ParseContext } from "@/types";
  * 框架分析器抽象基类，用于分析特定框架的代码结构并提取API信息
  */
 export abstract class FrameworkAnalyzer {
-  /** 框架名称，用于调试和日志 */
-  abstract readonly frameworkName: string;
-
   /**
    * 创建框架分析器实例
    * @param context 解析上下文

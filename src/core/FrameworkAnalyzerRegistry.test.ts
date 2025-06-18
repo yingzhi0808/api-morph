@@ -8,13 +8,12 @@ import { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 class MockFrameworkAnalyzer extends FrameworkAnalyzer {
   constructor(
     context: ParseContext,
-    public readonly frameworkName: string,
-    private readonly shouldAnalyze: boolean = true,
+    private readonly shouldAnalyze = true,
   ) {
     super(context);
   }
 
-  canAnalyze(_node: Node): boolean {
+  canAnalyze(_node: Node) {
     return this.shouldAnalyze;
   }
 
@@ -22,7 +21,6 @@ class MockFrameworkAnalyzer extends FrameworkAnalyzer {
     return {
       method: "get",
       path: "/test",
-      summary: `框架 ${this.frameworkName} 的测试`,
     };
   }
 }
@@ -30,13 +28,12 @@ class MockFrameworkAnalyzer extends FrameworkAnalyzer {
 class AnotherMockFrameworkAnalyzer extends FrameworkAnalyzer {
   constructor(
     context: ParseContext,
-    public readonly frameworkName: string,
-    private readonly shouldAnalyze: boolean = true,
+    private readonly shouldAnalyze = true,
   ) {
     super(context);
   }
 
-  canAnalyze(_node: Node): boolean {
+  canAnalyze(_node: Node) {
     return this.shouldAnalyze;
   }
 
@@ -44,7 +41,6 @@ class AnotherMockFrameworkAnalyzer extends FrameworkAnalyzer {
     return {
       method: "post",
       path: "/another",
-      summary: `另一个框架 ${this.frameworkName} 的测试`,
     };
   }
 }
@@ -56,20 +52,19 @@ describe("FrameworkAnalyzerRegistry", () => {
   describe("register", () => {
     it("应该成功注册单个框架分析器", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer = new MockFrameworkAnalyzer(context, "express");
+      const analyzer = new MockFrameworkAnalyzer(context);
 
       registry.register(analyzer);
 
       const allAnalyzers = registry.getAllAnalyzers();
       expect(allAnalyzers).toHaveLength(1);
       expect(allAnalyzers[0]).toBe(analyzer);
-      expect(allAnalyzers[0].frameworkName).toBe("express");
     });
 
     it("应该成功注册多个不同框架的分析器", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "express");
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify");
+      const analyzer1 = new MockFrameworkAnalyzer(context);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -82,28 +77,28 @@ describe("FrameworkAnalyzerRegistry", () => {
 
     it("当注册重复框架名称的分析器时应该抛出错误", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "express");
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "express");
+      const analyzer1 = new MockFrameworkAnalyzer(context);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context);
 
       registry.register(analyzer1);
 
       expect(() => {
         registry.register(analyzer2);
-      }).toThrow('框架分析器名称冲突：框架 "express" 已经被注册。');
+      }).toThrow('框架分析器名称冲突：框架 "MockFrameworkAnalyzer" 已经被注册。');
     });
 
     it("应该正确处理具有相同类型但不同框架名称的分析器", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "framework-1");
-      const analyzer2 = new MockFrameworkAnalyzer(context, "framework-2");
+      const analyzer1 = new MockFrameworkAnalyzer(context);
+      const analyzer2 = new MockFrameworkAnalyzer(context);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
 
       const allAnalyzers = registry.getAllAnalyzers();
       expect(allAnalyzers).toHaveLength(2);
-      expect(allAnalyzers[0].frameworkName).toBe("framework-1");
-      expect(allAnalyzers[1].frameworkName).toBe("framework-2");
+      expect(allAnalyzers[0]).toBe(analyzer1);
+      expect(allAnalyzers[1]).toBe(analyzer2);
     });
   });
 
@@ -118,8 +113,8 @@ describe("FrameworkAnalyzerRegistry", () => {
 
     it("应该返回所有已注册分析器的副本", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "express");
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify");
+      const analyzer1 = new MockFrameworkAnalyzer(context);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -138,22 +133,21 @@ describe("FrameworkAnalyzerRegistry", () => {
   describe("getFirstMatchingAnalyzer", () => {
     it("应该返回第一个能够处理节点的分析器", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "express", true);
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify", true);
+      const analyzer1 = new MockFrameworkAnalyzer(context, true);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, true);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
 
       const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
       expect(matchingAnalyzer).toBe(analyzer1);
-      expect(matchingAnalyzer?.frameworkName).toBe("express");
     });
 
     it("应该跳过不能处理节点的分析器", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "express", false);
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify", true);
-      const analyzer3 = new MockFrameworkAnalyzer(context, "koa", true);
+      const analyzer1 = new MockFrameworkAnalyzer(context, false);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, true);
+      const analyzer3 = new MockFrameworkAnalyzer(context, true);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -161,13 +155,12 @@ describe("FrameworkAnalyzerRegistry", () => {
 
       const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
       expect(matchingAnalyzer).toBe(analyzer2);
-      expect(matchingAnalyzer?.frameworkName).toBe("fastify");
     });
 
     it("当没有分析器能够处理节点时应该返回null", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "express", false);
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "fastify", false);
+      const analyzer1 = new MockFrameworkAnalyzer(context, false);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, false);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -184,9 +177,9 @@ describe("FrameworkAnalyzerRegistry", () => {
 
     it("应该保持注册顺序进行匹配", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context, "first", false);
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, "second", true);
-      const analyzer3 = new MockFrameworkAnalyzer(context, "third", true);
+      const analyzer1 = new MockFrameworkAnalyzer(context, false);
+      const analyzer2 = new AnotherMockFrameworkAnalyzer(context, true);
+      const analyzer3 = new MockFrameworkAnalyzer(context, true);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -194,20 +187,18 @@ describe("FrameworkAnalyzerRegistry", () => {
 
       const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
       expect(matchingAnalyzer).toBe(analyzer2);
-      expect(matchingAnalyzer?.frameworkName).toBe("second");
     });
 
     it("应该正确处理同步canAnalyze方法", () => {
       class SyncFrameworkAnalyzer extends FrameworkAnalyzer {
         constructor(
           context: ParseContext,
-          public readonly frameworkName: string,
-          private readonly shouldAnalyze: boolean = true,
+          private readonly shouldAnalyze = true,
         ) {
           super(context);
         }
 
-        canAnalyze(_node: Node): boolean {
+        canAnalyze(_node: Node) {
           return this.shouldAnalyze;
         }
 
@@ -215,19 +206,17 @@ describe("FrameworkAnalyzerRegistry", () => {
           return {
             method: "get",
             path: "/sync",
-            summary: `同步框架 ${this.frameworkName} 的测试`,
           };
         }
       }
 
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer = new SyncFrameworkAnalyzer(context, "sync-framework", true);
+      const analyzer = new SyncFrameworkAnalyzer(context, true);
 
       registry.register(analyzer);
 
       const matchingAnalyzer = registry.getFirstMatchingAnalyzer(mockNode);
       expect(matchingAnalyzer).toBe(analyzer);
-      expect(matchingAnalyzer?.frameworkName).toBe("sync-framework");
     });
   });
 });

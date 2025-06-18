@@ -4,13 +4,10 @@ import { VALID_HTTP_METHODS } from "@/constants";
 import { ASTAnalyzerRegistry, FrameworkAnalyzer } from "@/core";
 import type { OperationData, ParseContext } from "@/types";
 import { ExpressRouteASTAnalyzer } from "./ExpressRouteASTAnalyzer";
-import { ZodValidationASTAnalyzer } from "./ZodValidationASTAnalyzer";
+import { ExpressZodValidationASTAnalyzer } from "./ExpressZodValidationASTAnalyzer";
 
 /**
  * Express框架分析器，用于分析Express应用的各种节点类型。
- * 支持分析如下模式：
- * - 路由调用: `app.get("/path", handler)`、`router.post("/path", handler)`
- * - 路由挂载: `app.use("/api", router)`
  */
 export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   frameworkName = "Express";
@@ -21,7 +18,7 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
     super(context);
     this.astAnalyzerRegistry = new ASTAnalyzerRegistry();
     this.astAnalyzerRegistry.register(new ExpressRouteASTAnalyzer(context));
-    this.astAnalyzerRegistry.register(new ZodValidationASTAnalyzer(context));
+    this.astAnalyzerRegistry.register(new ExpressZodValidationASTAnalyzer(context));
   }
 
   /**
@@ -30,37 +27,52 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
    * @returns 如果属于Express框架返回true
    */
   canAnalyze(node: Node) {
+    // 必须是表达式语句
     if (!node.isKind(SyntaxKind.ExpressionStatement)) {
       return false;
     }
 
+    // 必须是函数调用
     const expression = node.getFirstChildByKind(SyntaxKind.CallExpression);
     if (!expression) {
       return false;
     }
 
+    // 必须是属性访问表达式
     const propertyAccess = expression.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
     if (!propertyAccess) {
       return false;
     }
 
-    const methodName = propertyAccess.getLastChildByKind(SyntaxKind.Identifier)?.getText();
-    if (!methodName) {
-      return false;
-    }
-
-    // 检查是否是有效的HTTP方法
+    // 必须是有效的HTTP方法
+    const methodName = propertyAccess.getName();
     if (!VALID_HTTP_METHODS.includes(methodName)) {
       return false;
     }
 
-    // 检查调用对象是否为Express类型
-    const objectExpression = propertyAccess.getFirstChild();
-    if (!objectExpression) {
+    // 必须是Express类型
+    const objectExpression = propertyAccess.getExpression();
+    const isExpressType = this.isExpressType(objectExpression);
+    if (!isExpressType) {
       return false;
     }
 
-    return this.isExpressType(objectExpression);
+    // 必须有两个参数
+    const args = expression.getArguments();
+    if (args.length < 2) {
+      return false;
+    }
+
+    // 路径参数必须是字符串字面量
+    const pathArg = args[0];
+    if (
+      !pathArg.isKind(SyntaxKind.StringLiteral) &&
+      !pathArg.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   /**

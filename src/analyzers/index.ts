@@ -1,3 +1,5 @@
+/* v8 ignore start */
+
 export * from "./ExpressFrameworkAnalyzer";
 export * from "./ExpressRouteASTAnalyzer";
-export * from "./ZodValidationASTAnalyzer";
+export * from "./ExpressZodValidationASTAnalyzer";
