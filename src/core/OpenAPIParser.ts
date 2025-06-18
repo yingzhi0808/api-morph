@@ -161,7 +161,7 @@ export class OpenAPIParser {
       OperationTagParser,
       SimplifiedResponseTagParser,
     ];
-    const parsers = [...defaultParsers, ...(options.customParsers ?? [])];
+    const parsers = [...defaultParsers, ...(options.customTagParsers ?? [])];
 
     for (const parser of parsers) {
       tagParserRegistry.register(new parser(this.context));

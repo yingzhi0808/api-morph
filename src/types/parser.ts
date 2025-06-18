@@ -52,7 +52,7 @@ export interface ParserOptions {
   /** 默认的请求体媒体类型 */
   defaultRequestMediaType?: string;
   /** 自定义标签解析器 */
-  customParsers?: (new (
+  customTagParsers?: (new (
     context: ParseContext,
   ) => TagParser)[];
   /** 自定义框架分析器 */
