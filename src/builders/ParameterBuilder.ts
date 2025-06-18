@@ -1,7 +1,7 @@
 import { cloneDeep } from "radashi";
 import type { ParameterIn } from "@/constants";
 import type { Builder } from "@/core";
-import type { MediaTypeObject, ParameterObject } from "@/types";
+import type { ExampleObject, MediaTypeObject, ParameterObject, ReferenceObject } from "@/types";
 
 /**
  * 参数构建器，用于构建 OpenAPI ParameterObject
@@ -119,6 +119,26 @@ export class ParameterBuilder implements Builder<ParameterObject> {
    */
   setSchema(schema: ParameterObject["schema"]) {
     this.parameter.schema = schema;
+    return this;
+  }
+
+  /**
+   * 设置参数的单个示例。
+   * @param example 示例对象。
+   * @returns 参数构建器。
+   */
+  setExample(example: unknown) {
+    this.parameter.example = example;
+    return this;
+  }
+
+  /**
+   * 设置参数的多个示例。
+   * @param examples 示例对象。
+   * @returns 参数构建器。
+   */
+  setExamples(examples: Record<string, ExampleObject | ReferenceObject>) {
+    this.parameter.examples = examples;
     return this;
   }
 

@@ -315,6 +315,96 @@ describe("ParameterBuilder", () => {
     });
   });
 
+  describe("setExample", () => {
+    it("应该正确设置单个示例", () => {
+      const builder = new ParameterBuilder("stringParam", "query");
+      const example = "示例值";
+      const result = builder.setExample(example).build();
+
+      expect(result.example).toBe(example);
+    });
+
+    it("应该覆盖之前设置的示例", () => {
+      const builder = new ParameterBuilder("overrideParam", "query");
+      const firstExample = "first";
+      const secondExample = "second";
+      const result = builder.setExample(firstExample).setExample(secondExample).build();
+
+      expect(result.example).toBe(secondExample);
+    });
+
+    it("应该支持链式调用", () => {
+      const builder = new ParameterBuilder("chainParam", "query");
+      const returnValue = builder.setExample("test");
+
+      expect(returnValue).toBe(builder);
+    });
+  });
+
+  describe("setExamples", () => {
+    it("应该正确设置多个示例", () => {
+      const builder = new ParameterBuilder("multiExampleParam", "query");
+      const examples = {
+        example1: {
+          summary: "示例1",
+          value: "值1",
+        },
+        example2: {
+          summary: "示例2",
+          value: "值2",
+        },
+      };
+      const result = builder.setExamples(examples).build();
+
+      expect(result.examples).toEqual(examples);
+    });
+
+    it("应该正确设置带有引用的示例", () => {
+      const builder = new ParameterBuilder("refExampleParam", "query");
+      const examples = {
+        example1: {
+          summary: "普通示例",
+          value: "test",
+        },
+        example2: {
+          $ref: "#/components/examples/UserExample",
+        },
+      };
+      const result = builder.setExamples(examples).build();
+
+      expect(result.examples).toEqual(examples);
+    });
+
+    it("应该覆盖之前设置的示例", () => {
+      const builder = new ParameterBuilder("overrideExamplesParam", "query");
+      const firstExamples = {
+        first: {
+          value: "first",
+        },
+      };
+      const secondExamples = {
+        second: {
+          value: "second",
+        },
+      };
+      const result = builder.setExamples(firstExamples).setExamples(secondExamples).build();
+
+      expect(result.examples).toEqual(secondExamples);
+    });
+
+    it("应该支持链式调用", () => {
+      const builder = new ParameterBuilder("chainExampleParam", "query");
+      const examples = {
+        test: {
+          value: "test",
+        },
+      };
+      const returnValue = builder.setExamples(examples);
+
+      expect(returnValue).toBe(builder);
+    });
+  });
+
   describe("addExtension", () => {
     it("应该添加有效的扩展字段", () => {
       const builder = new ParameterBuilder("extParam", "query");
