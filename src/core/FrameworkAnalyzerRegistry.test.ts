@@ -75,30 +75,15 @@ describe("FrameworkAnalyzerRegistry", () => {
       expect(allAnalyzers).toContain(analyzer2);
     });
 
-    it("当注册重复框架名称的分析器时应该抛出错误", () => {
+    it("当注册重复的分析器时应该抛出错误", () => {
       const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context);
-      const analyzer2 = new AnotherMockFrameworkAnalyzer(context);
+      const analyzer = new MockFrameworkAnalyzer(context);
 
-      registry.register(analyzer1);
+      registry.register(analyzer);
 
       expect(() => {
-        registry.register(analyzer2);
+        registry.register(analyzer);
       }).toThrow('框架分析器名称冲突：框架 "MockFrameworkAnalyzer" 已经被注册。');
-    });
-
-    it("应该正确处理具有相同类型但不同框架名称的分析器", () => {
-      const registry = new FrameworkAnalyzerRegistry();
-      const analyzer1 = new MockFrameworkAnalyzer(context);
-      const analyzer2 = new MockFrameworkAnalyzer(context);
-
-      registry.register(analyzer1);
-      registry.register(analyzer2);
-
-      const allAnalyzers = registry.getAllAnalyzers();
-      expect(allAnalyzers).toHaveLength(2);
-      expect(allAnalyzers[0]).toBe(analyzer1);
-      expect(allAnalyzers[1]).toBe(analyzer2);
     });
   });
 

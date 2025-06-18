@@ -38,7 +38,7 @@ describe("ASTAnalyzerRegistry", () => {
       expect(allAnalyzers[0]).toBe(analyzer);
     });
 
-    it("应该成功注册多个不同名称的分析器", () => {
+    it("应该成功注册多个不同的分析器", () => {
       const registry = new ASTAnalyzerRegistry();
       const analyzer1 = new MockASTAnalyzer(context);
       const analyzer2 = new AnotherMockASTAnalyzer(context);
@@ -52,16 +52,15 @@ describe("ASTAnalyzerRegistry", () => {
       expect(allAnalyzers).toContain(analyzer2);
     });
 
-    it("当注册重复名称的分析器时应该抛出错误", () => {
+    it("当注册重复的分析器时应该抛出错误", () => {
       const registry = new ASTAnalyzerRegistry();
-      const analyzer1 = new MockASTAnalyzer(context);
-      const analyzer2 = new AnotherMockASTAnalyzer(context);
+      const analyzer = new MockASTAnalyzer(context);
 
-      registry.register(analyzer1);
+      registry.register(analyzer);
 
       expect(() => {
-        registry.register(analyzer2);
-      }).toThrow('AST分析器名称冲突：分析器 "duplicate-name" 已经被注册。');
+        registry.register(analyzer);
+      }).toThrow('AST分析器名称冲突：分析器 "MockASTAnalyzer" 已经被注册。');
     });
 
     it("应该保持注册顺序", () => {
@@ -78,20 +77,6 @@ describe("ASTAnalyzerRegistry", () => {
       expect(allAnalyzers[0]).toBe(analyzer1);
       expect(allAnalyzers[1]).toBe(analyzer2);
       expect(allAnalyzers[2]).toBe(analyzer3);
-    });
-
-    it("应该正确处理具有相同类型但不同名称的分析器", () => {
-      const registry = new ASTAnalyzerRegistry();
-      const analyzer1 = new MockASTAnalyzer(context);
-      const analyzer2 = new MockASTAnalyzer(context);
-
-      registry.register(analyzer1);
-      registry.register(analyzer2);
-
-      const allAnalyzers = registry.getAllAnalyzers();
-      expect(allAnalyzers).toHaveLength(2);
-      expect(allAnalyzers[0]).toBe(analyzer1);
-      expect(allAnalyzers[1]).toBe(analyzer2);
     });
   });
 

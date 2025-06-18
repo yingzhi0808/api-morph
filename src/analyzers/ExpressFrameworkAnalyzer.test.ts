@@ -1,8 +1,20 @@
 import { createParseContext, createProject } from "@tests/utils";
+import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ParseContext } from "@/types";
+import { ASTAnalyzer } from "@/core/ASTAnalyzer";
+import type { OperationData, ParseContext } from "@/types";
 import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
+
+class CustomTestAnalyzer extends ASTAnalyzer {
+  analyze(_node: Node): OperationData {
+    return {
+      extensions: {
+        "x-custom-analyzer": "test-value",
+      },
+    };
+  }
+}
 
 describe("ExpressFrameworkAnalyzer", () => {
   let analyzer: ExpressFrameworkAnalyzer;
@@ -148,6 +160,32 @@ describe("ExpressFrameworkAnalyzer", () => {
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({ method: "get", path: "/users/{id}", operationId: "getUsersById" });
+    });
+
+    it("应该能够使用自定义Express AST分析器", async () => {
+      const context = createParseContext({
+        customExpressASTAnalyzers: [CustomTestAnalyzer],
+      });
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        const app = { get: () => {} }
+        app.get("/users/:id", (req, res) => {})`,
+      );
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const result = await analyzer.analyze(node);
+
+      expect(result).toEqual({
+        method: "get",
+        path: "/users/{id}",
+        operationId: "getUsersById",
+        extensions: {
+          "x-custom-analyzer": "test-value",
+        },
+      });
     });
   });
 });

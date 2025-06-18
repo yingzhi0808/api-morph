@@ -1,7 +1,8 @@
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { VALID_HTTP_METHODS } from "@/constants";
-import { ASTAnalyzerRegistry, FrameworkAnalyzer } from "@/core";
+import { ASTAnalyzerRegistry } from "@/core/ASTAnalyzerRegistry";
+import { FrameworkAnalyzer } from "@/core/FrameworkAnalyzer";
 import type { OperationData, ParseContext } from "@/types";
 import { ExpressRouteASTAnalyzer } from "./ExpressRouteASTAnalyzer";
 import { ExpressZodValidationASTAnalyzer } from "./ExpressZodValidationASTAnalyzer";
@@ -17,8 +18,13 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   constructor(context: ParseContext) {
     super(context);
     this.astAnalyzerRegistry = new ASTAnalyzerRegistry();
-    this.astAnalyzerRegistry.register(new ExpressRouteASTAnalyzer(context));
-    this.astAnalyzerRegistry.register(new ExpressZodValidationASTAnalyzer(context));
+
+    const defaultAnalyzers = [ExpressRouteASTAnalyzer, ExpressZodValidationASTAnalyzer];
+    const analyzers = [...defaultAnalyzers, ...(context.options.customExpressASTAnalyzers ?? [])];
+
+    for (const analyzer of analyzers) {
+      this.astAnalyzerRegistry.register(new analyzer(this.context));
+    }
   }
 
   /**
