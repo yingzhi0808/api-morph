@@ -129,7 +129,7 @@ export interface OperationData {
   /** 安全要求 */
   security?: SecurityRequirementObject;
   /** 服务器定义 */
-  server?: ServerObject;
+  servers?: ServerObject[];
   /** 扩展属性 */
   extensions?: Record<`x-${string}`, any>;
   /** 响应扩展属性 */

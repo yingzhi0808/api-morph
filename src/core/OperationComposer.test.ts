@@ -257,7 +257,7 @@ describe("OperationComposer", () => {
           callback: { name: "cb", callback: {} },
           deprecated: true,
           security: { apiKey: [] },
-          server: { url: "https://api.example.com" },
+          servers: [{ url: "https://api.example.com" }],
           extensions: { "x-custom": "value" },
           responsesExtensions: { "x-response-custom": "value" },
         }),

@@ -21,7 +21,7 @@ describe("ServerTagParser", () => {
       const tag = createJSDocTag(`@server https://api.example.com`);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: { url: "https://api.example.com" },
+        servers: [{ url: "https://api.example.com" }],
       });
     });
 
@@ -43,10 +43,12 @@ describe("ServerTagParser", () => {
       const tag = createJSDocTag("@server https://api.example.com 生产环境服务器");
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: {
-          url: "https://api.example.com",
-          description: "生产环境服务器",
-        },
+        servers: [
+          {
+            url: "https://api.example.com",
+            description: "生产环境服务器",
+          },
+        ],
       });
     });
 
@@ -58,15 +60,17 @@ describe("ServerTagParser", () => {
             description: API版本`);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: {
-          url: "https://api.example.com",
-          variables: {
-            version: {
-              default: "v1",
-              description: "API版本",
+        servers: [
+          {
+            url: "https://api.example.com",
+            variables: {
+              version: {
+                default: "v1",
+                description: "API版本",
+              },
             },
           },
-        },
+        ],
       });
     });
 
@@ -76,11 +80,13 @@ describe("ServerTagParser", () => {
         x-region: us-east-1`);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: {
-          url: "https://api.example.com",
-          "x-environment": "production",
-          "x-region": "us-east-1",
-        },
+        servers: [
+          {
+            url: "https://api.example.com",
+            "x-environment": "production",
+            "x-region": "us-east-1",
+          },
+        ],
       });
     });
 
@@ -99,24 +105,26 @@ describe("ServerTagParser", () => {
         x-load-balancer: true`);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: {
-          url: "https://api.example.com",
-          description: "生产环境API服务器",
-          variables: {
-            version: {
-              default: "v1",
-              enum: ["v1", "v2"],
-              description: "API版本号",
+        servers: [
+          {
+            url: "https://api.example.com",
+            description: "生产环境API服务器",
+            variables: {
+              version: {
+                default: "v1",
+                enum: ["v1", "v2"],
+                description: "API版本号",
+              },
+              environment: {
+                default: "prod",
+                enum: ["dev", "staging", "prod"],
+              },
             },
-            environment: {
-              default: "prod",
-              enum: ["dev", "staging", "prod"],
-            },
+            "x-environment": "production",
+            "x-region": "us-east-1",
+            "x-load-balancer": true,
           },
-          "x-environment": "production",
-          "x-region": "us-east-1",
-          "x-load-balancer": true,
-        },
+        ],
       });
     });
 
@@ -126,11 +134,13 @@ describe("ServerTagParser", () => {
         x-provider: aws`);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: {
-          url: "https://api.example.com",
-          description: "YAML中的描述",
-          "x-provider": "aws",
-        },
+        servers: [
+          {
+            url: "https://api.example.com",
+            description: "YAML中的描述",
+            "x-provider": "aws",
+          },
+        ],
       });
     });
 
@@ -140,10 +150,12 @@ describe("ServerTagParser", () => {
         x-valid: "should be included"`);
       const result = await parser.parse(tag);
       expect(result).toEqual({
-        server: {
-          url: "https://api.example.com",
-          "x-valid": "should be included",
-        },
+        servers: [
+          {
+            url: "https://api.example.com",
+            "x-valid": "should be included",
+          },
+        ],
       });
     });
   });

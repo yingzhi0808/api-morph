@@ -104,7 +104,7 @@ export class ServerTagParser extends TagParser {
     }
 
     return {
-      server: serverBuilder.build(),
+      servers: [serverBuilder.build()],
     };
   }
 }

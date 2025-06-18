@@ -186,8 +186,8 @@ export class OperationComposer {
       operationBuilder.addSecurity(operationData.security);
     }
 
-    if (operationData.server) {
-      operationBuilder.addServer(operationData.server);
+    if (operationData.servers) {
+      operationData.servers.forEach((server) => operationBuilder.addServer(server));
     }
 
     if (operationData.extensions) {
