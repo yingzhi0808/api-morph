@@ -338,6 +338,82 @@ describe("ParameterTagParser", () => {
       });
     });
 
+    it("应该正确处理带 example 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter userId query 用户ID
+        example: "user123"`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            description: "用户ID",
+            example: "user123",
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理带 examples 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter status query 状态
+        examples:
+          active:
+            summary: "活跃状态"
+            value: "active"
+          inactive:
+            summary: "非活跃状态"
+            value: "inactive"`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "status",
+            in: "query",
+            description: "状态",
+            examples: {
+              active: {
+                summary: "活跃状态",
+                value: "active",
+              },
+              inactive: {
+                summary: "非活跃状态",
+                value: "inactive",
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    it("应该正确处理带引用 examples 的参数标签", async () => {
+      const tag = createJSDocTag(`@parameter userId query 用户ID
+        examples:
+          validUser:
+            $ref: "#/components/examples/ValidUser"
+          invalidUser:
+            summary: "无效用户"
+            value: "invalid"`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            description: "用户ID",
+            examples: {
+              validUser: {
+                $ref: "#/components/examples/ValidUser",
+              },
+              invalidUser: {
+                summary: "无效用户",
+                value: "invalid",
+              },
+            },
+          },
+        ],
+      });
+    });
+
     it("应该正确解析带扩展字段的参数标签", async () => {
       const tag = createJSDocTag(`@parameter userId path 用户ID
         x-custom-field: custom-value
@@ -360,7 +436,7 @@ describe("ParameterTagParser", () => {
     it("应该在扩展字段不以 x- 开头时抛出验证错误", async () => {
       const tag = createJSDocTag(`@parameter userId path 用户ID
         custom-field: "should fail"`);
-      await expect(parser.parse(tag)).rejects.toThrow(/未知的 key/);
+      await expect(parser.parse(tag)).rejects.toThrow(/Unrecognized key/);
     });
 
     it("应该正确处理 YAML 中覆盖内联参数的情况", async () => {

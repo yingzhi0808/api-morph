@@ -226,7 +226,7 @@ describe("RequestBodyTagParser", () => {
     it("应该在扩展字段不以 x- 开头时抛出验证错误", async () => {
       const tag = createJSDocTag(`@requestBody 用户信息
         custom-field: "should fail"`);
-      await expect(parser.parse(tag)).rejects.toThrow(/未知的 key/);
+      await expect(parser.parse(tag)).rejects.toThrow(/Unrecognized key/);
     });
 
     it("应该正确处理复杂的媒体类型", async () => {
