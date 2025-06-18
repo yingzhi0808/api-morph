@@ -136,7 +136,7 @@ export abstract class TagParser {
   }
 
   /**
-   * 预处理JSDoc链接，将 {@link xxx} 替换为实际的JSON schema引用
+   * 预处理JSDoc链接，将 {@link xxx} 替换为实际的JSON Schema引用
    * @param tag JSDoc 标签对象。
    */
   private async preprocessJSDocLinks(tag: JSDocTag) {

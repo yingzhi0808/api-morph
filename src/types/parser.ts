@@ -47,11 +47,6 @@ export interface ParserOptions {
   include?: string[];
   /** 要排除的文件模式 */
   exclude?: string[];
-  /**
-   * 是否包含已废弃的 API
-   * @default true
-   */
-  includeDeprecated?: boolean;
   /** 默认的响应媒体类型 */
   defaultResponseMediaType?: string;
   /** 默认的请求体媒体类型 */

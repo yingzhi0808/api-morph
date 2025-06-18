@@ -88,23 +88,8 @@ export class OpenAPIParser {
       ),
     );
 
-    const filteredResults = this.filterDeprecatedOperations(results);
-    const openAPIObject = this.buildOpenAPI(filteredResults, openAPIBuilder);
+    const openAPIObject = this.buildOpenAPI(results, openAPIBuilder);
     return openAPIObject;
-  }
-
-  /**
-   * 根据 includeDeprecated 选项过滤废弃的操作。
-   * @param parsedOperationList 解析得到的操作数组。
-   * @returns 过滤后的操作数组。
-   */
-  private filterDeprecatedOperations(parsedOperationList: ParsedOperation[]): ParsedOperation[] {
-    if (this.context.options.includeDeprecated) {
-      return parsedOperationList;
-    }
-    return parsedOperationList.filter(
-      (parsedOperationData) => !parsedOperationData.operation.deprecated,
-    );
   }
 
   /**
@@ -222,7 +207,6 @@ export class OpenAPIParser {
 
     // 默认选项
     const defaultOptions: ParserOptions = {
-      includeDeprecated: true,
       defaultResponseMediaType: "application/json",
       defaultRequestMediaType: "application/json",
       enableASTAnalysis: true,
@@ -240,7 +224,7 @@ export class OpenAPIParser {
   }
 
   /**
-   * 查找指定 TypeScript 文件中所有被 @operation 标签注释的 AST 节点。
+   * 查找指定 TypeScript 文件中所有包含支持标签注释的 AST 节点。
    * @param sourceFile 要解析的 TypeScript 源文件。
    * @returns 返回一个 SourceOperationData 数组，其中每个对象包含被 JSDoc 标签注释的 AST 节点及其所有标签，
    * 如果未找到匹配的节点，则返回空数组。
@@ -248,19 +232,17 @@ export class OpenAPIParser {
   private findSourceOperationDataList(sourceFile: SourceFile) {
     const jsDocNodes = sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc);
     const sourceOperationDataList: SourceOperationData[] = [];
+    const supportedTagNames = this.tagParserRegistry.getAllTagNames();
 
     for (const jsDocNode of jsDocNodes) {
       const tags = jsDocNode.getTags();
 
-      // 检查是否包含 @operation 标签
-      const hasOperation = tags.some((tag) => tag.getTagName() === JSDocTagName.OPERATION);
-      if (!hasOperation) {
-        continue;
-      }
-
-      // 检查是否包含 @hidden 标签，如果有则跳过此操作
-      const isHidden = tags.some((tag) => tag.getTagName() === JSDocTagName.HIDDEN);
-      if (isHidden) {
+      // 检查是否包含支持的标签且不包含 @hidden 标签
+      const shouldProcess = tags.some((tag) => {
+        const tagName = tag.getTagName();
+        return supportedTagNames.includes(tagName) && tagName !== JSDocTagName.HIDDEN;
+      });
+      if (!shouldProcess) {
         continue;
       }
 

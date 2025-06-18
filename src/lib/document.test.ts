@@ -188,7 +188,6 @@ describe("generateDocument", () => {
         parserOptions: {
           include: [], // 不包含任何文件
           exclude: ["**/*.test.ts"],
-          includeDeprecated: false,
         },
       };
 
