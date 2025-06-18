@@ -93,10 +93,12 @@ export class ParameterTagParser extends TagParser {
       `  explode?: boolean\n` +
       `  allowReserved?: boolean\n` +
       `  schema?: SchemaObject | ReferenceObject\n` +
+      `  example?: any\n` +
+      `  examples?: Record<string, ExampleObject | ReferenceObject>\n` +
       `  content?: Record<string, MediaTypeObject>\n` +
       `  [key: \`x-\${string}\`]: any\n`;
 
-    const schema: z.ZodType<ParameterObject> = z
+    const schema = z
       .looseObject({
         name: z
           .string(`@${JSDocTagName.PARAMETER} 标签 name 不能为空`)
@@ -118,30 +120,38 @@ export class ParameterTagParser extends TagParser {
         explode: z.boolean().optional(),
         allowReserved: z.boolean().optional(),
         schema: z.any().optional(),
+        example: z.any().optional(),
+        examples: z.record(z.string(), z.any()).optional(),
         content: z.record(z.string(), z.any()).optional(),
       })
-      .refine(
-        (data) => {
-          const knownKeys = [
-            "name",
-            "in",
-            "description",
-            "required",
-            "deprecated",
-            "allowEmptyValue",
-            "style",
-            "explode",
-            "allowReserved",
-            "schema",
-            "content",
-          ];
-          const extraKeys = Object.keys(data).filter((key) => !knownKeys.includes(key));
-          return extraKeys.every((key) => key.startsWith("x-"));
-        },
-        {
-          error: (iss) => `未知的 key: "${iss.key}"，扩展字段必须以 "x-" 开头`,
-        },
-      );
+      .check((ctx) => {
+        const allKeys = Object.keys(ctx.value);
+        const knownKeys = [
+          "name",
+          "in",
+          "description",
+          "required",
+          "deprecated",
+          "allowEmptyValue",
+          "style",
+          "explode",
+          "allowReserved",
+          "schema",
+          "example",
+          "examples",
+          "content",
+        ];
+        const extraKeys = allKeys.filter((key) => !knownKeys.includes(key));
+        const invalidKeys = extraKeys.filter((key) => !key.startsWith("x-"));
+
+        if (invalidKeys.length > 0) {
+          ctx.issues.push({
+            code: "unrecognized_keys",
+            input: ctx.value,
+            keys: invalidKeys,
+          });
+        }
+      });
 
     const { success, data, error } = schema.safeParse(params);
     if (!success) {
@@ -188,6 +198,14 @@ export class ParameterTagParser extends TagParser {
 
     if (params.schema) {
       parameterBuilder.setSchema(params.schema);
+    }
+
+    if (params.example) {
+      parameterBuilder.setExample(params.example);
+    }
+
+    if (params.examples) {
+      parameterBuilder.setExamples(params.examples);
     }
 
     if (params.content) {

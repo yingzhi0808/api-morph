@@ -94,7 +94,7 @@ export class ResponseTagParser extends TagParser {
       `  links?: Record<string, LinkObject | ReferenceObject>\n` +
       `  [key: \`x-\${string}\`]: any\n`;
 
-    const schema: z.ZodType<ResponseObject & { statusCode: string }> = z
+    const schema = z
       .looseObject({
         statusCode: z
           .string({ error: `@${JSDocTagName.RESPONSE} 标签 statusCode 不能为空` })
@@ -107,16 +107,20 @@ export class ResponseTagParser extends TagParser {
         content: z.record(z.string(), z.any()).optional(),
         links: z.record(z.string(), z.any()).optional(),
       })
-      .refine(
-        (data) => {
-          const knownKeys = ["statusCode", "description", "headers", "content", "links"];
-          const extraKeys = Object.keys(data).filter((key) => !knownKeys.includes(key));
-          return extraKeys.every((key) => key.startsWith("x-"));
-        },
-        {
-          error: (iss) => `未知的 key: "${iss.key}"，扩展字段必须以 "x-" 开头`,
-        },
-      );
+      .check((ctx) => {
+        const allKeys = Object.keys(ctx.value);
+        const knownKeys = ["statusCode", "description", "headers", "content", "links"];
+        const extraKeys = allKeys.filter((key) => !knownKeys.includes(key));
+        const invalidKeys = extraKeys.filter((key) => !key.startsWith("x-"));
+
+        if (invalidKeys.length > 0) {
+          ctx.issues.push({
+            code: "unrecognized_keys",
+            input: ctx.value,
+            keys: invalidKeys,
+          });
+        }
+      });
 
     const { success, data, error } = schema.safeParse(params);
     if (!success) {

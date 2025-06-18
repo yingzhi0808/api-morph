@@ -100,22 +100,26 @@ export class RequestBodyTagParser extends TagParser {
       `  content?: Record<string, MediaTypeObject>\n` +
       `  [key: \`x-\${string}\`]: any\n`;
 
-    const schema: z.ZodType<RequestBodyObject> = z
+    const schema = z
       .looseObject({
         description: z.string().optional(),
         content: z.record(z.string(), z.any()),
         required: z.boolean().optional(),
       })
-      .refine(
-        (data) => {
-          const knownKeys = ["description", "content", "required"];
-          const extraKeys = Object.keys(data).filter((key) => !knownKeys.includes(key));
-          return extraKeys.every((key) => key.startsWith("x-"));
-        },
-        {
-          error: (iss) => `未知的 key: "${iss.key}"，扩展字段必须以 "x-" 开头`,
-        },
-      );
+      .check((ctx) => {
+        const allKeys = Object.keys(ctx.value);
+        const knownKeys = ["description", "required", "content"];
+        const extraKeys = allKeys.filter((key) => !knownKeys.includes(key));
+        const invalidKeys = extraKeys.filter((key) => !key.startsWith("x-"));
+
+        if (invalidKeys.length > 0) {
+          ctx.issues.push({
+            code: "unrecognized_keys",
+            input: ctx.value,
+            keys: invalidKeys,
+          });
+        }
+      });
 
     const { success, data, error } = schema.safeParse(params);
     if (!success) {
