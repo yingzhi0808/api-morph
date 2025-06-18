@@ -168,7 +168,7 @@ describe("zod helpers", () => {
     it("应该正确获取字段错误信息", () => {
       const schema = z.object({
         name: z.string().min(2, "姓名至少2个字符"),
-        email: z.string().email("邮箱格式不正确"),
+        email: z.email("邮箱格式不正确"),
         age: z.number().min(18, "年龄至少18岁"),
       });
 
@@ -182,7 +182,6 @@ describe("zod helpers", () => {
         const message = getZodErrorMessage(error as ZodError);
         expect(typeof message).toBe("string");
         expect(message).toBeTruthy();
-        // 应该返回第一个字段错误
         expect(["姓名至少2个字符", "邮箱格式不正确", "年龄至少18岁"]).toContain(message);
       }
     });
@@ -239,7 +238,7 @@ describe("zod helpers", () => {
     it("应该正确处理复杂验证错误", () => {
       const schema = z
         .object({
-          email: z.string().email("邮箱格式不正确"),
+          email: z.email("邮箱格式不正确"),
           password: z.string().min(8, "密码至少8位").regex(/[A-Z]/, "密码必须包含大写字母"),
           confirmPassword: z.string(),
         })
@@ -291,7 +290,6 @@ describe("zod helpers", () => {
         const message = getZodErrorMessage(error as ZodError);
         expect(typeof message).toBe("string");
         expect(message).toBeTruthy();
-        // 应该返回其中一个错误信息
         expect(["字段1错误", "字段2错误", "字段3错误"]).toContain(message);
       }
     });
@@ -305,13 +303,11 @@ describe("zod helpers", () => {
         const message = getZodErrorMessage(error as ZodError);
         expect(typeof message).toBe("string");
         expect(message).toBeTruthy();
-        // 应该返回默认的错误信息
         expect(message.length).toBeGreaterThan(0);
       }
     });
 
     it("应该正确处理空的错误对象", () => {
-      // 测试空的 ZodError 情况
       const emptyError = new z.ZodError([]);
       const message = getZodErrorMessage(emptyError);
       expect(message).toBeUndefined();

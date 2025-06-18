@@ -21,13 +21,5 @@ export function normalizeMediaType(value: string) {
     return result.split(";")[0].trim();
   }
 
-  // 对于 mime-types 包无法识别的自定义 media type，
-  // 使用正则表达式验证格式是否符合 RFC 6838 标准
-  const mediaTypePattern =
-    /^[a-zA-Z][a-zA-Z0-9][a-zA-Z0-9!#$&\-^]*\/[a-zA-Z0-9][a-zA-Z0-9!#$&\-^+]*$/;
-  if (mediaTypePattern.test(value)) {
-    return value;
-  }
-
   return null;
 }
