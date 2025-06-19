@@ -105,35 +105,8 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
    */
   private isExpressType(node: Node) {
     const nodeType = node.getType();
-    const expressType = this.getExpressType();
-    return nodeType.isAssignableTo(expressType);
-  }
+    const typeSymbol = nodeType.getSymbol();
 
-  /**
-   * 获取 Express 的类型对象。
-   * 通过创建虚拟文件导入Express类型来获取类型信息
-   * @returns Express 的 Type 对象，如果获取失败则返回 null。
-   */
-  private getExpressType() {
-    const project = this.context.project;
-
-    const tempFileName = "__temp_express_resolve__.ts";
-    const tempFile = project.createSourceFile(
-      tempFileName,
-      `
-        import express from "express";
-        const app = express();
-      `,
-    );
-
-    try {
-      const variableDeclaration = tempFile.getFirstDescendantByKindOrThrow(
-        SyntaxKind.VariableDeclaration,
-      );
-      const type = variableDeclaration.getType();
-      return type;
-    } finally {
-      project.removeSourceFile(tempFile);
-    }
+    return typeSymbol?.getName() === "Express";
   }
 }

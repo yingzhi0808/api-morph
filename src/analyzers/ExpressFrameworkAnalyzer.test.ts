@@ -162,6 +162,58 @@ describe("ExpressFrameworkAnalyzer", () => {
       expect(result).toEqual({ method: "get", path: "/users/{id}", operationId: "getUsersById" });
     });
 
+    it("应该能够集成ExpressZodValidationASTAnalyzer来分析Zod验证", async () => {
+      const project = createProject({
+        tsConfigFilePath: "tsconfig.json",
+        useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
+      });
+
+      project.addDirectoryAtPath("tests/fixtures");
+
+      const context = createParseContext({}, project);
+      const sourceFile = project.createSourceFile(
+        `test-${Date.now()}.ts`,
+        `
+        import express from "express"
+        import { UserLoginVo, UserIdDto } from "@tests/fixtures/schema";
+        const app = express()
+        app.post("/users/:id", validateRequest({
+          params: UserIdDto,
+          body: UserLoginVo
+        }), (req, res) => {})`,
+      );
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const result = await analyzer.analyze(node);
+
+      expect(result).toEqual({
+        method: "post",
+        path: "/users/{id}",
+        operationId: "postUsersById",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "用户ID",
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/UserLoginVo",
+              },
+            },
+          },
+        },
+      });
+    });
+
     it("应该能够使用自定义Express AST分析器", async () => {
       const context = createParseContext({
         customExpressASTAnalyzers: [CustomTestAnalyzer],
