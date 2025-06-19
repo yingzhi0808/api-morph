@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod/v4";
 import type {
   CallbackObject,
   ContactObject,
@@ -701,6 +702,26 @@ describe("OpenAPIBuilder", () => {
         .build();
 
       expect(result.components?.schemas?.Test).toStrictEqual(firstSchema);
+    });
+
+    it("应该正确添加 Zod schema", () => {
+      const builder = new OpenAPIBuilder();
+      const zodSchema = z.object({
+        name: z.string(),
+        age: z.number(),
+      });
+      const result = builder.addSchemaToComponents("User", zodSchema).build();
+
+      expect(result.components?.schemas?.User).toEqual({
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          age: { type: "number" },
+        },
+        required: ["name", "age"],
+        additionalProperties: false,
+      });
     });
 
     it("应该支持链式调用", () => {

@@ -1,4 +1,6 @@
 import { assign, cloneDeep } from "radashi";
+import type { ZodType } from "zod/v4";
+import { z } from "zod/v4";
 import type { PathItemBuilder } from "@/builders";
 import type { Builder } from "@/core";
 import type {
@@ -22,6 +24,7 @@ import type {
   ServerObject,
   TagObject,
 } from "@/types";
+import { isZodSchema } from "@/utils";
 
 /**
  * 文档构建器，用于构建完整的 OpenAPI 文档
@@ -278,10 +281,10 @@ export class OpenAPIBuilder implements Builder<OpenAPIObject> {
   /**
    * 添加 Schema 组件到 components。
    * @param name Schema 名称。
-   * @param schema Schema 对象。
+   * @param schema Schema 对象、布尔值或 Zod schema。
    * @returns 文档构建器。
    */
-  addSchemaToComponents(name: string, schema: SchemaObject | boolean) {
+  addSchemaToComponents(name: string, schema: SchemaObject | boolean | ZodType) {
     const document = this.document;
     if (!document.components) {
       document.components = {};
@@ -290,7 +293,11 @@ export class OpenAPIBuilder implements Builder<OpenAPIObject> {
       document.components.schemas = {};
     }
     if (!document.components.schemas[name]) {
-      document.components.schemas[name] = schema;
+      if (isZodSchema(schema)) {
+        document.components.schemas[name] = z.toJSONSchema(schema) as SchemaObject;
+      } else {
+        document.components.schemas[name] = schema;
+      }
     }
     return this;
   }
