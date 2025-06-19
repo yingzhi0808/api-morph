@@ -111,12 +111,12 @@ describe("ExpressRouteASTAnalyzer", () => {
     it("应该为复杂路径生成正确的operationId", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.post("/api/v1/users/:userId/posts", () => {});',
+        'app.post("/api/users/:userId/posts", () => {});',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.operationId).toBe("postApiV1UsersByUserIdPosts");
+      expect(result.operationId).toBe("postApiUsersByUserIdPosts");
     });
 
     it("应该为多个参数的路径生成正确的operationId", async () => {

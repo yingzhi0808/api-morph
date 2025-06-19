@@ -76,6 +76,7 @@ describe("ExpressFrameworkAnalyzer", () => {
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const analyzer = new ExpressFrameworkAnalyzer(context);
+
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
@@ -96,6 +97,7 @@ describe("ExpressFrameworkAnalyzer", () => {
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const analyzer = new ExpressFrameworkAnalyzer(context);
+
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
@@ -117,6 +119,7 @@ describe("ExpressFrameworkAnalyzer", () => {
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const analyzer = new ExpressFrameworkAnalyzer(context);
+
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
@@ -137,17 +140,14 @@ describe("ExpressFrameworkAnalyzer", () => {
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const analyzer = new ExpressFrameworkAnalyzer(context);
+
       expect(analyzer.canAnalyze(node)).toBe(true);
     });
   });
 
   describe("analyze", () => {
     it("应该能够分析Express路由调用并返回操作数据", async () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-      });
-      const sourceFile = project.createSourceFile(
+      const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
         const app = { get: () => {} }
@@ -173,15 +173,15 @@ describe("ExpressFrameworkAnalyzer", () => {
 
       const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
-        `test-${Date.now()}.ts`,
+        "user-controller.ts",
         `
-        import express from "express"
-        import { UserLoginVo, UserIdDto } from "@tests/fixtures/schema";
-        const app = express()
-        app.post("/users/:id", validateRequest({
-          params: UserIdDto,
-          body: UserLoginVo
-        }), (req, res) => {})`,
+import express from "express"
+import { UserIdDto, UpdateUserDto } from "@tests/fixtures/schema"
+const app = express()
+app.put("/api/users/:id", validateRequest({
+  params: UserIdDto,
+  body: UpdateUserDto
+}), (req, res) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
@@ -190,9 +190,9 @@ describe("ExpressFrameworkAnalyzer", () => {
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
-        method: "post",
-        path: "/users/{id}",
-        operationId: "postUsersById",
+        method: "put",
+        path: "/api/users/{id}",
+        operationId: "putApiUsersById",
         parameters: [
           {
             name: "id",
@@ -206,7 +206,7 @@ describe("ExpressFrameworkAnalyzer", () => {
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/UserLoginVo",
+                $ref: "#/components/schemas/UpdateUserDto",
               },
             },
           },

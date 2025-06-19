@@ -52,7 +52,7 @@ export class OpenAPIParser {
    * @returns 返回完整的 OpenAPI 对象。
    */
   async parse(openAPIBuilder: OpenAPIBuilder) {
-    const operationParser = new OperationComposer(
+    const operationComposer = new OperationComposer(
       this.tagParserRegistry,
       this.frameworkAnalyzerRegistry,
     );
@@ -72,7 +72,7 @@ export class OpenAPIParser {
         sourceFiles = this.project.getSourceFiles(patterns);
       }
     } else if (Array.isArray(excludes) && excludes.length > 0) {
-      const patterns: string[] = excludes.map((pattern) => `!${pattern}`);
+      const patterns = excludes.map((pattern) => `!${pattern}`);
       sourceFiles = this.project.getSourceFiles(patterns);
     } else {
       sourceFiles = this.project.getSourceFiles();
@@ -84,7 +84,7 @@ export class OpenAPIParser {
 
     const results = await Promise.all(
       flatOperationDataList.map((sourceOperationData) =>
-        operationParser.compose(sourceOperationData),
+        operationComposer.compose(sourceOperationData),
       ),
     );
 

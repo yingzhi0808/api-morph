@@ -24,11 +24,12 @@ describe("ExpressZodValidationASTAnalyzer", () => {
   describe("analyze", () => {
     it("应该处理body参数的Zod schema", async () => {
       const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+        "user-controller.ts",
         `
-        import { UserLoginVo } from "@tests/fixtures/schema";
-        app.post("/users", validateRequest({ body: UserLoginVo }), handler);
-        `,
+import { UpdateUserDto } from "@tests/fixtures/schema";
+app.put("/api/users/:id", validateRequest({
+  body: UpdateUserDto
+}), (req, res) => {})`,
       );
       const node = sourceFile.getStatements()[1];
       const result = await analyzer.analyze(node);
@@ -38,7 +39,7 @@ describe("ExpressZodValidationASTAnalyzer", () => {
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/UserLoginVo",
+                $ref: "#/components/schemas/UpdateUserDto",
               },
             },
           },
@@ -50,8 +51,8 @@ describe("ExpressZodValidationASTAnalyzer", () => {
       const sourceFile = context.project.createSourceFile(
         `test-${Date.now()}.ts`,
         `
-        import { UserIdVo } from "@tests/fixtures/schema";
-        app.get("/users", validateRequest({ query: UserIdVo }), handler);
+        import { UserIdDto } from "@tests/fixtures/schema";
+        app.get("/users", validateRequest({ query: UserIdDto }), handler);
         `,
       );
       const node = sourceFile.getStatements()[1];
@@ -74,8 +75,8 @@ describe("ExpressZodValidationASTAnalyzer", () => {
       const sourceFile = context.project.createSourceFile(
         `test-${Date.now()}.ts`,
         `
-        import { UserIdVo } from "@tests/fixtures/schema";
-        app.get("/users/:id", validateRequest({ params: UserIdVo }), handler);
+        import { UserIdDto } from "@tests/fixtures/schema";
+        app.get("/users/:id", validateRequest({ params: UserIdDto }), handler);
         `,
       );
       const node = sourceFile.getStatements()[1];
@@ -98,8 +99,8 @@ describe("ExpressZodValidationASTAnalyzer", () => {
       const sourceFile = context.project.createSourceFile(
         `test-${Date.now()}.ts`,
         `
-        import { UserIdVo } from "@tests/fixtures/schema";
-        app.get("/users", validateRequest({ headers: UserIdVo }), handler);
+        import { UserIdDto } from "@tests/fixtures/schema";
+        app.get("/users", validateRequest({ headers: UserIdDto }), handler);
         `,
       );
       const node = sourceFile.getStatements()[1];
@@ -150,11 +151,12 @@ describe("ExpressZodValidationASTAnalyzer", () => {
 
     it("应该处理未知的属性名", async () => {
       const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+        "user-controller.ts",
         `
-          import { UserLoginVo } from "@tests/fixtures/schema";
-          app.get("/users", validateRequest({ unknown: UserLoginVo }), handler);
-          `,
+import { UpdateUserDto } from "@tests/fixtures/schema";
+app.put("/api/users/:id", validateRequest({
+  unknown: UpdateUserDto
+}), (req, res) => {})`,
       );
       const node = sourceFile.getStatements()[1];
       const result = await analyzer.analyze(node);
@@ -226,8 +228,8 @@ describe("ExpressZodValidationASTAnalyzer", () => {
       const sourceFile = customContext.project.createSourceFile(
         `test-${Date.now()}.ts`,
         `
-          import { UserLoginVo } from "@tests/fixtures/schema";
-          app.post("/users", validateRequest({ body: UserLoginVo }), handler);
+          import { UpdateUserDto } from "@tests/fixtures/schema";
+          app.put("/api/users/:id", validateRequest({ body: UpdateUserDto }), handler);
           `,
       );
       const node = sourceFile.getStatements()[1];

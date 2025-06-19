@@ -317,10 +317,10 @@ default: "1"`);
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserLoginVo } from "@tests/fixtures/schema";
+import { UpdateUserDto } from "@tests/fixtures/schema";
 /**
  * @test 测试参数
- * schema: {@link UserLoginVo}
+ * schema: {@link UpdateUserDto}
  */
 function test() {}`,
         );
@@ -330,12 +330,12 @@ function test() {}`,
 
         expect(result.inline).toEqual(["测试参数"]);
         expect(result.yaml).toEqual({
-          schema: { $ref: "#/components/schemas/UserLoginVo" },
+          schema: { $ref: "#/components/schemas/UpdateUserDto" },
         });
         expect(result.rawText).toEqual(
-          `测试参数\nschema: { $ref: "#/components/schemas/UserLoginVo" }`,
+          `测试参数\nschema: { $ref: "#/components/schemas/UpdateUserDto" }`,
         );
-        expect(context.schemas.has("UserLoginVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserDto")).toBe(true);
       });
 
       it("应该处理没有标识符的JSDoc链接", async () => {
@@ -405,10 +405,10 @@ function test() {}`,
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserLoginVo, UserVo } from "@tests/fixtures/schema";
+import { UpdateUserDto, UserVo } from "@tests/fixtures/schema";
 /**
  * @test 测试参数
- * login: {@link UserLoginVo}
+ * login: {@link UpdateUserDto}
  * user: {@link UserVo}
  */
 function test() {}`,
@@ -419,27 +419,27 @@ function test() {}`,
 
         expect(result.inline).toEqual(["测试参数"]);
         expect(result.yaml).toEqual({
-          login: { $ref: "#/components/schemas/UserLoginVo" },
+          login: { $ref: "#/components/schemas/UpdateUserDto" },
           user: { $ref: "#/components/schemas/UserVo" },
         });
         expect(result.rawText).toEqual(
-          `测试参数\nlogin: { $ref: "#/components/schemas/UserLoginVo" }\nuser: { $ref: "#/components/schemas/UserVo" }`,
+          `测试参数\nlogin: { $ref: "#/components/schemas/UpdateUserDto" }\nuser: { $ref: "#/components/schemas/UserVo" }`,
         );
-        expect(context.schemas.has("UserLoginVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserDto")).toBe(true);
         expect(context.schemas.has("UserVo")).toBe(true);
       });
 
       it("应该处理schema已存在于context的情况", async () => {
         const existingSchema: SchemaObject = { type: "object" };
-        context.schemas.set("UserLoginVo", existingSchema);
+        context.schemas.set("UpdateUserDto", existingSchema);
 
         const sourceFile = project.createSourceFile(
           `test-${Date.now()}.ts`,
           `
-              import { UserLoginVo } from "@tests/fixtures/schema";
+              import { UpdateUserDto } from "@tests/fixtures/schema";
               /**
                * @test 测试参数
-               * schema: {@link UserLoginVo}
+               * schema: {@link UpdateUserDto}
                */
               function test() {}
               `,
@@ -449,9 +449,9 @@ function test() {}`,
         const result = await parser.getTagParamsWithYaml(tag);
 
         expect(result.yaml).toEqual({
-          schema: { $ref: "#/components/schemas/UserLoginVo" },
+          schema: { $ref: "#/components/schemas/UpdateUserDto" },
         });
-        expect(context.schemas.get("UserLoginVo")).toBe(existingSchema);
+        expect(context.schemas.get("UpdateUserDto")).toBe(existingSchema);
       });
 
       it("应该处理没有JSDoc链接的情况", async () => {
@@ -479,9 +479,9 @@ function test() {}`,
           project,
           `test-${Date.now()}${Math.random() * 1000000}.ts`,
           `
-import { UserLoginVo } from "@tests/fixtures/schema";
+import { UpdateUserDto } from "@tests/fixtures/schema";
 /**
- * @test param1 {@link UserLoginVo} param3
+ * @test param1 {@link UpdateUserDto} param3
  */
 function test() {}`,
         );
@@ -491,14 +491,14 @@ function test() {}`,
 
         expect(result.inline).toEqual([
           "param1",
-          `$ref: "#/components/schemas/UserLoginVo"`,
+          `$ref: "#/components/schemas/UpdateUserDto"`,
           "param3",
         ]);
         expect(result.yaml).toBeUndefined();
         expect(result.rawText).toEqual(
-          `param1 { $ref: "#/components/schemas/UserLoginVo" } param3`,
+          `param1 { $ref: "#/components/schemas/UpdateUserDto" } param3`,
         );
-        expect(context.schemas.has("UserLoginVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserDto")).toBe(true);
       });
     });
   });

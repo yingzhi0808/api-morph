@@ -380,9 +380,9 @@ describe("RequestBodyTagParser", () => {
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserLoginVo } from "@tests/fixtures/schema";
+import { UpdateUserDto } from "@tests/fixtures/schema";
 /**
- * @requestBody {@link UserLoginVo} required 用户登录信息
+ * @requestBody {@link UpdateUserDto} required 更新的用户信息
  */
 function test() {}`,
         );
@@ -392,18 +392,18 @@ function test() {}`,
 
         expect(result).toEqual({
           requestBody: {
-            description: "用户登录信息",
+            description: "更新的用户信息",
             required: true,
             content: {
               "application/json": {
                 schema: {
-                  $ref: "#/components/schemas/UserLoginVo",
+                  $ref: "#/components/schemas/UpdateUserDto",
                 },
               },
             },
           },
         });
-        expect(context.schemas.has("UserLoginVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserDto")).toBe(true);
       });
 
       it("应该正确处理 YAML 参数中的 Zod Schema", async () => {
@@ -411,7 +411,7 @@ function test() {}`,
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserVo, ErrorVo } from "@tests/fixtures/schema";
+import { UserVo, UpdateUserVo } from "@tests/fixtures/schema";
 /**
  * @requestBody 用户信息更新
  * required: true
@@ -419,7 +419,7 @@ import { UserVo, ErrorVo } from "@tests/fixtures/schema";
  *   application/json:
  *     schema: {@link UserVo}
  *   application/xml:
- *     schema: {@link ErrorVo}
+ *     schema: {@link UpdateUserVo}
  */
 function test() {}`,
         );
@@ -439,14 +439,14 @@ function test() {}`,
               },
               "application/xml": {
                 schema: {
-                  $ref: "#/components/schemas/ErrorVo",
+                  $ref: "#/components/schemas/UpdateUserVo",
                 },
               },
             },
           },
         });
         expect(context.schemas.has("UserVo")).toBe(true);
-        expect(context.schemas.has("ErrorVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserVo")).toBe(true);
       });
     });
   });

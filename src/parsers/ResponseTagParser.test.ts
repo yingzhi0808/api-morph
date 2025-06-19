@@ -583,14 +583,14 @@ function test() {}`,
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserVo, ErrorVo } from "@tests/fixtures/schema";
+import { UserVo, UpdateUserVo } from "@tests/fixtures/schema";
 /**
  * @response 200 成功响应
  * content:
  *   application/json:
  *     schema: {@link UserVo}
  *   application/xml:
- *     schema: {@link ErrorVo}
+ *     schema: {@link UpdateUserVo}
  */
 function test() {}`,
         );
@@ -610,7 +610,7 @@ function test() {}`,
                 },
                 "application/xml": {
                   schema: {
-                    $ref: "#/components/schemas/ErrorVo",
+                    $ref: "#/components/schemas/UpdateUserVo",
                   },
                 },
               },
@@ -618,7 +618,7 @@ function test() {}`,
           },
         });
         expect(context.schemas.has("UserVo")).toBe(true);
-        expect(context.schemas.has("ErrorVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserVo")).toBe(true);
       });
     });
   });

@@ -12,18 +12,18 @@ describe("OpenAPIParser", () => {
         "user-controller.ts",
         `
 /**
- * @operation put /api/v1/users/{userId}/profile
- * @summary 更新用户档案信息
- * @description 更新指定用户的个人档案信息，包括基本信息和偏好设置。支持部分更新，只更新提供的字段。
- * @operationId updateUserProfile
- * @tags users profile
+ * @operation put /api/users/{id}
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @operationId updateUser
+ * @tags users
  * @deprecated
- * @parameter userId path required 用户唯一标识符
+ * @parameter id path required 用户ID
  * schema:
  *   type: string
  *   format: uuid
  * example: 123e4567-e89b-12d3-a456-426614174000
- * @requestBody required 用户档案更新数据
+ * @requestBody required 用户更新数据
  * content:
  *   application/json:
  *     schema:
@@ -46,7 +46,7 @@ describe("OpenAPIParser", () => {
  *           format: uri
  *           description: 头像URL
  *           examples: [https://cdn.example.com/avatars/user123.jpg]
- * @response 200 用户档案更新成功
+ * @response 200 更新用户信息成功
  * content:
  *   application/json:
  *     schema:
@@ -60,7 +60,7 @@ describe("OpenAPIParser", () => {
  *           type: object
  *           description: 返回数据
  *           properties:
- *             userId:
+ *             id:
  *               type: string
  *               format: uuid
  *               description: 用户ID
@@ -87,7 +87,7 @@ describe("OpenAPIParser", () => {
  *               description: 错误消息
  *               examples: [指定的用户不存在]
  */
-app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
+app.put("/api/users/:id", (req, res) => {})`,
       );
 
       const parser = new OpenAPIParser(project);
@@ -104,27 +104,27 @@ app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
         "user-controller.ts",
         `
 /**
- * @operation put /api/v1/users/{userId}/profile
- * @summary 更新用户档案信息
- * @description 更新指定用户的个人档案信息，包括基本信息和偏好设置。支持部分更新，只更新提供的字段。
- * @operationId updateUserProfile
- * @tags users profile
+ * @operation put /api/users/{id}
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @operationId updateUser
+ * @tags users
  * @deprecated
- * @parameter userId path required 用户唯一标识符
+ * @parameter id path required 用户ID
  * schema:
  *   type: string
  *   format: uuid
  * example: 123e4567-e89b-12d3-a456-426614174000
- * @requestBody {$ref: "#/components/schemas/UpdateUserProfileDto"} required 用户档案更新数据
- * @response 200 {$ref: "#/components/schemas/UpdateUserProfileVo"} 用户档案更新成功
+ * @requestBody {$ref: "#/components/schemas/UpdateUserDto"} required 用户更新数据
+ * @response 200 {$ref: "#/components/schemas/UpdateUserVo"} 更新用户信息成功
  * @response 404 {$ref: "#/components/schemas/UserNotFoundVo"} 用户不存在
  */
-app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
+app.put("/api/users/:id", (req, res) => {})`,
       );
 
       const parser = new OpenAPIParser(project);
       const builder = new OpenAPIBuilder()
-        .addSchemaToComponents("UpdateUserProfileDto", {
+        .addSchemaToComponents("UpdateUserDto", {
           type: "object",
           required: ["email"],
           properties: {
@@ -149,7 +149,7 @@ app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
             },
           },
         })
-        .addSchemaToComponents("UpdateUserProfileVo", {
+        .addSchemaToComponents("UpdateUserVo", {
           type: "object",
           properties: {
             success: {
@@ -161,7 +161,7 @@ app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
               type: "object",
               description: "返回数据",
               properties: {
-                userId: {
+                id: {
                   type: "string",
                   format: "uuid",
                   description: "用户ID",
@@ -213,24 +213,24 @@ app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
         project,
         "user-controller.ts",
         `
-import { UpdateUserProfileDto, UpdateUserProfileVo, UserNotFoundVo } from "@tests/fixtures/schema"
+import { UpdateUserDto, UpdateUserVo, UserNotFoundVo } from "@tests/fixtures/schema"
 /**
- * @operation put /api/v1/users/{userId}/profile
- * @summary 更新用户档案信息
- * @description 更新指定用户的个人档案信息，包括基本信息和偏好设置。支持部分更新，只更新提供的字段。
- * @operationId updateUserProfile
- * @tags users profile
+ * @operation put /api/users/{id}
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @operationId updateUser
+ * @tags users
  * @deprecated
- * @parameter userId path required 用户唯一标识符
+ * @parameter id path required 用户ID
  * schema:
  *   type: string
  *   format: uuid
  * example: 123e4567-e89b-12d3-a456-426614174000
- * @requestBody {@link UpdateUserProfileDto} required 用户档案更新数据
- * @response 200 {@link UpdateUserProfileVo} 用户档案更新成功
+ * @requestBody {@link UpdateUserDto} required 用户更新数据
+ * @response 200 {@link UpdateUserVo} 更新用户信息成功
  * @response 404 {@link UserNotFoundVo} 用户不存在
  */
-app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
+app.put("/api/users/:id", (req, res) => {})`,
       );
 
       const parser = new OpenAPIParser(project);
@@ -238,6 +238,94 @@ app.put("/api/v1/users/:userId/profile", (req, res) => {})`,
       const result = await parser.parse(builder);
 
       expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe("Express框架集成测试", () => {
+    it("应该能够自动分析Express路由", async () => {
+      const project = createProject({
+        tsConfigFilePath: "tsconfig.json",
+        useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
+      });
+
+      project.addDirectoryAtPath("tests/fixtures");
+
+      createFileWithContent(
+        project,
+        "user-controller.ts",
+        `
+import express from "express"
+import { UserVo, UserIdDto, UpdateUserDto, UpdateUserVo, UserNotFoundVo } from "@tests/fixtures/schema"
+const app = express()
+
+/**
+ * @summary 获取用户信息
+ * @description 获取指定用户的个人信息
+ * @tags users
+ * @response 200 {@link UserVo} 获取用户信息成功
+ * @response 404 {@link UserNotFoundVo} 用户不存在
+ */
+app.get("/api/users/:id", validateRequest({
+  params: UserIdDto
+}), (req, res) => {})
+
+/**
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @tags users
+ * @response 200 {@link UpdateUserVo} 更新用户信息成功
+ * @response 404 {@link UserNotFoundVo} 用户不存在
+ */
+app.put("/api/users/:id", validateRequest({
+  params: UserIdDto,
+  body: UpdateUserDto
+}), (req, res) => {})`,
+      );
+
+      const parser = new OpenAPIParser(project);
+      const builder = new OpenAPIBuilder();
+      const result = await parser.parse(builder);
+
+      expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe("选项测试", () => {
+    it("应该支持禁用AST分析功能", async () => {
+      const project = createProject({
+        tsConfigFilePath: "tsconfig.json",
+        useInMemoryFileSystem: false,
+      });
+
+      project.addDirectoryAtPath("tests/fixtures");
+
+      createFileWithContent(
+        project,
+        "user-controller.ts",
+        `
+import express from "express"
+import { UserVo, UserIdDto, UserNotFoundVo } from "@tests/fixtures/schema"
+const app = express()
+/**
+ * @operation get /api/users/{id}
+ * @summary 获取用户信息
+ * @description 获取指定用户的个人信息
+ * @tags users
+ * @response 200 {@link UserVo} 获取用户信息成功
+ * @response 404 {@link UserNotFoundVo} 用户不存在
+ */
+app.get("/api/users/:id", validateRequest({
+  params: UserIdDto
+}), (req, res) => {})`,
+      );
+
+      const parser = new OpenAPIParser(project, { enableASTAnalysis: false });
+      const builder = new OpenAPIBuilder();
+      const result = await parser.parse(builder);
+
+      expect(result.paths!["/api/users/{id}"]!.get).toBeDefined();
+      expect(result.paths!["/api/users/{id}"]!.get?.parameters).toBeUndefined();
     });
   });
 });

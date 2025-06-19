@@ -1,10 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引用的Zod schema的JSDoc注释 1`] = `
+exports[`OpenAPIParser > Express框架集成测试 > 应该能够自动分析Express路由 1`] = `
 {
   "components": {
     "schemas": {
-      "UpdateUserProfileDto": {
+      "UpdateUserDto": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
@@ -40,7 +40,7 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
         ],
         "type": "object",
       },
-      "UpdateUserProfileVo": {
+      "UpdateUserVo": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
@@ -48,7 +48,7 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
             "additionalProperties": false,
             "description": "返回数据",
             "properties": {
-              "userId": {
+              "id": {
                 "description": "用户ID",
                 "examples": [
                   "123e4567-e89b-12d3-a456-426614174000",
@@ -59,7 +59,295 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
               },
             },
             "required": [
-              "userId",
+              "id",
+            ],
+            "type": "object",
+          },
+          "success": {
+            "description": "是否成功",
+            "examples": [
+              true,
+            ],
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "success",
+          "data",
+        ],
+        "type": "object",
+      },
+      "UserIdDto": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "用户ID",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+        ],
+        "type": "object",
+      },
+      "UserNotFoundVo": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "错误码",
+                "examples": [
+                  "USER_NOT_FOUND",
+                ],
+                "type": "string",
+              },
+              "message": {
+                "description": "错误消息",
+                "examples": [
+                  "指定的用户不存在",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "code",
+              "message",
+            ],
+            "type": "object",
+          },
+          "success": {
+            "description": "是否成功",
+            "examples": [
+              false,
+            ],
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "success",
+          "error",
+        ],
+        "type": "object",
+      },
+      "UserVo": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "avatar": {
+            "description": "头像URL",
+            "format": "uri",
+            "type": "string",
+          },
+          "createdAt": {
+            "description": "创建时间",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "type": "string",
+          },
+          "email": {
+            "description": "邮箱",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+          "id": {
+            "description": "用户ID",
+            "type": "string",
+          },
+          "updatedAt": {
+            "description": "更新时间",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "type": "string",
+          },
+          "username": {
+            "description": "用户名",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "createdAt",
+          "updatedAt",
+        ],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "title": "",
+    "version": "1.0.0",
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/users/{id}": {
+      "get": {
+        "description": "获取指定用户的个人信息",
+        "operationId": "getApiUsersById",
+        "parameters": [
+          {
+            "description": "用户ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserVo",
+                },
+              },
+            },
+            "description": "获取用户信息成功",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserNotFoundVo",
+                },
+              },
+            },
+            "description": "用户不存在",
+          },
+        },
+        "summary": "获取用户信息",
+        "tags": [
+          "users",
+        ],
+      },
+      "put": {
+        "description": "更新指定用户的个人信息",
+        "operationId": "putApiUsersById",
+        "parameters": [
+          {
+            "description": "用户ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto",
+              },
+            },
+          },
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserVo",
+                },
+              },
+            },
+            "description": "更新用户信息成功",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserNotFoundVo",
+                },
+              },
+            },
+            "description": "用户不存在",
+          },
+        },
+        "summary": "更新用户信息",
+        "tags": [
+          "users",
+        ],
+      },
+    },
+  },
+  "tags": [
+    {
+      "name": "users",
+    },
+  ],
+}
+`;
+
+exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引用的Zod schema的JSDoc注释 1`] = `
+{
+  "components": {
+    "schemas": {
+      "UpdateUserDto": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "avatar": {
+            "description": "头像URL",
+            "examples": [
+              "https://cdn.example.com/avatars/user123.jpg",
+            ],
+            "format": "uri",
+            "type": "string",
+          },
+          "displayName": {
+            "description": "用户显示名称",
+            "examples": [
+              "John Doe",
+            ],
+            "maxLength": 50,
+            "minLength": 2,
+            "type": "string",
+          },
+          "email": {
+            "description": "用户邮箱地址",
+            "examples": [
+              "john.doe@example.com",
+            ],
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "email",
+        ],
+        "type": "object",
+      },
+      "UpdateUserVo": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "additionalProperties": false,
+            "description": "返回数据",
+            "properties": {
+              "id": {
+                "description": "用户ID",
+                "examples": [
+                  "123e4567-e89b-12d3-a456-426614174000",
+                ],
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
             ],
             "type": "object",
           },
@@ -127,17 +415,17 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/v1/users/{userId}/profile": {
+    "/api/users/{id}": {
       "put": {
         "deprecated": true,
-        "description": "更新指定用户的个人档案信息，包括基本信息和偏好设置。支持部分更新，只更新提供的字段。",
-        "operationId": "updateUserProfile",
+        "description": "更新指定用户的个人信息",
+        "operationId": "updateUser",
         "parameters": [
           {
-            "description": "用户唯一标识符",
+            "description": "用户ID",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "in": "path",
-            "name": "userId",
+            "name": "id",
             "required": true,
             "schema": {
               "format": "uuid",
@@ -149,11 +437,11 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateUserProfileDto",
+                "$ref": "#/components/schemas/UpdateUserDto",
               },
             },
           },
-          "description": "用户档案更新数据",
+          "description": "用户更新数据",
           "required": true,
         },
         "responses": {
@@ -161,11 +449,11 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateUserProfileVo",
+                  "$ref": "#/components/schemas/UpdateUserVo",
                 },
               },
             },
-            "description": "用户档案更新成功",
+            "description": "更新用户信息成功",
           },
           "404": {
             "content": {
@@ -178,10 +466,9 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
             "description": "用户不存在",
           },
         },
-        "summary": "更新用户档案信息",
+        "summary": "更新用户信息",
         "tags": [
           "users",
-          "profile",
         ],
       },
     },
@@ -189,9 +476,6 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含@link引�
   "tags": [
     {
       "name": "users",
-    },
-    {
-      "name": "profile",
     },
   ],
 }
@@ -205,17 +489,17 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含JSON Schem
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/v1/users/{userId}/profile": {
+    "/api/users/{id}": {
       "put": {
         "deprecated": true,
-        "description": "更新指定用户的个人档案信息，包括基本信息和偏好设置。支持部分更新，只更新提供的字段。",
-        "operationId": "updateUserProfile",
+        "description": "更新指定用户的个人信息",
+        "operationId": "updateUser",
         "parameters": [
           {
-            "description": "用户唯一标识符",
+            "description": "用户ID",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "in": "path",
-            "name": "userId",
+            "name": "id",
             "required": true,
             "schema": {
               "format": "uuid",
@@ -261,7 +545,7 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含JSON Schem
               },
             },
           },
-          "description": "用户档案更新数据",
+          "description": "用户更新数据",
           "required": true,
         },
         "responses": {
@@ -273,7 +557,7 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含JSON Schem
                     "data": {
                       "description": "返回数据",
                       "properties": {
-                        "userId": {
+                        "id": {
                           "description": "用户ID",
                           "examples": [
                             "123e4567-e89b-12d3-a456-426614174000",
@@ -296,7 +580,7 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含JSON Schem
                 },
               },
             },
-            "description": "用户档案更新成功",
+            "description": "更新用户信息成功",
           },
           "404": {
             "content": {
@@ -337,10 +621,9 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含JSON Schem
             "description": "用户不存在",
           },
         },
-        "summary": "更新用户档案信息",
+        "summary": "更新用户信息",
         "tags": [
           "users",
-          "profile",
         ],
       },
     },
@@ -348,9 +631,6 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含JSON Schem
   "tags": [
     {
       "name": "users",
-    },
-    {
-      "name": "profile",
     },
   ],
 }
@@ -360,7 +640,7 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
 {
   "components": {
     "schemas": {
-      "UpdateUserProfileDto": {
+      "UpdateUserDto": {
         "properties": {
           "avatar": {
             "description": "头像URL",
@@ -393,12 +673,12 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
         ],
         "type": "object",
       },
-      "UpdateUserProfileVo": {
+      "UpdateUserVo": {
         "properties": {
           "data": {
             "description": "返回数据",
             "properties": {
-              "userId": {
+              "id": {
                 "description": "用户ID",
                 "examples": [
                   "123e4567-e89b-12d3-a456-426614174000",
@@ -458,17 +738,17 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/v1/users/{userId}/profile": {
+    "/api/users/{id}": {
       "put": {
         "deprecated": true,
-        "description": "更新指定用户的个人档案信息，包括基本信息和偏好设置。支持部分更新，只更新提供的字段。",
-        "operationId": "updateUserProfile",
+        "description": "更新指定用户的个人信息",
+        "operationId": "updateUser",
         "parameters": [
           {
-            "description": "用户唯一标识符",
+            "description": "用户ID",
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "in": "path",
-            "name": "userId",
+            "name": "id",
             "required": true,
             "schema": {
               "format": "uuid",
@@ -480,11 +760,11 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateUserProfileDto",
+                "$ref": "#/components/schemas/UpdateUserDto",
               },
             },
           },
-          "description": "用户档案更新数据",
+          "description": "用户更新数据",
           "required": true,
         },
         "responses": {
@@ -492,11 +772,11 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateUserProfileVo",
+                  "$ref": "#/components/schemas/UpdateUserVo",
                 },
               },
             },
-            "description": "用户档案更新成功",
+            "description": "更新用户信息成功",
           },
           "404": {
             "content": {
@@ -509,10 +789,9 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
             "description": "用户不存在",
           },
         },
-        "summary": "更新用户档案信息",
+        "summary": "更新用户信息",
         "tags": [
           "users",
-          "profile",
         ],
       },
     },
@@ -520,9 +799,6 @@ exports[`OpenAPIParser > 标签解析功能测试 > 应该解析包含内联sche
   "tags": [
     {
       "name": "users",
-    },
-    {
-      "name": "profile",
     },
   ],
 }

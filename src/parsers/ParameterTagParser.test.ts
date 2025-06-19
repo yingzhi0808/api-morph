@@ -479,9 +479,9 @@ describe("ParameterTagParser", () => {
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserIdVo } from "@tests/fixtures/schema";
+import { UserIdDto } from "@tests/fixtures/schema";
 /**
- * @parameter userId path {@link UserIdVo} 用户ID
+ * @parameter userId path {@link UserIdDto} 用户ID
  */
 function test() {}`,
         );
@@ -497,12 +497,12 @@ function test() {}`,
               description: "用户ID",
               required: true,
               schema: {
-                $ref: "#/components/schemas/UserIdVo",
+                $ref: "#/components/schemas/UserIdDto",
               },
             },
           ],
         });
-        expect(context.schemas.has("UserIdVo")).toBe(true);
+        expect(context.schemas.has("UserIdDto")).toBe(true);
       });
 
       it("应该正确处理 YAML 参数中的 Zod Schema", async () => {
@@ -510,14 +510,14 @@ function test() {}`,
           project,
           `test-${Date.now()}.ts`,
           `
-import { UserVo, ErrorVo } from "@tests/fixtures/schema";
+import { UserVo, UpdateUserVo } from "@tests/fixtures/schema";
 /**
  * @parameter userId path 用户ID
  * required: true
  * schema: {@link UserVo}
  * content:
  *   application/json:
- *     schema: {@link ErrorVo}
+ *     schema: {@link UpdateUserVo}
  */
 function test() {}`,
         );
@@ -538,7 +538,7 @@ function test() {}`,
               content: {
                 "application/json": {
                   schema: {
-                    $ref: "#/components/schemas/ErrorVo",
+                    $ref: "#/components/schemas/UpdateUserVo",
                   },
                 },
               },
@@ -546,7 +546,7 @@ function test() {}`,
           ],
         });
         expect(context.schemas.has("UserVo")).toBe(true);
-        expect(context.schemas.has("ErrorVo")).toBe(true);
+        expect(context.schemas.has("UpdateUserVo")).toBe(true);
       });
     });
   });
