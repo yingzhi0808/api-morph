@@ -2,6 +2,7 @@
 
 export * from "./CallbackBuilder";
 export * from "./ExternalDocsBuilder";
+export * from "./MediaTypeBuilder";
 export * from "./OpenAPIBuilder";
 export * from "./OperationBuilder";
 export * from "./ParameterBuilder";

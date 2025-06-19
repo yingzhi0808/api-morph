@@ -1,3 +1,5 @@
+import { isObject } from "radashi";
+import type { ZodType } from "zod/v4";
 import type { ParameterObject, ReferenceObject } from "@/types";
 
 /**
@@ -18,4 +20,13 @@ export function isParameterObject(
  */
 export function isExtensionKey(key: string): key is `x-${string}` {
   return key.startsWith("x-");
+}
+
+/**
+ * 判断给定的 value 是否为 Zod schema。
+ * @param value 要判断的值。
+ * @returns 如果是 Zod schema 则返回 true，否则返回 false。
+ */
+export function isZodSchema(value: unknown): value is ZodType {
+  return isObject(value) && "_zod" in value;
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod/v4";
 import type { ParameterObject, ReferenceObject } from "@/types";
-import { isExtensionKey, isParameterObject } from "@/utils";
+import { isExtensionKey, isParameterObject, isZodSchema } from "@/utils";
 
 describe("typeGuards", () => {
   describe("isParameterObject", () => {
@@ -160,6 +161,75 @@ describe("typeGuards", () => {
       expect(isExtensionKey("x-codegen-request-body-name")).toBe(true);
       expect(isExtensionKey("x-nullable")).toBe(true);
       expect(isExtensionKey("x-enum-varnames")).toBe(true);
+    });
+  });
+
+  describe("isZodSchema", () => {
+    it("应该正确识别 ZodString schema", () => {
+      const zodString = z.string();
+      expect(isZodSchema(zodString)).toBe(true);
+    });
+
+    it("应该正确识别 ZodNumber schema", () => {
+      const zodNumber = z.number();
+      expect(isZodSchema(zodNumber)).toBe(true);
+    });
+
+    it("应该正确识别 ZodObject schema", () => {
+      const zodObject = z.object({
+        name: z.string(),
+        age: z.number(),
+      });
+      expect(isZodSchema(zodObject)).toBe(true);
+    });
+
+    it("应该正确识别 ZodArray schema", () => {
+      const zodArray = z.array(z.string());
+      expect(isZodSchema(zodArray)).toBe(true);
+    });
+
+    it("应该正确识别 ZodEnum schema", () => {
+      const zodEnum = z.enum(["red", "green", "blue"]);
+      expect(isZodSchema(zodEnum)).toBe(true);
+    });
+
+    it("应该正确识别 ZodUnion schema", () => {
+      const zodUnion = z.union([z.string(), z.number()]);
+      expect(isZodSchema(zodUnion)).toBe(true);
+    });
+
+    it("应该正确识别 ZodOptional schema", () => {
+      const zodOptional = z.string().optional();
+      expect(isZodSchema(zodOptional)).toBe(true);
+    });
+
+    it("应该正确识别 ZodNullable schema", () => {
+      const zodNullable = z.string().nullable();
+      expect(isZodSchema(zodNullable)).toBe(true);
+    });
+
+    it("应该正确拒绝普通对象", () => {
+      const plainObject = { type: "string" };
+      expect(isZodSchema(plainObject)).toBe(false);
+    });
+
+    it("应该正确拒绝 JSON Schema 对象", () => {
+      const jsonSchema = {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+        },
+        required: ["name"],
+      };
+      expect(isZodSchema(jsonSchema)).toBe(false);
+    });
+
+    it("应该正确拒绝 null", () => {
+      expect(isZodSchema(null)).toBe(false);
+    });
+
+    it("应该正确拒绝 undefined", () => {
+      expect(isZodSchema(undefined)).toBe(false);
     });
   });
 });
