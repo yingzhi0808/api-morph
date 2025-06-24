@@ -27,7 +27,8 @@
     "isolatedModules": true,
     "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmit": true
   },
   "include": ["src", "tests", "examples"]
 }

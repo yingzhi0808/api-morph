@@ -60,7 +60,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "check": "run-p check:*",
-    "check:type": "tsc --noEmit",
+    "check:type": "tsc",
     "check:biome": "biome check --fix --no-errors-on-unmatched",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "lefthook install"
