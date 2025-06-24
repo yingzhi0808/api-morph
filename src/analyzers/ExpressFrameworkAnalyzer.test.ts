@@ -64,6 +64,7 @@ describe("ExpressFrameworkAnalyzer", () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
       });
       const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
@@ -84,6 +85,7 @@ describe("ExpressFrameworkAnalyzer", () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
       });
       const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
@@ -105,6 +107,7 @@ describe("ExpressFrameworkAnalyzer", () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
       });
       const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
@@ -127,6 +130,7 @@ describe("ExpressFrameworkAnalyzer", () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
       });
       const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
@@ -173,7 +177,7 @@ describe("ExpressFrameworkAnalyzer", () => {
 
       const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
-        "user-controller.ts",
+        "test.ts",
         `
 import express from "express"
 import { UserIdDto, UpdateUserDto } from "@tests/fixtures/schema"

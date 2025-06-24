@@ -1,5 +1,6 @@
+import { nanoid } from "nanoid";
 import { Project, type ProjectOptions, SyntaxKind } from "ts-morph";
-import type { ParseContext, ParserOptions, SourceOperationData } from "@/types";
+import type { ParseContext, ParserOptions } from "@/types";
 
 /**
  * 创建一个 ts-morph Project 实例，默认使用内存文件系统。
@@ -36,28 +37,14 @@ export function createParseContext(
 }
 
 /**
- * 在指定的 Project 中创建包含指定内容的文件。
- * @param project ts-morph Project 实例。
- * @param fileName 文件名。
- * @param content 文件内容。
- * @returns 创建的 SourceFile 实例。
- */
-export function createFileWithContent(project: Project, fileName: string, content: string) {
-  return project.createSourceFile(fileName, content);
-}
-
-/**
  * 创建包含指定内容的 JSDocTag。
  * @param content JSDoc 标签内容。
  * @param project ts-morph Project 实例。
  * @returns JSDocTag 对象。
  */
-export function createJSDocTag(
-  content: string,
-  project = new Project({ useInMemoryFileSystem: true }),
-) {
+export function createJSDocTag(content: string, project = createProject()) {
   const sourceFile = project.createSourceFile(
-    `test-${Date.now()}.ts`,
+    `${nanoid()}.ts`,
     `
       /**
        * ${content}
@@ -66,33 +53,6 @@ export function createJSDocTag(
       `,
   );
   const [jsDoc] = sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc);
-  const tag = jsDoc?.getTags()[0];
-  if (!tag) {
-    throw new Error("无法创建JSDoc标签");
-  }
+  const tag = jsDoc.getTags()[0];
   return tag;
-}
-
-/**
- * 创建测试用的 SourceOperationData 对象。
- * @param tagContents JSDoc 标签内容数组。
- * @returns SourceOperationData 对象。
- */
-export function createSourceOperationData(tagContents: string[]): SourceOperationData {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const docComments = tagContents.map((content) => ` * ${content}`).join("\n");
-  const sourceFile = project.createSourceFile(
-    `test-${Date.now()}.ts`,
-    `/**
-${docComments}
- */
-function test() {}`,
-  );
-
-  const [jsDoc] = sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc);
-
-  return {
-    node: jsDoc.getParent(),
-    tags: jsDoc.getTags(),
-  };
 }

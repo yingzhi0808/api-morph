@@ -1,4 +1,4 @@
-import { createFileWithContent, createProject } from "@tests/utils";
+import { createProject } from "@tests/utils";
 import { describe, expect, it } from "vitest";
 import { OpenAPIBuilder } from "@/builders";
 import { OpenAPIParser } from "./OpenAPIParser";
@@ -7,9 +7,8 @@ describe("OpenAPIParser", () => {
   describe("标签解析功能测试", () => {
     it("应该解析包含JSON Schema的JSDoc注释", async () => {
       const project = createProject();
-      createFileWithContent(
-        project,
-        "user-controller.ts",
+      project.createSourceFile(
+        "test.ts",
         `
 /**
  * @operation put /api/users/{id}
@@ -99,9 +98,8 @@ app.put("/api/users/:id", (req, res) => {})`,
 
     it("应该解析包含内联schema的JSDoc注释", async () => {
       const project = createProject();
-      createFileWithContent(
-        project,
-        "user-controller.ts",
+      project.createSourceFile(
+        "test.ts",
         `
 /**
  * @operation put /api/users/{id}
@@ -209,9 +207,8 @@ app.put("/api/users/:id", (req, res) => {})`,
         skipAddingFilesFromTsConfig: true,
       });
       project.addDirectoryAtPath("tests/fixtures");
-      createFileWithContent(
-        project,
-        "user-controller.ts",
+      project.createSourceFile(
+        "test.ts",
         `
 import { UpdateUserDto, UpdateUserVo, UserNotFoundVo } from "@tests/fixtures/schema"
 /**
@@ -248,12 +245,9 @@ app.put("/api/users/:id", (req, res) => {})`,
         useInMemoryFileSystem: false,
         skipAddingFilesFromTsConfig: true,
       });
-
       project.addDirectoryAtPath("tests/fixtures");
-
-      createFileWithContent(
-        project,
-        "user-controller.ts",
+      project.createSourceFile(
+        "test.ts",
         `
 import express from "express"
 import { UserVo, UserIdDto, UpdateUserDto, UpdateUserVo, UserNotFoundVo } from "@tests/fixtures/schema"
@@ -296,13 +290,11 @@ app.put("/api/users/:id", validateRequest({
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
       });
-
       project.addDirectoryAtPath("tests/fixtures");
-
-      createFileWithContent(
-        project,
-        "user-controller.ts",
+      project.createSourceFile(
+        "test.ts",
         `
 import express from "express"
 import { UserVo, UserIdDto, UserNotFoundVo } from "@tests/fixtures/schema"

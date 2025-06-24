@@ -1,10 +1,5 @@
-import {
-  createFileWithContent,
-  createJSDocTag,
-  createParseContext,
-  createProject,
-} from "@tests/utils";
-import type { JSDocTag } from "ts-morph";
+import { createJSDocTag, createParseContext, createProject } from "@tests/utils";
+import type { JSDocTag, Project } from "ts-morph";
 import { SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
 import { TagParser } from "@/core/TagParser";
@@ -297,25 +292,24 @@ default: "1"`);
     });
 
     describe("应该处理包含JSDoc链接的标签", () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
+      let project: Project;
       let parser: TestTagParser;
       let context: ParseContext;
 
-      project.addDirectoryAtPath("tests/fixtures");
-
       beforeEach(() => {
+        project = createProject({
+          tsConfigFilePath: "tsconfig.json",
+          useInMemoryFileSystem: false,
+          skipAddingFilesFromTsConfig: true,
+        });
+        project.addDirectoryAtPath("tests/fixtures");
         context = createParseContext({}, project);
         parser = new TestTagParser(context);
       });
 
       it("应该处理JSDoc链接中的 zod schema", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 import { UpdateUserDto } from "@tests/fixtures/schema";
 /**
@@ -340,7 +334,7 @@ function test() {}`,
 
       it("应该处理没有标识符的JSDoc链接", async () => {
         const sourceFile = project.createSourceFile(
-          `test-${Date.now()}.ts`,
+          "test.ts",
           `
             /**
              * @test 测试参数
@@ -358,9 +352,8 @@ function test() {}`,
       });
 
       it("应该处理没有定义节点的JSDoc链接", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 /**
  * @test 测试参数
@@ -378,9 +371,8 @@ function test() {}`,
       });
 
       it("应该处理非Zod类型的JSDoc链接", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 export interface NonZodType {
   name: string;
@@ -401,9 +393,8 @@ function test() {}`,
       });
 
       it("应该处理多个JSDoc链接", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 import { UpdateUserDto, UserVo } from "@tests/fixtures/schema";
 /**
@@ -434,7 +425,7 @@ function test() {}`,
         context.schemas.set("UpdateUserDto", existingSchema);
 
         const sourceFile = project.createSourceFile(
-          `test-${Date.now()}.ts`,
+          "test.ts",
           `
               import { UpdateUserDto } from "@tests/fixtures/schema";
               /**
@@ -456,7 +447,7 @@ function test() {}`,
 
       it("应该处理没有JSDoc链接的情况", async () => {
         const sourceFile = project.createSourceFile(
-          `test-${Date.now()}${Math.random() * 1000000}.ts`,
+          "test.ts",
           `
               /**
                * @test 测试参数
@@ -475,9 +466,8 @@ function test() {}`,
       });
 
       it("应该处理内联参数中的JSDoc链接", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}${Math.random() * 1000000}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 import { UpdateUserDto } from "@tests/fixtures/schema";
 /**

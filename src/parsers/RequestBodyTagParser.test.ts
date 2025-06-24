@@ -1,10 +1,5 @@
-import {
-  createFileWithContent,
-  createJSDocTag,
-  createParseContext,
-  createProject,
-} from "@tests/utils";
-import { SyntaxKind } from "ts-morph";
+import { createJSDocTag, createParseContext, createProject } from "@tests/utils";
+import { type Project, SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ParseContext } from "@/types";
 import { RequestBodyTagParser } from "./RequestBodyTagParser";
@@ -360,25 +355,24 @@ describe("RequestBodyTagParser", () => {
     });
 
     describe("应该处理包含 Zod Schema 的情况", () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
+      let project: Project;
       let parser: RequestBodyTagParser;
       let context: ParseContext;
 
-      project.addDirectoryAtPath("tests/fixtures");
-
       beforeEach(() => {
+        project = createProject({
+          tsConfigFilePath: "tsconfig.json",
+          useInMemoryFileSystem: false,
+          skipAddingFilesFromTsConfig: true,
+        });
+        project.addDirectoryAtPath("tests/fixtures");
         context = createParseContext({}, project);
         parser = new RequestBodyTagParser(context);
       });
 
       it("应该正确处理内联参数中的 Zod Schema", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 import { UpdateUserDto } from "@tests/fixtures/schema";
 /**
@@ -407,9 +401,8 @@ function test() {}`,
       });
 
       it("应该正确处理 YAML 参数中的 Zod Schema", async () => {
-        const sourceFile = createFileWithContent(
-          project,
-          `test-${Date.now()}.ts`,
+        const sourceFile = project.createSourceFile(
+          "test.ts",
           `
 import { UserVo, UpdateUserVo } from "@tests/fixtures/schema";
 /**

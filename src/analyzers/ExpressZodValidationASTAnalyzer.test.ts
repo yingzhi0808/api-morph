@@ -1,30 +1,30 @@
 import { createParseContext, createProject } from "@tests/utils";
+import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ParseContext } from "@/types";
 import { ExpressZodValidationASTAnalyzer } from "./ExpressZodValidationASTAnalyzer";
 
 describe("ExpressZodValidationASTAnalyzer", () => {
+  let project: Project;
   let analyzer: ExpressZodValidationASTAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
-    const project = createProject({
+    project = createProject({
       tsConfigFilePath: "tsconfig.json",
       useInMemoryFileSystem: false,
       skipAddingFilesFromTsConfig: true,
     });
-
     project.addDirectoryAtPath("tests/fixtures");
-
     context = createParseContext({}, project);
     analyzer = new ExpressZodValidationASTAnalyzer(context);
   });
 
   describe("analyze", () => {
     it("应该处理body参数的Zod schema", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "user-controller.ts",
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
 import { UpdateUserDto } from "@tests/fixtures/schema";
 app.put("/api/users/:id", validateRequest({
@@ -48,8 +48,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理query参数的Zod schema", async () => {
-      const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
         import { UserIdDto } from "@tests/fixtures/schema";
         app.get("/users", validateRequest({ query: UserIdDto }), handler);
@@ -72,8 +72,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理path参数的Zod schema", async () => {
-      const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
         import { UserIdDto } from "@tests/fixtures/schema";
         app.get("/users/:id", validateRequest({ params: UserIdDto }), handler);
@@ -96,8 +96,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理headers参数的Zod schema", async () => {
-      const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
         import { UserIdDto } from "@tests/fixtures/schema";
         app.get("/users", validateRequest({ headers: UserIdDto }), handler);
@@ -120,7 +120,7 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理没有validateRequest调用的路由", async () => {
-      const sourceFile = context.project.createSourceFile("test.ts", 'app.get("/users", handler);');
+      const sourceFile = project.createSourceFile("test.ts", 'app.get("/users", handler);');
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
@@ -128,7 +128,7 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理validateRequest没有参数的情况", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
         'app.get("/users", validateRequest(), handler);',
       );
@@ -139,7 +139,7 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理validateRequest参数不是对象字面量的情况", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
         'app.get("/users", validateRequest(someVariable), handler);',
       );
@@ -150,8 +150,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理未知的属性名", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "user-controller.ts",
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
 import { UpdateUserDto } from "@tests/fixtures/schema";
 app.put("/api/users/:id", validateRequest({
@@ -165,7 +165,7 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理非Zod类型的标识符", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
         `
           const notZodSchema = { type: "object" };
@@ -179,7 +179,7 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理内联Zod schema调用", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
         `
           import { z } from "zod";
@@ -196,8 +196,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理非标识符和非调用表达式的节点", async () => {
-      const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
           app.get("/users", validateRequest({ body: "literal-string" }), handler);
           `,
@@ -209,14 +209,6 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该使用默认的请求媒体类型", async () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
-
-      project.addDirectoryAtPath("tests/fixtures");
-
       const customContext = createParseContext(
         {
           defaultRequestMediaType: "application/json",
@@ -224,9 +216,8 @@ app.put("/api/users/:id", validateRequest({
         project,
       );
       const customAnalyzer = new ExpressZodValidationASTAnalyzer(customContext);
-
-      const sourceFile = customContext.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
           import { UpdateUserDto } from "@tests/fixtures/schema";
           app.put("/api/users/:id", validateRequest({ body: UpdateUserDto }), handler);
@@ -239,8 +230,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理包含特殊属性的参数schema", async () => {
-      const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
         import { SpecialAttributesVo } from "@tests/fixtures/schema";
         app.get("/users", validateRequest({ query: SpecialAttributesVo }), handler);
@@ -275,8 +266,8 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理包含非对象类型属性的schema", async () => {
-      const sourceFile = context.project.createSourceFile(
-        `test-${Date.now()}.ts`,
+      const sourceFile = project.createSourceFile(
+        "test.ts",
         `
         import { NonObjectSchemaVo } from "@tests/fixtures/schema";
         app.get("/users", validateRequest({ query: NonObjectSchemaVo }), handler);
