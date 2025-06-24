@@ -2,7 +2,7 @@
   "name": "api-morph",
   "type": "module",
   "version": "0.2.1",
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.12.2",
   "description": "A TypeScript-first OpenAPI document generator that analyzes your code and generates comprehensive OpenAPI documentation.",
   "author": "Yingzhi Ji <jiyingzhi0808@gmail.com>",
   "license": "MIT",
@@ -72,18 +72,19 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
-    "@oxc-node/core": "^0.0.28",
+    "@biomejs/biome": "^2.0.5",
+    "@oxc-node/core": "^0.0.29",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.0.3",
     "@vitest/coverage-v8": "^3.2.4",
     "lefthook": "^1.11.14",
+    "nanoid": "^5.1.5",
     "npm-run-all2": "^8.0.4",
     "tsdown": "^0.12.8",
     "vite-tsconfig-paths": "^5.1.4",
     "vitepress": "2.0.0-alpha.5",
     "vitest": "^3.2.4",
-    "vue": "^3.5.16"
+    "vue": "^3.5.17"
   },
   "peerDependencies": {
     "@types/express": "^5.0.0",
