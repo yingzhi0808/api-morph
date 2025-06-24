@@ -9,8 +9,7 @@
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
-      "@tests/*": ["./tests/*"],
-      "api-morph": ["./src/index.ts"]
+      "@tests/*": ["./tests/*"]
     },
     "resolveJsonModule": true,
     "types": ["node"],
