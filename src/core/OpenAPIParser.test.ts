@@ -286,7 +286,7 @@ app.put("/api/users/:id", validateRequest({
   });
 
   describe("选项测试", () => {
-    it("应该支持禁用AST分析功能", async () => {
+    it("应该支持禁用代码分析功能", async () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
@@ -312,7 +312,7 @@ app.get("/api/users/:id", validateRequest({
 }), (req, res) => {})`,
       );
 
-      const parser = new OpenAPIParser(project, { enableASTAnalysis: false });
+      const parser = new OpenAPIParser(project, { enableCodeAnalysis: false });
       const builder = new OpenAPIBuilder();
       const result = await parser.parse(builder);
 

@@ -2,15 +2,15 @@ import { createParseContext } from "@tests/utils";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ParseContext } from "@/types";
-import { ExpressRouteASTAnalyzer } from "./ExpressRouteASTAnalyzer";
+import { ExpressRouteCodeAnalyzer } from "./ExpressRouteCodeAnalyzer";
 
-describe("ExpressRouteASTAnalyzer", () => {
-  let analyzer: ExpressRouteASTAnalyzer;
+describe("ExpressRouteCodeAnalyzer", () => {
+  let analyzer: ExpressRouteCodeAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
     context = createParseContext();
-    analyzer = new ExpressRouteASTAnalyzer(context);
+    analyzer = new ExpressRouteCodeAnalyzer(context);
   });
 
   describe("analyze", () => {
@@ -157,7 +157,7 @@ describe("ExpressRouteASTAnalyzer", () => {
           return `custom_${method}_${path.replace(/[^a-zA-Z0-9]/g, "_")}`;
         },
       });
-      const customAnalyzer = new ExpressRouteASTAnalyzer(customContext);
+      const customAnalyzer = new ExpressRouteCodeAnalyzer(customContext);
       const sourceFile = customContext.project.createSourceFile(
         "test.ts",
         'app.get("/users/:id", handler);',
@@ -172,7 +172,7 @@ describe("ExpressRouteASTAnalyzer", () => {
       const customContext = createParseContext({
         generateOperationId: () => null,
       });
-      const customAnalyzer = new ExpressRouteASTAnalyzer(customContext);
+      const customAnalyzer = new ExpressRouteCodeAnalyzer(customContext);
       const sourceFile = customContext.project.createSourceFile(
         "test.ts",
         'app.get("/users", handler);',
@@ -196,7 +196,7 @@ describe("ExpressRouteASTAnalyzer", () => {
           return "custom";
         },
       });
-      const customAnalyzer = new ExpressRouteASTAnalyzer(customContext);
+      const customAnalyzer = new ExpressRouteCodeAnalyzer(customContext);
       const sourceFile = customContext.project.createSourceFile(
         "users.ts",
         'app.get("/users/:id", getUserById);',

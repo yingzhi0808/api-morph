@@ -3,7 +3,7 @@ import { SyntaxKind } from "typescript";
 import z from "zod/v4";
 import type { JSONSchema } from "zod/v4/core";
 import type { ParameterIn } from "@/constants";
-import { ASTAnalyzer } from "@/core";
+import { CodeAnalyzer } from "@/core";
 import { isZodType } from "@/helpers";
 import type {
   ExampleObject,
@@ -14,10 +14,10 @@ import type {
 } from "@/types";
 
 /**
- * Express Zod 验证中间件 AST 分析器，负责从 Express 路由中的 validateRequest 中间件调用中提取 Zod schema
+ * Express Zod 验证中间件代码分析器，负责从 Express 路由中的 validateRequest 中间件调用中提取 Zod schema
  * 并转换为 OpenAPI 的参数和请求体定义
  */
-export class ExpressZodValidationASTAnalyzer extends ASTAnalyzer {
+export class ExpressZodValidationCodeAnalyzer extends CodeAnalyzer {
   /**
    * 分析节点中的 validateRequest 调用，提取 Zod schema
    * @param node 节点

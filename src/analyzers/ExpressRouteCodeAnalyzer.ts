@@ -3,7 +3,7 @@ import { pascal } from "radashi";
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import type { HttpMethod } from "@/constants";
-import { ASTAnalyzer } from "@/core";
+import { CodeAnalyzer } from "@/core";
 import type { OperationData } from "@/types";
 
 /**
@@ -16,9 +16,9 @@ export interface RouteInfo {
 }
 
 /**
- * 路由AST分析器，负责从Express路由调用中分析HTTP方法、路径和operationId
+ * 路由代码分析器，负责从Express路由调用中分析HTTP方法、路径和operationId
  */
-export class ExpressRouteASTAnalyzer extends ASTAnalyzer {
+export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
   /**
    * 分析路由信息（方法、路径和operationId）
    */

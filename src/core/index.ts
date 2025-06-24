@@ -1,8 +1,8 @@
 /* v8 ignore start */
 
-export * from "./ASTAnalyzer";
-export * from "./ASTAnalyzerRegistry";
 export * from "./Builder";
+export * from "./CodeAnalyzer";
+export * from "./CodeAnalyzerRegistry";
 export * from "./FrameworkAnalyzer";
 export * from "./FrameworkAnalyzerRegistry";
 export * from "./OpenAPIParser";

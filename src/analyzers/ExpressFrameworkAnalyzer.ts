@@ -1,11 +1,11 @@
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { VALID_HTTP_METHODS } from "@/constants";
-import { ASTAnalyzerRegistry } from "@/core/ASTAnalyzerRegistry";
+import { CodeAnalyzerRegistry } from "@/core/CodeAnalyzerRegistry";
 import { FrameworkAnalyzer } from "@/core/FrameworkAnalyzer";
 import type { OperationData, ParseContext } from "@/types";
-import { ExpressRouteASTAnalyzer } from "./ExpressRouteASTAnalyzer";
-import { ExpressZodValidationASTAnalyzer } from "./ExpressZodValidationASTAnalyzer";
+import { ExpressRouteCodeAnalyzer } from "./ExpressRouteCodeAnalyzer";
+import { ExpressZodValidationCodeAnalyzer } from "./ExpressZodValidationCodeAnalyzer";
 
 /**
  * Express框架分析器，用于分析Express应用的各种节点类型。
@@ -13,23 +13,23 @@ import { ExpressZodValidationASTAnalyzer } from "./ExpressZodValidationASTAnalyz
 export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   frameworkName = "Express";
 
-  private readonly astAnalyzerRegistry: ASTAnalyzerRegistry;
+  private readonly codeAnalyzerRegistry: CodeAnalyzerRegistry;
 
   constructor(context: ParseContext) {
     super(context);
-    this.astAnalyzerRegistry = new ASTAnalyzerRegistry();
+    this.codeAnalyzerRegistry = new CodeAnalyzerRegistry();
 
-    const defaultAnalyzers = [ExpressRouteASTAnalyzer, ExpressZodValidationASTAnalyzer];
-    const analyzers = [...defaultAnalyzers, ...(context.options.customExpressASTAnalyzers ?? [])];
+    const defaultAnalyzers = [ExpressRouteCodeAnalyzer, ExpressZodValidationCodeAnalyzer];
+    const analyzers = [...defaultAnalyzers, ...(context.options.customExpressCodeAnalyzers ?? [])];
 
     for (const analyzer of analyzers) {
-      this.astAnalyzerRegistry.register(new analyzer(this.context));
+      this.codeAnalyzerRegistry.register(new analyzer(this.context));
     }
   }
 
   /**
    * 判断节点是否属于Express框架
-   * @param node AST节点
+   * @param node 代码节点
    * @returns 如果属于Express框架返回true
    */
   canAnalyze(node: Node) {
@@ -82,12 +82,12 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 分析Express节点，使用AST分析器注册表来获取不同的信息
-   * @param node AST节点
+   * 分析Express节点，使用代码分析器注册表来获取不同的信息
+   * @param node 代码节点
    * @returns 解析后的操作数据
    */
   async analyze(node: Node) {
-    const analyzers = this.astAnalyzerRegistry.getAllAnalyzers();
+    const analyzers = this.codeAnalyzerRegistry.getAllAnalyzers();
     const results = await Promise.all(analyzers.map((analyzer) => analyzer.analyze(node)));
 
     const operationData: OperationData = {};

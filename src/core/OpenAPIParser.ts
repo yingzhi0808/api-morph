@@ -178,8 +178,8 @@ export class OpenAPIParser {
   private createFrameworkAnalyzerRegistry(options: ParserOptions) {
     const frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
 
-    // 如果禁用了AST分析，返回空的注册表
-    if (options.enableASTAnalysis === false) {
+    // 如果禁用了代码分析，返回空的注册表
+    if (options.enableCodeAnalysis === false) {
       return frameworkAnalyzerRegistry;
     }
 
@@ -209,7 +209,7 @@ export class OpenAPIParser {
     const defaultOptions: ParserOptions = {
       defaultResponseMediaType: "application/json",
       defaultRequestMediaType: "application/json",
-      enableASTAnalysis: true,
+      enableCodeAnalysis: true,
     };
 
     // 合并用户选项和默认选项
@@ -224,9 +224,9 @@ export class OpenAPIParser {
   }
 
   /**
-   * 查找指定 TypeScript 文件中所有包含支持标签注释的 AST 节点。
+   * 查找指定 TypeScript 文件中所有包含支持标签注释的代码节点。
    * @param sourceFile 要解析的 TypeScript 源文件。
-   * @returns 返回一个 SourceOperationData 数组，其中每个对象包含被 JSDoc 标签注释的 AST 节点及其所有标签，
+   * @returns 返回一个 SourceOperationData 数组，其中每个对象包含被 JSDoc 标签注释的代码节点及其所有标签，
    * 如果未找到匹配的节点，则返回空数组。
    */
   private findSourceOperationDataList(sourceFile: SourceFile) {

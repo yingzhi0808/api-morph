@@ -2,11 +2,11 @@ import { createParseContext, createProject } from "@tests/utils";
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ASTAnalyzer } from "@/core/ASTAnalyzer";
+import { CodeAnalyzer } from "@/core/CodeAnalyzer";
 import type { OperationData, ParseContext } from "@/types";
 import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
 
-class CustomTestAnalyzer extends ASTAnalyzer {
+class CustomTestAnalyzer extends CodeAnalyzer {
   analyze(_node: Node): OperationData {
     return {
       extensions: {
@@ -166,7 +166,7 @@ describe("ExpressFrameworkAnalyzer", () => {
       expect(result).toEqual({ method: "get", path: "/users/{id}", operationId: "getUsersById" });
     });
 
-    it("应该能够集成ExpressZodValidationASTAnalyzer来分析Zod验证", async () => {
+    it("应该能够集成ExpressZodValidationCodeAnalyzer来分析Zod验证", async () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
@@ -218,9 +218,9 @@ app.put("/api/users/:id", validateRequest({
       });
     });
 
-    it("应该能够使用自定义Express AST分析器", async () => {
+    it("应该能够使用自定义Express 代码分析器", async () => {
       const context = createParseContext({
-        customExpressASTAnalyzers: [CustomTestAnalyzer],
+        customExpressCodeAnalyzers: [CustomTestAnalyzer],
       });
       const sourceFile = context.project.createSourceFile(
         "test.ts",

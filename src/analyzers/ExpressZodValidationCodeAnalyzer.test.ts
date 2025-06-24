@@ -3,11 +3,11 @@ import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ParseContext } from "@/types";
-import { ExpressZodValidationASTAnalyzer } from "./ExpressZodValidationASTAnalyzer";
+import { ExpressZodValidationCodeAnalyzer } from "./ExpressZodValidationCodeAnalyzer";
 
-describe("ExpressZodValidationASTAnalyzer", () => {
+describe("ExpressZodValidationCodeAnalyzer", () => {
   let project: Project;
-  let analyzer: ExpressZodValidationASTAnalyzer;
+  let analyzer: ExpressZodValidationCodeAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe("ExpressZodValidationASTAnalyzer", () => {
     });
     project.addDirectoryAtPath("tests/fixtures");
     context = createParseContext({}, project);
-    analyzer = new ExpressZodValidationASTAnalyzer(context);
+    analyzer = new ExpressZodValidationCodeAnalyzer(context);
   });
 
   describe("analyze", () => {
@@ -215,7 +215,7 @@ app.put("/api/users/:id", validateRequest({
         },
         project,
       );
-      const customAnalyzer = new ExpressZodValidationASTAnalyzer(customContext);
+      const customAnalyzer = new ExpressZodValidationCodeAnalyzer(customContext);
       const sourceFile = project.createSourceFile(
         "test.ts",
         `

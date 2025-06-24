@@ -2,7 +2,7 @@
 
 import type { JSDocTag, Node, Project, TypeChecker } from "ts-morph";
 import type { HttpMethod } from "@/constants";
-import type { ASTAnalyzer, FrameworkAnalyzer, TagParser } from "@/core";
+import type { CodeAnalyzer, FrameworkAnalyzer, TagParser } from "@/core";
 import type {
   CallbackObject,
   ExternalDocumentationObject,
@@ -59,15 +59,15 @@ export interface ParserOptions {
   customFrameworkAnalyzers?: (new (
     context: ParseContext,
   ) => FrameworkAnalyzer)[];
-  /** 自定义Express AST分析器 */
-  customExpressASTAnalyzers?: (new (
+  /** 自定义Expres代码分析器 */
+  customExpressCodeAnalyzers?: (new (
     context: ParseContext,
-  ) => ASTAnalyzer)[];
+  ) => CodeAnalyzer)[];
   /**
-   * 是否启用AST分析
+   * 是否启用代码分析
    * @default true
    */
-  enableASTAnalysis?: boolean;
+  enableCodeAnalysis?: boolean;
   /**
    * 自定义 `operationId` 生成函数，如果提供，将使用此函数生成 `operationId`。
    * 返回 `null` 表示不生成 `operationId`。
@@ -79,7 +79,7 @@ export interface ParserOptions {
  * 表示待解析的 Operation 源数据
  */
 export interface SourceOperationData {
-  /** AST 节点 */
+  /**代码节点 */
   node: Node;
   /** 该节点关联的所有 JSDoc 标签 */
   tags: JSDocTag[];

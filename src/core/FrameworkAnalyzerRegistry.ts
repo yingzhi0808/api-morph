@@ -22,7 +22,7 @@ export class FrameworkAnalyzerRegistry {
 
   /**
    * 按注册顺序尝试每个框架分析器，返回第一个能够处理的结果
-   * @param node AST节点
+   * @param node 代码节点
    * @returns 第一个能够处理该节点的框架分析器，如果没有找到返回null
    */
   getFirstMatchingAnalyzer(node: Node) {

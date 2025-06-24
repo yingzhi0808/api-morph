@@ -15,14 +15,14 @@ export abstract class FrameworkAnalyzer {
 
   /**
    * 判断当前节点是否属于该框架
-   * @param node AST节点
+   * @param node 代码节点
    * @returns 如果属于该框架返回true，否则返回false
    */
   abstract canAnalyze(node: Node): boolean;
 
   /**
    * 分析框架节点并提取API信息
-   * @param node AST节点
+   * @param node 代码节点
    * @returns 解析后的操作数据
    */
   abstract analyze(node: Node): Promise<OperationData> | OperationData;

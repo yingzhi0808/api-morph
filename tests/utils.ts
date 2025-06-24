@@ -23,7 +23,7 @@ export function createParseContext(
 ): ParseContext {
   // 默认选项，与 OpenAPIParser 中的保持一致
   const defaultOptions: ParserOptions = {
-    enableASTAnalysis: true,
+    enableCodeAnalysis: true,
     defaultResponseMediaType: "application/json",
     defaultRequestMediaType: "application/json",
   };

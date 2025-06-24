@@ -70,7 +70,7 @@ describe("OperationComposer", () => {
   }
 
   describe("compose", () => {
-    it("应该正确组合AST分析和标签解析的结果", async () => {
+    it("应该正确组合代码分析和标签解析的结果", async () => {
       tagParserRegistry = new TagParserRegistry();
       frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
 
@@ -86,7 +86,7 @@ describe("OperationComposer", () => {
         new MockFrameworkAnalyzer(context, "express", true, {
           method: "get",
           path: "/api",
-          description: "AST描述",
+          description: "代码描述",
         }),
       );
 
@@ -98,7 +98,7 @@ describe("OperationComposer", () => {
       expect(result.method).toBe("post");
       expect(result.path).toBe("/users");
       expect(result.operation.summary).toBe("标签摘要");
-      expect(result.operation.description).toBe("AST描述"); // AST的描述应该保留
+      expect(result.operation.description).toBe("代码描述"); // 代码的描述应该保留
     });
 
     it("应该在没有框架分析器时仅使用标签解析结果", async () => {
@@ -157,7 +157,7 @@ describe("OperationComposer", () => {
       tagParserRegistry = new TagParserRegistry();
       frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
 
-      // AST分析提供schema
+      // 代码分析提供schema
       frameworkAnalyzerRegistry.register(
         new MockFrameworkAnalyzer(context, "express", true, {
           requestBody: {
@@ -189,7 +189,7 @@ describe("OperationComposer", () => {
 
       const result = await composer.compose(sourceData);
 
-      // 应该使用标签的mediaType但保留AST的schema
+      // 应该使用标签的mediaType但保留代码的schema
       const requestBody = result.operation.requestBody as RequestBodyObject;
       expect(requestBody?.content).toEqual({
         "application/json": {
@@ -294,7 +294,7 @@ describe("OperationComposer", () => {
       tagParserRegistry = new TagParserRegistry();
       frameworkAnalyzerRegistry = new FrameworkAnalyzerRegistry();
 
-      // AST分析提供schema
+      // 代码分析提供schema
       frameworkAnalyzerRegistry.register(
         new MockFrameworkAnalyzer(context, "express", true, {
           requestBody: {

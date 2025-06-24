@@ -6,7 +6,7 @@ import type { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 import type { TagParserRegistry } from "./TagParserRegistry";
 
 /**
- * 操作组合器，负责整合 JSDoc 标签解析和框架 AST 分析的结果，构建完整的 API 操作
+ * 操作组合器，负责整合 JSDoc 标签解析和框架代码分析的结果，构建完整的 API 操作
  */
 export class OperationComposer {
   /**
@@ -26,7 +26,7 @@ export class OperationComposer {
    */
   async compose(sourceOperationData: SourceOperationData) {
     // 框架优先策略：找到第一个能处理的框架就返回其结果
-    let astAnalysisData: OperationData = {};
+    let codeAnalysisData: OperationData = {};
     const frameworkAnalyzer = this.frameworkAnalyzerRegistry.getFirstMatchingAnalyzer(
       sourceOperationData.node,
     );
@@ -34,7 +34,7 @@ export class OperationComposer {
     if (frameworkAnalyzer) {
       const analysisResult = await frameworkAnalyzer.analyze(sourceOperationData.node);
       if (analysisResult) {
-        astAnalysisData = analysisResult;
+        codeAnalysisData = analysisResult;
       }
     }
 
@@ -58,26 +58,26 @@ export class OperationComposer {
     }
 
     // 合并框架分析和标签解析结果，标签解析结果优先
-    const combinedOperationData = this.mergeOperationData(astAnalysisData, tagParsingData);
+    const combinedOperationData = this.mergeOperationData(codeAnalysisData, tagParsingData);
     return this.buildOperation(combinedOperationData);
   }
 
   /**
    * 合并两个操作数据，对 requestBody 进行浅合并。
-   * @param astData 框架分析数据。
+   * @param codeData 框架分析数据。
    * @param tagData 标签解析数据。
    * @returns 合并后的操作数据。
    */
-  private mergeOperationData(astData: OperationData, tagData: OperationData): OperationData {
-    const merged = { ...astData, ...tagData };
+  private mergeOperationData(codeData: OperationData, tagData: OperationData): OperationData {
+    const merged = { ...codeData, ...tagData };
 
     // 对 requestBody 进行浅合并
-    if (astData.requestBody && tagData.requestBody) {
+    if (codeData.requestBody && tagData.requestBody) {
       merged.requestBody = {
-        ...astData.requestBody,
+        ...codeData.requestBody,
         ...tagData.requestBody,
         content: this.mergeRequestBodyContent(
-          astData.requestBody.content,
+          codeData.requestBody.content,
           tagData.requestBody.content,
         ),
       };
@@ -88,14 +88,14 @@ export class OperationComposer {
 
   /**
    * 智能合并 requestBody 的 content 字段。
-   * - 当 tagContent 只有一项时，使用标签中的 mediaType 替换 AST 分析的 mediaType，但保留 schema 内容。
+   * - 当 tagContent 只有一项时，使用标签中的 mediaType 替换代码分析的 mediaType，但保留 schema 内容。
    * - 当 tagContent 有多项时，进行叠加合并。
-   * @param astContent AST 分析得到的 content。
+   * @param codeContent 代码分析得到的 content。
    * @param tagContent 标签解析得到的 content。
    * @returns 合并后的 content。
    */
   private mergeRequestBodyContent(
-    astContent: Record<string, MediaTypeObject> = {},
+    codeContent: Record<string, MediaTypeObject> = {},
     tagContent: Record<string, MediaTypeObject> = {},
   ) {
     const tagContentKeys = Object.keys(tagContent);
@@ -105,29 +105,29 @@ export class OperationComposer {
       const tagMediaType = tagContentKeys[0];
       const tagMediaTypeObject = tagContent[tagMediaType];
 
-      // 获取 AST content 中的第一个 schema（如果存在）
-      const astContentKeys = Object.keys(astContent);
-      if (astContentKeys.length > 0) {
-        const astMediaTypeObject = astContent[astContentKeys[0]];
+      // 获取代码 content 中的第一个 schema（如果存在）
+      const codeContentKeys = Object.keys(codeContent);
+      if (codeContentKeys.length > 0) {
+        const codeMediaTypeObject = codeContent[codeContentKeys[0]];
 
-        // 如果标签中的 mediaType 对象没有 schema，但 AST 中有，则使用 AST 的 schema
-        if (!tagMediaTypeObject.schema && astMediaTypeObject?.schema) {
+        // 如果标签中的 mediaType 对象没有 schema，但代码中有，则使用代码的 schema
+        if (!tagMediaTypeObject.schema && codeMediaTypeObject?.schema) {
           return {
             [tagMediaType]: {
               ...tagMediaTypeObject,
-              schema: astMediaTypeObject.schema,
+              schema: codeMediaTypeObject.schema,
             },
           };
         }
       }
 
-      // 如果标签中已有完整的 schema 或 AST 中没有 schema，直接使用标签的内容
+      // 如果标签中已有完整的 schema 或代码中没有 schema，直接使用标签的内容
       return tagContent;
     }
 
     // 如果标签 content 有多项或为空，进行叠加合并
     return {
-      ...astContent,
+      ...codeContent,
       ...tagContent,
     };
   }

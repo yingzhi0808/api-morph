@@ -2,10 +2,10 @@ import { createParseContext } from "@tests/utils";
 import type { Node } from "ts-morph";
 import { describe, expect, it } from "vitest";
 import type { OperationData } from "@/types";
-import { ASTAnalyzer } from "./ASTAnalyzer";
-import { ASTAnalyzerRegistry } from "./ASTAnalyzerRegistry";
+import { CodeAnalyzer } from "./CodeAnalyzer";
+import { CodeAnalyzerRegistry } from "./CodeAnalyzerRegistry";
 
-class MockASTAnalyzer extends ASTAnalyzer {
+class MockCodeAnalyzer extends CodeAnalyzer {
   analyze(_node: Node): OperationData {
     return {
       method: "get",
@@ -14,7 +14,7 @@ class MockASTAnalyzer extends ASTAnalyzer {
   }
 }
 
-class AnotherMockASTAnalyzer extends ASTAnalyzer {
+class AnotherMockCodeAnalyzer extends CodeAnalyzer {
   analyze(_node: Node): OperationData {
     return {
       method: "post",
@@ -23,13 +23,13 @@ class AnotherMockASTAnalyzer extends ASTAnalyzer {
   }
 }
 
-describe("ASTAnalyzerRegistry", () => {
+describe("CodeAnalyzerRegistry", () => {
   const context = createParseContext();
 
   describe("register", () => {
     it("应该成功注册单个分析器", () => {
-      const registry = new ASTAnalyzerRegistry();
-      const analyzer = new MockASTAnalyzer(context);
+      const registry = new CodeAnalyzerRegistry();
+      const analyzer = new MockCodeAnalyzer(context);
 
       registry.register(analyzer);
 
@@ -39,9 +39,9 @@ describe("ASTAnalyzerRegistry", () => {
     });
 
     it("应该成功注册多个不同的分析器", () => {
-      const registry = new ASTAnalyzerRegistry();
-      const analyzer1 = new MockASTAnalyzer(context);
-      const analyzer2 = new AnotherMockASTAnalyzer(context);
+      const registry = new CodeAnalyzerRegistry();
+      const analyzer1 = new MockCodeAnalyzer(context);
+      const analyzer2 = new AnotherMockCodeAnalyzer(context);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -53,21 +53,21 @@ describe("ASTAnalyzerRegistry", () => {
     });
 
     it("当注册重复的分析器时应该抛出错误", () => {
-      const registry = new ASTAnalyzerRegistry();
-      const analyzer = new MockASTAnalyzer(context);
+      const registry = new CodeAnalyzerRegistry();
+      const analyzer = new MockCodeAnalyzer(context);
 
       registry.register(analyzer);
 
       expect(() => {
         registry.register(analyzer);
-      }).toThrow('AST分析器名称冲突：分析器 "MockASTAnalyzer" 已经被注册。');
+      }).toThrow('代码分析器名称冲突：分析器 "MockCodeAnalyzer" 已经被注册。');
     });
 
     it("应该保持注册顺序", () => {
-      const registry = new ASTAnalyzerRegistry();
-      const analyzer1 = new MockASTAnalyzer(context);
-      const analyzer2 = new AnotherMockASTAnalyzer(context);
-      const analyzer3 = new MockASTAnalyzer(context);
+      const registry = new CodeAnalyzerRegistry();
+      const analyzer1 = new MockCodeAnalyzer(context);
+      const analyzer2 = new AnotherMockCodeAnalyzer(context);
+      const analyzer3 = new MockCodeAnalyzer(context);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
@@ -82,7 +82,7 @@ describe("ASTAnalyzerRegistry", () => {
 
   describe("getAllAnalyzers", () => {
     it("当没有注册任何分析器时应该返回空数组", () => {
-      const registry = new ASTAnalyzerRegistry();
+      const registry = new CodeAnalyzerRegistry();
       const allAnalyzers = registry.getAllAnalyzers();
 
       expect(allAnalyzers).toEqual([]);
@@ -90,9 +90,9 @@ describe("ASTAnalyzerRegistry", () => {
     });
 
     it("应该返回所有已注册分析器的副本", () => {
-      const registry = new ASTAnalyzerRegistry();
-      const analyzer1 = new MockASTAnalyzer(context);
-      const analyzer2 = new AnotherMockASTAnalyzer(context);
+      const registry = new CodeAnalyzerRegistry();
+      const analyzer1 = new MockCodeAnalyzer(context);
+      const analyzer2 = new AnotherMockCodeAnalyzer(context);
 
       registry.register(analyzer1);
       registry.register(analyzer2);
