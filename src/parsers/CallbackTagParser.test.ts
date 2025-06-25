@@ -83,6 +83,20 @@ describe("CallbackTagParser", () => {
       });
     });
 
+    it("应该正确解析 ReferenceObject", async () => {
+      const tag = createJSDocTag(`@callback orderStatusCallback
+        $ref: "#/components/callbacks/OrderStatusChanged"`);
+      const result = await parser.parse(tag);
+      expect(result).toEqual({
+        callback: {
+          name: "orderStatusCallback",
+          callback: {
+            $ref: "#/components/callbacks/OrderStatusChanged",
+          },
+        },
+      });
+    });
+
     it("应该在没有 YAML 参数时抛出错误", async () => {
       const tag = createJSDocTag("@callback paymentNotify");
       await expect(parser.parse(tag)).rejects.toThrow(/@callback 标签必须包含 YAML 参数/);
