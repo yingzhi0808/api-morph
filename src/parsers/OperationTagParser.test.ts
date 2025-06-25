@@ -18,9 +18,9 @@ describe("OperationTagParser", () => {
 
   describe("parse", () => {
     it("应该正确解析 @operation 标签", async () => {
-      const tag = createJSDocTag("@operation get /users");
+      const tag = createJSDocTag("@operation get /users/{id}");
       const result = await parser.parse(tag);
-      expect(result).toEqual({ method: "get", path: "/users" });
+      expect(result).toEqual({ method: "get", path: "/users/{id}" });
     });
 
     it("应该正确解析所有支持的 HTTP 方法", async () => {

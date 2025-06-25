@@ -31,7 +31,7 @@ export class OperationTagParser extends TagParser {
   protected transformParams(params: ParsedTagParams) {
     const { inline } = params;
     const [method, path] = inline;
-    return { method, path };
+    return { method: method?.toLowerCase(), path };
   }
 
   /**
