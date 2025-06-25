@@ -25,7 +25,7 @@ export function createParseContext(
   const defaultOptions: ParserOptions = {
     enableCodeAnalysis: true,
     defaultResponseMediaType: "application/json",
-    defaultRequestMediaType: "application/json",
+    defaultRequestBodyMediaType: "application/json",
   };
 
   return {

@@ -211,7 +211,7 @@ app.put("/api/users/:id", validateRequest({
     it("应该使用默认的请求媒体类型", async () => {
       const customContext = createParseContext(
         {
-          defaultRequestMediaType: "application/json",
+          defaultRequestBodyMediaType: "application/json",
         },
         project,
       );

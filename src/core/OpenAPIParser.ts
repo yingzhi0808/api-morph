@@ -208,7 +208,7 @@ export class OpenAPIParser {
     // 默认选项
     const defaultOptions: ParserOptions = {
       defaultResponseMediaType: "application/json",
-      defaultRequestMediaType: "application/json",
+      defaultRequestBodyMediaType: "application/json",
       enableCodeAnalysis: true,
     };
 

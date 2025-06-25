@@ -38,7 +38,7 @@ export class RequestBodyTagParser extends TagParser {
   protected transformParams(params: ParsedTagParams) {
     const { inline, yaml = {} } = params;
 
-    let mediaType = this.context.options.defaultRequestMediaType!;
+    let mediaType = this.context.options.defaultRequestBodyMediaType!;
     let schemaRef: string | undefined;
     let content: Record<string, MediaTypeObject> | undefined;
     let required: boolean | undefined;

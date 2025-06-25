@@ -50,7 +50,7 @@ export interface ParserOptions {
   /** 默认的响应媒体类型 */
   defaultResponseMediaType?: string;
   /** 默认的请求体媒体类型 */
-  defaultRequestMediaType?: string;
+  defaultRequestBodyMediaType?: string;
   /** 自定义标签解析器 */
   customTagParsers?: (new (
     context: ParseContext,

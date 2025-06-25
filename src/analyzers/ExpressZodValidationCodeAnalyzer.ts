@@ -163,7 +163,7 @@ export class ExpressZodValidationCodeAnalyzer extends CodeAnalyzer {
     _schema: JSONSchema.BaseSchema,
     schemaName: string,
   ): RequestBodyObject {
-    const mediaType = this.context.options.defaultRequestMediaType!;
+    const mediaType = this.context.options.defaultRequestBodyMediaType!;
     const schemaRef = { $ref: `#/components/schemas/${schemaName}` };
 
     return {
