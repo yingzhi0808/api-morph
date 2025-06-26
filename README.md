@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="_media/logo.svg" alt="api-morph logo" width="150" height="150">
+  <a href="https://yingzhi0808.github.io/api-morph/"><img src="https://yingzhi0808.github.io/api-morph/logo.svg" alt="api-morph logo" width="150" height="150"></a>
   <h1>api-morph</h1>
 </div>
 
