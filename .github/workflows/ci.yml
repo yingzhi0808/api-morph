@@ -53,7 +53,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: yingzhi0808/globload
+          slug: yingzhi0808/api-morph
 
       - name: Build
         run: pnpm build
