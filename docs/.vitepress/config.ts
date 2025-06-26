@@ -6,7 +6,7 @@ export default defineConfig({
   description: "TypeScript 优先的 OpenAPI 文档生成器，通过分析代码自动生成全面的 API 文档",
   base: "/api-morph/",
   head: [
-    ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
+    ["link", { rel: "icon", type: "image/svg+xml", href: "./logo.svg" }],
     ["meta", { name: "theme-color", content: "#f59e0b" }],
   ],
   themeConfig: {

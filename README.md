@@ -131,10 +131,10 @@ app.listen(3000, () => {
 
 完整的文档和 API 参考请访问我们的[官方文档站点](https://api-morph.example.com)。
 
-- [快速开始指南](https://api-morph.example.com/guides/getting-started) - 详细的入门教程
-- [语法概览](https://api-morph.example.com/guides/syntax-overview) - JSDoc 标签语法说明
-- [工作原理](https://api-morph.example.com/guides/working-principles) - 了解 api-morph 的工作机制
-- [API 参考](https://api-morph.example.com/api/) - 完整的 API 文档
+- [快速开始指南](https://yingzhi0808.github.io/api-morph/guides/getting-started) - 详细的入门教程
+- [语法概览](https://yingzhi0808.github.io/api-morph/guides/syntax-overview) - JSDoc 标签语法说明
+- [工作原理](https://yingzhi0808.github.io/api-morph/guides/working-principles) - 了解 api-morph 的工作机制
+- [API 参考](https://yingzhi0808.github.io/api-morph/api/) - 完整的 API 文档
 
 ## 🔧 支持的框架
 
