@@ -12,6 +12,8 @@ import { isExtensionKey } from "@/utils";
 
 /**
  * 响应标签解析器，处理 `@response` 标签。
+ *
+ * @category 解析器
  */
 export class ResponseTagParser extends TagParser {
   tags: string[] = [JSDocTagName.RESPONSE];

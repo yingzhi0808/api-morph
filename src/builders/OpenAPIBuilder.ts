@@ -28,6 +28,8 @@ import { isZodSchema } from "@/utils";
 
 /**
  * 文档构建器，用于构建完整的 OpenAPI 文档
+ *
+ * @category 构建器
  */
 export class OpenAPIBuilder implements Builder<OpenAPIObject> {
   private document: OpenAPIObject;

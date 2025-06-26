@@ -28,6 +28,8 @@ import { TagParserRegistry } from "./TagParserRegistry";
 
 /**
  * 解析整个项目中的 JSDoc 注释，并生成 OpenAPI 对象
+ *
+ * @category 核心
  */
 export class OpenAPIParser {
   /** 解析上下文 */

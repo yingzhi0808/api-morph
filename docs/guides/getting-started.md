@@ -1,314 +1,446 @@
 # 快速开始
 
-## 前置要求
+欢迎使用 api-morph！本指南将通过一个完整的示例，带您逐步体验 api-morph 的强大功能。
 
-在开始使用 api-morph 之前，你需要有一个 TypeScript 和 Node.js 的后端项目，你可以使用 express、fastify 和 koa 等框架。在这个教程中，我们将使用 express 框架。
+## 前置准备工作
 
-## 项目初始化
+在开始之前，我们需要创建一个新的项目并配置好基本的开发环境。
 
-### 1. 创建项目目录和基础文件
+### 1. 创建 package.json
 
-首先创建一个新的项目目录：
+首先创建项目目录并初始化 package.json：
 
 ```bash
 mkdir my-api-project
 cd my-api-project
 ```
 
-### 2. 初始化 package.json
-
-创建 `package.json` 文件，配置项目的基本信息和依赖：
+创建 `package.json` 文件：
 
 ```json
 {
+  "name": "my-api-project",
   "type": "module",
   "scripts": {
-    "start": "tsx watch src/index.ts"
-  },
-  "dependencies": {
-    "express": "^5.1.0"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.2",
-    "tsx": "^4.19.4"
+    "dev": "tsx watch index.ts"
   }
 }
 ```
 
-### 3. 配置 TypeScript
+### 2. 创建 tsconfig.json
 
-创建 `tsconfig.json` 文件来配置 TypeScript 编译选项：
+创建 TypeScript 配置文件 `tsconfig.json`：
 
 ```json
 {
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["ESNext"],
+    "moduleDetection": "force",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "types": ["node"],
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["**/*.ts"]
 }
 ```
 
-### 4. 安装基础依赖
+### 3. 安装依赖
 
-使用你选择的包管理器安装项目依赖：
-
-::: code-group
-
-```bash [pnpm]
-pnpm install
-```
-
-```bash [npm]
-npm install
-```
-
-```bash [yarn]
-yarn install
-```
-
-:::
-
-### 5. 安装 api-morph
-
-现在安装 api-morph 来生成 API 文档：
+安装核心依赖：
 
 ::: code-group
 
 ```bash [pnpm]
-pnpm add api-morph
+pnpm add api-morph express zod
 ```
 
 ```bash [npm]
-npm install api-morph
+npm install api-morph express zod
 ```
 
 ```bash [yarn]
-yarn add api-morph
+yarn add api-morph express zod
 ```
 
 :::
 
-## 创建 Express 应用
+安装开发依赖：
 
-### 1. 创建基础服务器结构
+::: code-group
 
-在 `src/index.ts` 文件中创建基础的 Express 应用，并直接添加登录接口：
+```bash [pnpm]
+pnpm add -D @types/express @types/node typescript tsx
+```
+
+```bash [npm]
+npm install -D @types/express @types/node typescript tsx
+```
+
+```bash [yarn]
+yarn add -D @types/express @types/node typescript tsx
+```
+
+:::
+
+## 第一步：搭建基本的 Express 应用
+
+让我们先创建一个基本的 Express 应用框架。
+
+创建 `index.ts` 文件：
 
 ```typescript
 import express from "express";
 
 const app = express();
 
-// 配置中间件
 app.use(express.json());
 
-// 登录接口
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username !== "admin" || password !== "123456") {
-    res.status(401).json({ message: "Invalid username or password" });
-  } else {
-    res.json({ id: 1, token: "token-123456" });
-  }
-});
-
-// 启动服务器
 const port = 3000;
 app.listen(port, () => {
-  console.log(`服务器运行在 http://localhost:${port}`);
+  console.log(`Example app listening on port ${port}`);
 });
 ```
 
-现在你可以运行 `npm start` 来启动开发服务器。
+## 第二步：定义 Zod Schema
 
-## 使用 JSDoc 注释生成 API 文档
-
-api-morph 通过解析 JSDoc 注释来生成 OpenAPI 文档。让我们为登录接口添加详细的文档注释。
-
-### 1. 添加基础元数据
-
-首先，我们为接口添加基本的元数据信息：
+接下来，我们创建必要的 Zod schema 来定义数据结构。创建 `schema.ts` 文件：
 
 ```typescript
-/**
- * @operation post /login 用户登录接口
- * @description 提供用户登录功能，校验用户名和密码，登录成功后返回用户ID和认证令牌
- * @tags 认证与授权
- * @operationId login
- */
-app.post("/login", (req, res) => {
-  // ... 路由处理逻辑
+import { z } from "zod/v4";
+
+export const UserIdDto = z.object({
+  id: z.string().meta({ description: "用户ID" }),
+});
+
+export const UpdateUserDto = z.object({
+  email: z.email().meta({
+    description: "用户邮箱地址",
+    examples: ["john.doe@example.com"],
+  }),
+  username: z
+    .string()
+    .min(3)
+    .max(50)
+    .meta({
+      description: "用户名",
+      examples: ["John Doe"],
+    }),
+});
+
+export const UpdateUserVo = z.object({
+  id: z.string().meta({ description: "用户ID" }),
+  email: z.email().meta({
+    description: "用户邮箱地址",
+    examples: ["john.doe@example.com"],
+  }),
+  username: z
+    .string()
+    .min(3)
+    .max(50)
+    .meta({
+      description: "用户名",
+      examples: ["John Doe"],
+    }),
 });
 ```
 
-让我们解释一下这些 JSDoc 标签的含义：
+这些 schema 定义了：
+- `UserIdDto`：用于验证路径参数中的用户ID
+- `UpdateUserDto`：用于验证更新用户的请求体数据
+- `UpdateUserVo`：定义更新用户的响应数据结构
 
-- `@operation`: 定义 HTTP 方法、路径和接口名称
-  - 格式：`@operation {method} {path} {summary}`
-  - 示例：`@operation post /login 用户登录接口`
+::: tip
+api-morph 仅支持 Zod v4 版本，因为只有 Zod v4 才支持生成 JSON Schema。请确保从 `zod/v4` 导入，而不是直接从 `zod` 导入。
+:::
 
-- `@description`: 接口的详细描述，解释接口的功能和用途
+## 第三步：定义 Express 路由
 
-- `@tags`: 为接口分组，便于在文档中组织和查找
-  - 可以使用中文标签名，如 "认证与授权"、"用户管理" 等
-
-- `@operationId`: 接口的唯一标识符，通常用于代码生成工具
-
-### 2. 定义请求体
-
-接下来，我们定义接口的请求体结构：
+现在让我们在 `index.ts` 中添加一个获取用户信息的 API 路由：
 
 ```typescript
-/**
- * @operation post /login 用户登录接口
- * @description 提供用户登录功能，校验用户名和密码，登录成功后返回用户ID和认证令牌
- * @tags 认证与授权
- * @operationId login
- * @requestBody
- * description: 用户登录所需的用户名和密码
- * required: true
- * content:
- *   application/json:
- *     schema:
- *       type: object
- *       properties:
- *         username:
- *           type: string
- *           description: 用户的唯一登录名
- *           examples: [admin]
- *         password:
- *           type: string
- *           description: 用户的登录密码
- *           examples: [123456]
- *         required:
- *          - username
- *          - password
- */
-```
-
-`@requestBody` 标签用于定义请求体的结构：
-- `description`: 请求体的描述
-- `required`: 是否必需（true/false）
-- `content`: 定义不同媒体类型的内容结构
-- `schema`: 定义数据结构，包括类型、属性、示例值等
-
-### 3. 定义响应
-
-最后，我们定义接口可能的响应：
-
-```typescript
-/**
- * @response 200 登录成功，返回用户信息和认证令牌
- * content:
- *   application/json:
- *     schema:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: 用户唯一标识
- *           examples: [1]
- *         token:
- *           type: string
- *           description: 用户认证令牌，用于后续接口鉴权
- *           examples: [token-123456]
- * @response 401 登录失败，返回错误信息
- * content:
- *   application/json:
- *     schema:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           description: 错误信息
- *           examples: [Invalid username or password]
- */
-```
-
-`@response` 标签用于定义不同状态码的响应：
-- 格式：`@response {statusCode} {description}`
-- 每个响应可以定义不同的内容类型和数据结构
-
-## 配置 Swagger UI
-
-### 1. 导入 api-morph 功能
-
-首先，在文件顶部导入 api-morph 的相关功能：
-
-```typescript
-import { generateDocument, generateSwaggerUI, getSwaggerUIAssetInfo } from "api-morph";
 import express from "express";
-```
 
-### 2. 配置静态资源服务
-
-为了让 Swagger UI 正常工作，我们需要配置静态资源服务：
-
-```typescript
 const app = express();
 
 app.use(express.json());
-// 配置 Swagger UI 静态资源目录
-app.use(express.static(getSwaggerUIAssetInfo().assetPath));
-```
 
-`getSwaggerUIAssetInfo().assetPath` 返回 Swagger UI 所需的静态资源路径。
+// [!code ++:10]
+app.put("/api/users/:id", (req, res) => {
+  const { id } = req.params;
+  const { email, username } = req.body;
 
-### 3. 添加 OpenAPI 文档接口
+  res.json({
+    id,
+    email,
+    username,
+  });
+});
 
-创建一个接口来生成和返回 OpenAPI 文档：
-
-```typescript
-app.get("/openapi.json", async (req, res) => {
-  const openapi = await generateDocument(
-    {
-      info: {
-        version: "1.0.0",
-        title: "API Documentation",
-        description: "这是一个简单的 API 文档示例",
-      },
-    },
-  );
-  res.json(openapi);
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
 });
 ```
 
-`generateDocument` 函数的参数说明：
-- 第一个参数：OpenAPI 文档的基本信息
-- 第二个参数：解析选项，`include` 指定要解析的文件路径模式
+## 第四步：定义基本路由信息
 
-### 4. 添加 Swagger UI 界面
-
-创建一个路由来展示 Swagger UI 界面：
+现在我们为路由添加 JSDoc 注释，包含 summary、description 和 tags：
 
 ```typescript
-app.get("/swagger-ui", (_req, res) => {
+import express from "express";
+
+const app = express();
+
+app.use(express.json());
+
+// [!code ++:5]
+/**
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @tags users
+ */
+app.put("/api/users/:id", (req, res) => {
+  const { id } = req.params;
+  const { email, username } = req.body;
+
+  res.json({
+    id,
+    email,
+    username,
+  });
+});
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+```
+
+JSDoc 注释说明：
+- `@summary`：API 的简短描述
+- `@description`：API 的详细描述
+- `@tags`：API 分组标签，用于在文档中分类
+
+## 第五步：通过中间件定义请求参数
+
+现在我们引入 api-morph 的验证中间件来处理请求参数：
+
+```typescript
+import express from "express";
+// [!code ++:2]
+import { validateRequest } from "api-morph/express";
+import { UpdateUserDto, UserIdDto } from "./schema";
+
+const app = express();
+
+app.use(express.json());
+
+/**
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @tags users
+ */
+app.put("/api/users/:id", (req, res) => { // [!code --]
+// [!code ++:4]
+app.put(
+  "/api/users/:id",
+  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  (req, res) => {
+    const { id } = req.params;
+    const { email, username } = req.body;
+
+    res.json({
+      id,
+      email,
+      username,
+    });
+  },
+);
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+```
+
+### 这一步发生了什么？
+
+通过集成 `validateRequest` 中间件，我们可以利用 Zod 对请求参数进行校验，这在真实的后端项目中几乎是必须的步骤。如果你不使用 api-morph，也会通过其他的方式实现这个功能。
+
+**api-morph 的核心理念是尽可能利用已有的代码，分析它，然后自动推断出必要的信息。** 当你使用 `validateRequest` 后，api-morph 会分析它然后自动生成对应的请求参数文档。
+
+具体来说：
+- **自动验证路径参数**：`params: UserIdDto` 会验证 URL 中的 `:id` 参数
+- **自动验证请求体**：`body: UpdateUserDto` 会验证 POST/PUT 请求的 JSON 数据
+- **自动生成文档**：api-morph 会读取这些 Zod schema，并在 OpenAPI 文档中生成对应的参数说明
+- **错误处理**：如果验证失败，中间件会自动返回 400 错误响应
+
+这样，你的业务代码既有了类型安全保障，又自动生成了准确的 API 文档，一举两得！
+
+## 第六步：定义响应
+
+现在我们在 JSDoc 注释中添加响应定义：
+
+```typescript
+import express from "express";
+import { validateRequest } from "api-morph/express";
+import { UpdateUserDto, UserIdDto } from "./schema"; // [!code --]
+import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema"; // [!code ++]
+
+const app = express();
+
+app.use(express.json());
+
+/**
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @tags users
+// [!code ++:1]
+ * @response 200 {@link UpdateUserVo} 更新用户信息成功
+ */
+app.put(
+  "/api/users/:id",
+  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  (req, res) => {
+    const { id } = req.params;
+    const { email, username } = req.body;
+
+    res.json({
+      id,
+      email,
+      username,
+    });
+  },
+);
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+```
+
+`@response` 注释说明：
+- `200`：HTTP 状态码
+- `{@link UpdateUserVo}`：引用我们定义的响应 schema
+- `更新用户信息成功`：响应描述
+
+::: tip
+`{@link}` 是合法的 JSDoc 语法，用于创建对其他类型或变量的引用。api-morph 会解析这些链接并自动找到对应的 Zod schema 定义，然后在 OpenAPI 文档中生成完整的类型信息。
+:::
+
+## 第七步：生成 OpenAPI 并在 Express 中提供服务
+
+最后，我们添加生成和提供 OpenAPI 文档的功能：
+
+```typescript
+// [!code ++:6]
+import {
+  generateDocument,
+  generateSwaggerUI,
+  getSwaggerUIAssetInfo,
+  validateRequest,
+} from "api-morph";
+import { validateRequest } from "api-morph/express";
+import express from "express";
+import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema";
+
+const app = express();
+
+app.use(express.json());
+// [!code ++:2]
+// 提供 Swagger UI 需要的静态资源
+app.use(express.static(getSwaggerUIAssetInfo().assetPath));
+
+/**
+ * @summary 更新用户信息
+ * @description 更新指定用户的个人信息
+ * @tags users
+ * @response 200 {@link UpdateUserVo} 更新用户信息成功
+ */
+app.put(
+  "/api/users/:id",
+  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  (req, res) => {
+    const { id } = req.params;
+    const { email, username } = req.body;
+
+    res.json({
+      id,
+      email,
+      username,
+    });
+  },
+);
+
+// [!code ++:24]
+// 生成 OpenAPI 文档
+const openapi = await generateDocument(
+  {
+    info: {
+      version: "1.0.0",
+      title: "用户管理 API",
+      description: "这是一个用户管理 API 的文档示例",
+    },
+  },
+);
+
+// 提供 OpenAPI JSON 文档
+app.get("/openapi.json", (req, res) => {
+  res.json(openapi);
+});
+
+// 提供 Swagger UI 界面
+app.get("/swagger-ui", (req, res) => {
   res.send(
     generateSwaggerUI({
       url: "/openapi.json",
     }),
   );
 });
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+  console.log(`访问 http://localhost:${port}/swagger-ui 查看 API 文档`);
+});
 ```
 
-`generateSwaggerUI` 函数生成 Swagger UI 的 HTML 页面，`url` 参数指向 OpenAPI 文档的接口地址。
+## 运行和测试
 
-## 测试你的 API 文档
-
-现在启动服务器：
+现在启动应用：
 
 ```bash
-npm start
+npm run dev
 ```
 
-然后在浏览器中访问：
+你可以：
 
-- API 文档界面：http://localhost:3000/swagger-ui
-- OpenAPI JSON：http://localhost:3000/openapi.json
+1. **测试 API**：使用 curl 或 Postman 测试 `PUT /api/users/:id` 接口
+2. **查看文档**：访问 `http://localhost:3000/swagger-ui` 查看生成的 API 文档
+3. **获取 OpenAPI JSON**：访问 `http://localhost:3000/openapi.json` 获取原始的 OpenAPI 规范
 
-你应该能看到一个完整的 API 文档界面，包含你刚才定义的登录接口及其详细的参数和响应说明。
+## 完整的文件结构
+
+最终你的项目结构应该是这样的：
+
+```
+your-project/
+├── index.ts          # 主应用文件
+├── schema.ts         # Zod schema 定义
+├── package.json      # 项目配置
+└── tsconfig.json     # TypeScript 配置
+```
+
+## 下一步
+
+现在你已经掌握了 api-morph 的基本用法！你可以：
+
+1. 添加更多的路由和 schema
+2. 探索更多的 JSDoc 标签功能
+3. 自定义 OpenAPI 文档的样式和配置
+4. 集成到现有的 Express 项目中
+
+查看我们的其他指南了解更多高级功能！

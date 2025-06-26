@@ -2,6 +2,8 @@ import type { TagParser } from "./TagParser";
 
 /**
  * 标签解析器注册表，用于管理和查找标签解析器
+ *
+ * @category 核心
  */
 export class TagParserRegistry {
   /** 标签名到解析器的映射 */

@@ -10,6 +10,8 @@ import { tokenizeString } from "@/utils";
 
 /**
  * 标签解析器接口，所有标签解析器必须实现此接口
+ *
+ * @category 核心
  */
 export abstract class TagParser {
   /** 解析器支持的 JSDoc 标签名称列表 */

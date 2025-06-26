@@ -1,0 +1,28 @@
+{
+  "name": "api-morph",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/node_modules/**",
+    "**/__tests__/**",
+    "**/__snapshots__/**"
+  ],
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "defaultCategory": "其他",
+  "categoryOrder": ["核心", "解析器", "构建器", "分析器", "帮助工具", "类型定义", "其他"],
+  "gitRevision": "main",
+  "sourceLinkTemplate": "https://github.com/yingzhi0808/api-morph/blob/{gitRevision}/{path}#L{line}",
+  "docsRoot": "docs",
+  "sidebar": {
+    "autoConfiguration": true,
+    "format": "vitepress"
+  }
+}

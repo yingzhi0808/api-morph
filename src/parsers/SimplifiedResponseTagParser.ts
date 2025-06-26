@@ -28,6 +28,8 @@ const tagToStatusCode = Object.fromEntries(
  * - `@conflictResponse` (409)
  * - `@internalServerErrorResponse` (500)
  * - 以及所有其他 HTTP 状态码...
+ *
+ * @category 解析器
  */
 export class SimplifiedResponseTagParser extends ResponseTagParser {
   override tags: string[] = Object.keys(tagToStatusCode);
