@@ -8,4 +8,3 @@ ignoredBuiltDependencies:
 onlyBuiltDependencies:
   - lefthook
 useNodeVersion: 18.20.8
-enableGlobalVirtualStore: true
