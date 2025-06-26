@@ -6,10 +6,10 @@
 <div align="center">
 
 [![ci](https://github.com/yingzhi0808/api-morph/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yingzhi0808/api-morph/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/yingzhi0808/api-morph/graph/badge.svg?token=AK6BS4DRO1)](https://codecov.io/gh/yingzhi0808/api-morph)
 [![npm version](https://img.shields.io/npm/v/api-morph.svg)](https://www.npmjs.com/package/api-morph)
 [![npm downloads](https://img.shields.io/npm/dm/api-morph.svg)](https://www.npmjs.com/package/api-morph)
 [![license](https://img.shields.io/npm/l/api-morph.svg)](https://github.com/yingzhi0808/api-morph/blob/main/LICENSE)
-[![codecov](https://codecov.io/gh/yingzhi0808/api-morph/graph/badge.svg?token=AK6BS4DRO1)](https://codecov.io/gh/yingzhi0808/api-morph)
 </div>
 
 一个现代化的 TypeScript 优先的 OpenAPI 文档生成器，通过分析代码和 JSDoc 注释自动生成全面、准确的 API 文档。
