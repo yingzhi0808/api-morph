@@ -14,7 +14,7 @@ export default defineConfig({
     nav: [
       { text: "首页", link: "/" },
       { text: "指南", link: "/guides/introduction" },
-      { text: "API 文档", link: "/api/" },
+      { text: "API", link: "/api" },
     ],
     sidebar: {
       "/guides/": [
