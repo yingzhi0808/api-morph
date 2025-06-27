@@ -260,7 +260,7 @@ const app = express()
  * @response 200 {@link UserVo} 获取用户信息成功
  * @response 404 {@link UserNotFoundVo} 用户不存在
  */
-app.get("/api/users/:id", validateRequest({
+app.get("/api/users/:id", zodValidator({
   params: UserIdDto
 }), (req, res) => {})
 
@@ -271,7 +271,7 @@ app.get("/api/users/:id", validateRequest({
  * @response 200 {@link UpdateUserVo} 更新用户信息成功
  * @response 404 {@link UserNotFoundVo} 用户不存在
  */
-app.put("/api/users/:id", validateRequest({
+app.put("/api/users/:id", zodValidator({
   params: UserIdDto,
   body: UpdateUserDto
 }), (req, res) => {})`,
@@ -307,7 +307,7 @@ const app = express()
  * @response 200 {@link UserVo} 获取用户信息成功
  * @response 404 {@link UserNotFoundVo} 用户不存在
  */
-app.get("/api/users/:id", validateRequest({
+app.get("/api/users/:id", zodValidator({
   params: UserIdDto
 }), (req, res) => {})`,
       );

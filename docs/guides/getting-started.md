@@ -231,7 +231,7 @@ JSDoc 注释说明：
 ```typescript
 import express from "express";
 // [!code ++:2]
-import { validateRequest } from "api-morph/express";
+import { zodValidator } from "api-morph/express";
 import { UpdateUserDto, UserIdDto } from "./schema";
 
 const app = express();
@@ -247,7 +247,7 @@ app.put("/api/users/:id", (req, res) => { // [!code --]
 // [!code ++:4]
 app.put(
   "/api/users/:id",
-  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  zodValidator({ params: UserIdDto, body: UpdateUserDto }),
   (req, res) => {
     const { id } = req.params;
     const { email, username } = req.body;
@@ -268,9 +268,9 @@ app.listen(port, () => {
 
 ### 这一步发生了什么？
 
-通过集成 `validateRequest` 中间件，我们可以利用 Zod 对请求参数进行校验，这在真实的后端项目中几乎是必须的步骤。如果你不使用 api-morph，也会通过其他的方式实现这个功能。
+通过集成 `zodValidator` 中间件，我们可以利用 Zod 对请求参数进行校验，这在真实的后端项目中几乎是必须的步骤。如果你不使用 api-morph，也会通过其他的方式实现这个功能。
 
-**api-morph 的核心理念是尽可能利用已有的代码，分析它，然后自动推断出必要的信息。** 当你使用 `validateRequest` 后，api-morph 会分析它然后自动生成对应的请求参数文档。
+**api-morph 的核心理念是尽可能利用已有的代码，分析它，然后自动推断出必要的信息。** 当你使用 `zodValidator` 后，api-morph 会分析它然后自动生成对应的请求参数文档。
 
 具体来说：
 - **自动验证路径参数**：`params: UserIdDto` 会验证 URL 中的 `:id` 参数
@@ -286,7 +286,7 @@ app.listen(port, () => {
 
 ```typescript
 import express from "express";
-import { validateRequest } from "api-morph/express";
+import { zodValidator } from "api-morph/express";
 import { UpdateUserDto, UserIdDto } from "./schema"; // [!code --]
 import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema"; // [!code ++]
 
@@ -303,7 +303,7 @@ app.use(express.json());
  */
 app.put(
   "/api/users/:id",
-  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  zodValidator({ params: UserIdDto, body: UpdateUserDto }),
   (req, res) => {
     const { id } = req.params;
     const { email, username } = req.body;
@@ -337,9 +337,9 @@ app.listen(port, () => {
 
 ```typescript
 import express from "express";
-import { validateRequest } from "api-morph/express"; // [!code --]
+import { zodValidator } from "api-morph/express"; // [!code --]
 import { generateDocument } from "api-morph"; // [!code ++]
-import { setupSwaggerUI, validateRequest } from "api-morph/express"; // [!code ++]
+import { setupSwaggerUI, zodValidator } from "api-morph/express"; // [!code ++]
 import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema";
 
 const app = express();
@@ -354,7 +354,7 @@ app.use(express.json());
  */
 app.put(
   "/api/users/:id",
-  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  zodValidator({ params: UserIdDto, body: UpdateUserDto }),
   (req, res) => {
     const { id } = req.params;
     const { email, username } = req.body;

@@ -125,7 +125,7 @@ app.get("/api/users/:id", (req, res) => {
 ::: code-group
 
 ```typescript [index.ts]
-import { validateRequest } from "api-morph/express";
+import { zodValidator } from "api-morph/express";
 import express from "express";
 import { UserIdDto } from "./schema";
 
@@ -136,7 +136,7 @@ const app = express();
  */
 app.get(
   "/api/users/:id",
-  validateRequest({
+  zodValidator({
     params: UserIdDto,
   }),
   (req, res) => {},
@@ -228,7 +228,7 @@ app.get('/api/users', getUserList);
 
 - **HTTP 方法**：从路由定义中自动识别（如 `app.get()`、`app.post()` 等）
 - **API 路径**：从路由路径中提取并转换为 OpenAPI 格式（如 `/users/:id` → `/users/{id}`）
-- **请求参数**：从 `validateRequest` 中间件中提取参数验证规则
+- **请求参数**：从 `zodValidator` 中间件中提取参数验证规则
   - `params`：路径参数
   - `query`：查询参数
   - `body`：请求体参数
@@ -264,7 +264,7 @@ const openapi = await generateDocument(
  * @operationId createUserV2        // 👈 覆盖自动生成的 operationId
  * @summary 创建新用户
  */
-app.get('/api/users', validateRequest({  // 👈 代码分析器：GET /api/users
+app.get('/api/users', zodValidator({  // 👈 代码分析器：GET /api/users
   body: UserCreateDto
 }), createUser);
 

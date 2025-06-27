@@ -3,5 +3,5 @@
  * @module express
  */
 
-export * from "./middlewares/zodValidation";
+export * from "./middlewares/zodValidator";
 export * from "./swagger";

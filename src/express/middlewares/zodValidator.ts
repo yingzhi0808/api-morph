@@ -69,7 +69,7 @@ const defaultErrorHandler: ErrorRequestHandler = (error, _req, res) => {
 /**
  * 创建类型安全的 Zod 校验中间件
  */
-export function validateRequest<
+export function zodValidator<
   TParams extends ZodObject = ZodObject,
   TQuery extends ZodObject = ZodObject,
   TBody extends ZodObject = ZodObject,
