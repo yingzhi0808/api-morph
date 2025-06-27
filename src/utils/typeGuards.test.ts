@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod/v4";
-import type { ParameterObject, ReferenceObject } from "@/types";
-import { isExtensionKey, isParameterObject, isZodSchema } from "@/utils";
+import type { ParameterObject, ReferenceObject } from "@/types/openapi";
+import { isExtensionKey, isParameterObject, isZodSchema } from "@/utils/typeGuards";
 
 describe("typeGuards", () => {
   describe("isParameterObject", () => {

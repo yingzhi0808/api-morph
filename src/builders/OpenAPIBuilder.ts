@@ -1,8 +1,8 @@
 import { assign, cloneDeep } from "radashi";
 import type { ZodType } from "zod/v4";
 import { z } from "zod/v4";
-import type { PathItemBuilder } from "@/builders";
-import type { Builder } from "@/core";
+import type { Builder } from "@/builders/Builder";
+import type { PathItemBuilder } from "@/builders/PathItemBuilder";
 import type {
   CallbackObject,
   ContactObject,
@@ -23,13 +23,13 @@ import type {
   SecuritySchemeObject,
   ServerObject,
   TagObject,
-} from "@/types";
-import { isZodSchema } from "@/utils";
+} from "@/types/openapi";
+import { isZodSchema } from "@/utils/typeGuards";
 
 /**
  * 文档构建器，用于构建完整的 OpenAPI 文档
  *
- * @category 构建器
+ * @category Builders
  */
 export class OpenAPIBuilder implements Builder<OpenAPIObject> {
   private document: OpenAPIObject;

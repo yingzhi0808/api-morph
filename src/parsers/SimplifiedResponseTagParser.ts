@@ -1,8 +1,8 @@
 import http from "node:http";
 import { camel } from "radashi";
 import type { JSDocTag } from "ts-morph";
-import { ResponseTagParser } from "@/parsers";
-import type { ParsedTagParams } from "@/types";
+import { ResponseTagParser } from "./ResponseTagParser";
+import type { ParsedTagParams } from "./TagParser";
 
 // 生成状态码到描述的映射：200 -> "ok", 201 -> "created", 400 -> "badRequest" 等
 const statusCodeToTag = Object.fromEntries(
@@ -29,7 +29,7 @@ const tagToStatusCode = Object.fromEntries(
  * - `@internalServerErrorResponse` (500)
  * - 以及所有其他 HTTP 状态码...
  *
- * @category 解析器
+ * @category Parsers
  */
 export class SimplifiedResponseTagParser extends ResponseTagParser {
   override tags: string[] = Object.keys(tagToStatusCode);

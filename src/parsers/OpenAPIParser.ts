@@ -1,35 +1,37 @@
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
-import { ExpressFrameworkAnalyzer } from "@/analyzers";
-import { type OpenAPIBuilder, PathItemBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import {
-  CallbackTagParser,
-  DeprecatedTagParser,
-  DescriptionTagParser,
-  ExtensionsTagParser,
-  ExternalDocsTagParser,
-  OperationIdTagParser,
-  OperationTagParser,
-  ParameterTagParser,
-  RequestBodyTagParser,
-  ResponsesExtensionsTagParser,
-  ResponseTagParser,
-  SecurityTagParser,
-  ServerTagParser,
-  SimplifiedResponseTagParser,
-  SummaryTagParser,
-  TagsTagParser,
-} from "@/parsers";
-import type { ParseContext, ParsedOperation, ParserOptions, SourceOperationData } from "@/types";
-import { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
-import { OperationComposer } from "./OperationComposer";
-import { TagParserRegistry } from "./TagParserRegistry";
+import { ExpressFrameworkAnalyzer } from "@/analyzers/ExpressFrameworkAnalyzer";
+import type { OpenAPIBuilder } from "@/builders/OpenAPIBuilder";
+import { PathItemBuilder } from "@/builders/PathItemBuilder";
+import { OperationComposer } from "@/core/OperationComposer";
+import { FrameworkAnalyzerRegistry } from "@/registry/FrameworkAnalyzerRegistry";
+import { TagParserRegistry } from "@/registry/TagParserRegistry";
+import { JSDocTagName } from "@/types/common";
+import type {
+  ParseContext,
+  ParsedOperation,
+  ParserOptions,
+  SourceOperationData,
+} from "@/types/parser";
+import { CallbackTagParser } from "./CallbackTagParser";
+import { DeprecatedTagParser } from "./DeprecatedTagParser";
+import { DescriptionTagParser } from "./DescriptionTagParser";
+import { ExtensionsTagParser } from "./ExtensionsTagParser";
+import { ExternalDocsTagParser } from "./ExternalDocsTagParser";
+import { OperationIdTagParser } from "./OperationIdTagParser";
+import { OperationTagParser } from "./OperationTagParser";
+import { ParameterTagParser } from "./ParameterTagParser";
+import { RequestBodyTagParser } from "./RequestBodyTagParser";
+import { ResponsesExtensionsTagParser } from "./ResponsesExtensionsTagParser";
+import { ResponseTagParser } from "./ResponseTagParser";
+import { SecurityTagParser } from "./SecurityTagParser";
+import { ServerTagParser } from "./ServerTagParser";
+import { SimplifiedResponseTagParser } from "./SimplifiedResponseTagParser";
+import { SummaryTagParser } from "./SummaryTagParser";
+import { TagsTagParser } from "./TagsTagParser";
 
 /**
  * 解析整个项目中的 JSDoc 注释，并生成 OpenAPI 对象
- *
- * @category 核心
  */
 export class OpenAPIParser {
   /** 解析上下文 */

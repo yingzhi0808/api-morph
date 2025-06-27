@@ -8,7 +8,7 @@ import type {
   ResponseObject,
   SecurityRequirementObject,
   ServerObject,
-} from "@/types";
+} from "@/types/openapi";
 import { OperationBuilder } from "./OperationBuilder";
 import { ParameterBuilder } from "./ParameterBuilder";
 import { RequestBodyBuilder } from "./RequestBodyBuilder";

@@ -1,9 +1,11 @@
 import { cloneDeep } from "radashi";
-import type { Builder } from "@/core";
-import type { ServerObject, ServerVariableObject } from "@/types";
+import type { Builder } from "@/builders/Builder";
+import type { ServerObject, ServerVariableObject } from "@/types/openapi";
 
 /**
  * 服务器构建器，用于构建 OpenAPI ServerObject
+ *
+ * @category Builders
  */
 export class ServerBuilder implements Builder<ServerObject> {
   private server: ServerObject = { url: "" };

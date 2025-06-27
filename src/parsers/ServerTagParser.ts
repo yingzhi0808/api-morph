@@ -1,14 +1,17 @@
 import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
-import { ServerBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
+import { ServerBuilder } from "@/builders/ServerBuilder";
 import { getZodErrorMessage } from "@/helpers/zod";
-import type { OperationData, ParsedTagParams, ServerTagData, ServerTagParams } from "@/types";
-import { isExtensionKey } from "@/utils";
+import { JSDocTagName } from "@/types/common";
+import type { OperationData, ServerTagData, ServerTagParams } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 /**
  * 服务器标签解析器，处理 `@server` 标签
+ *
+ * @category Parsers
  */
 export class ServerTagParser extends TagParser {
   tags: string[] = [JSDocTagName.SERVER];

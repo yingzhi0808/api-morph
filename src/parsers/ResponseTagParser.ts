@@ -2,18 +2,20 @@ import http from "node:http";
 import type { JSDocTag } from "ts-morph";
 import YAML from "yaml";
 import z from "zod/v4";
-import { ResponseBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
+import { ResponseBuilder } from "@/builders/ResponseBuilder";
 import { normalizeMediaType } from "@/helpers/mediaType";
-import type { MediaTypeObject, OperationData, ParsedTagParams, ResponseObject } from "@/types";
-import { isExtensionKey } from "@/utils";
+import { getZodErrorMessage } from "@/helpers/zod";
+import { JSDocTagName } from "@/types/common";
+import type { MediaTypeObject, ResponseObject } from "@/types/openapi";
+import type { OperationData } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 /**
  * 响应标签解析器，处理 `@response` 标签。
  *
- * @category 解析器
+ * @category Parsers
  */
 export class ResponseTagParser extends TagParser {
   tags: string[] = [JSDocTagName.RESPONSE];

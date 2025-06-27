@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { removeQuotes, tokenizeString, unescapeString } from "@/utils";
+import { removeQuotes, tokenizeString, unescapeString } from "@/utils/string";
 
 describe("string", () => {
   describe("removeQuotes", () => {

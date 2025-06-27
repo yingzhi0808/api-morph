@@ -1,6 +1,6 @@
 import { isObject } from "radashi";
 import type { ZodType } from "zod/v4";
-import type { ParameterObject, ReferenceObject } from "@/types";
+import type { ParameterObject, ReferenceObject } from "@/types/openapi";
 
 /**
  * 判断参数对象是否为 ParameterObject。

@@ -1,7 +1,7 @@
 import { createParseContext } from "@tests/utils";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ParseContext } from "@/types";
+import type { ParseContext } from "@/types/parser";
 import { ExpressRouteCodeAnalyzer } from "./ExpressRouteCodeAnalyzer";
 
 describe("ExpressRouteCodeAnalyzer", () => {

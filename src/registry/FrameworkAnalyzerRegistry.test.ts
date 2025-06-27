@@ -1,8 +1,8 @@
 import { createParseContext } from "@tests/utils";
 import type { Node } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import type { OperationData, ParseContext } from "@/types";
-import { FrameworkAnalyzer } from "./FrameworkAnalyzer";
+import { FrameworkAnalyzer } from "@/analyzers/FrameworkAnalyzer";
+import type { OperationData, ParseContext } from "@/types/parser";
 import { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
 
 class MockFrameworkAnalyzer extends FrameworkAnalyzer {

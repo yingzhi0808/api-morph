@@ -1,19 +1,16 @@
 import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
-import { ExternalDocsBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
-import type {
-  ExternalDocsTagData,
-  ExternalDocsTagParams,
-  OperationData,
-  ParsedTagParams,
-} from "@/types";
-import { isExtensionKey } from "@/utils";
+import { ExternalDocsBuilder } from "@/builders/ExternalDocsBuilder";
+import { getZodErrorMessage } from "@/helpers/zod";
+import { type ParsedTagParams, TagParser } from "@/parsers/TagParser";
+import { JSDocTagName } from "@/types/common";
+import type { ExternalDocsTagData, ExternalDocsTagParams, OperationData } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
 
 /**
  * 外部文档标签解析器，处理 `@externalDocs` 标签
+ *
+ * @category Parsers
  */
 export class ExternalDocsTagParser extends TagParser {
   tags: string[] = [JSDocTagName.EXTERNAL_DOCS];

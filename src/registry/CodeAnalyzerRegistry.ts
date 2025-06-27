@@ -1,4 +1,4 @@
-import type { CodeAnalyzer } from "./CodeAnalyzer";
+import type { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
 
 /**
  * 代码分析器注册表，用于管理和查找代码分析器

@@ -1,19 +1,23 @@
 import type { JSDocTag } from "ts-morph";
 import YAML from "yaml";
 import z from "zod/v4";
-import { RequestBodyBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
+import { RequestBodyBuilder } from "@/builders/RequestBodyBuilder";
 import { normalizeMediaType } from "@/helpers/mediaType";
-import type { MediaTypeObject, OperationData, ParsedTagParams, RequestBodyObject } from "@/types";
-import { isExtensionKey } from "@/utils";
+import { getZodErrorMessage } from "@/helpers/zod";
+import { JSDocTagName } from "@/types/common";
+import type { MediaTypeObject, RequestBodyObject } from "@/types/openapi";
+import type { OperationData } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 /**
  * 请求体标签解析器，处理 `@requestBody` 标签。
  * 支持简化语法: `@requestBody [mediaType] [schema] [description]`。
  *
  * 当省略 mediaType 但提供了 schema 时，会自动使用默认的请求体媒体类型。
+ *
+ * @category Parsers
  */
 export class RequestBodyTagParser extends TagParser {
   tags: string[] = [JSDocTagName.REQUEST_BODY];

@@ -1,15 +1,17 @@
 import { cloneDeep } from "radashi";
-import type { Builder } from "@/core";
+import type { Builder } from "@/builders/Builder";
 import type {
   HeaderObject,
   LinkObject,
   MediaTypeObject,
   ReferenceObject,
   ResponseObject,
-} from "@/types";
+} from "@/types/openapi";
 
 /**
  * 响应构建器，用于构建 OpenAPI ResponseObject
+ *
+ * @category Builders
  */
 export class ResponseBuilder implements Builder<ResponseObject> {
   private response: ResponseObject = { description: "" };

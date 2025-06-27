@@ -1,12 +1,16 @@
 import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
-import { type HttpMethod, JSDocTagName, VALID_HTTP_METHODS } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
-import type { OperationData, ParsedTagParams } from "@/types";
+import { VALID_HTTP_METHODS } from "@/constants";
+import { getZodErrorMessage } from "@/helpers/zod";
+import { type HttpMethod, JSDocTagName } from "@/types/common";
+import type { OperationData } from "@/types/parser";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 /**
  * 操作标签解析器，处理 `@operation` 标签
+ *
+ * @category Parsers
  */
 export class OperationTagParser extends TagParser {
   tags: string[] = [JSDocTagName.OPERATION];

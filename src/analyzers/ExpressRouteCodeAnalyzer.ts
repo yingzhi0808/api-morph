@@ -2,9 +2,9 @@ import { basename, extname } from "node:path";
 import { pascal } from "radashi";
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
-import type { HttpMethod } from "@/constants";
-import { CodeAnalyzer } from "@/core";
-import type { OperationData } from "@/types";
+import type { HttpMethod } from "@/types/common";
+import type { OperationData } from "@/types/parser";
+import { CodeAnalyzer } from "./CodeAnalyzer";
 
 /**
  * 路由信息分析结果

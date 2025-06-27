@@ -1,13 +1,16 @@
 import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
-import { SecurityBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
-import type { OperationData, ParsedTagParams, SecurityTagData, SecurityTagParams } from "@/types";
+import { SecurityBuilder } from "@/builders/SecurityBuilder";
+import { getZodErrorMessage } from "@/helpers/zod";
+import { JSDocTagName } from "@/types/common";
+import type { OperationData, SecurityTagData, SecurityTagParams } from "@/types/parser";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 /**
  * 安全标签解析器，处理 `@security` 标签
+ *
+ * @category Parsers
  */
 export class SecurityTagParser extends TagParser {
   tags: string[] = [JSDocTagName.SECURITY];

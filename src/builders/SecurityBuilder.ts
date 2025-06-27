@@ -1,9 +1,11 @@
 import { cloneDeep } from "radashi";
-import type { Builder } from "@/core";
-import type { SecurityRequirementObject } from "@/types";
+import type { Builder } from "@/builders/Builder";
+import type { SecurityRequirementObject } from "@/types/openapi";
 
 /**
  * 安全需求构建器，用于构建 OpenAPI SecurityRequirementObject
+ *
+ * @category Builders
  */
 export class SecurityBuilder implements Builder<SecurityRequirementObject> {
   private security: SecurityRequirementObject = {};

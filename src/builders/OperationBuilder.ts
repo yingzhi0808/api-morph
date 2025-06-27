@@ -1,6 +1,8 @@
 import { cloneDeep } from "radashi";
-import type { ParameterBuilder, RequestBodyBuilder, ResponseBuilder } from "@/builders";
-import type { Builder } from "@/core";
+import type { Builder } from "@/builders/Builder";
+import type { ParameterBuilder } from "@/builders/ParameterBuilder";
+import type { RequestBodyBuilder } from "@/builders/RequestBodyBuilder";
+import type { ResponseBuilder } from "@/builders/ResponseBuilder";
 import type {
   CallbackObject,
   ExternalDocumentationObject,
@@ -11,11 +13,13 @@ import type {
   ResponseObject,
   SecurityRequirementObject,
   ServerObject,
-} from "@/types";
-import { isParameterObject } from "@/utils";
+} from "@/types/openapi";
+import { isParameterObject } from "@/utils/typeGuards";
 
 /**
  * 操作构建器，用于构建 OpenAPI OperationObject
+ *
+ * @category Builders
  */
 export class OperationBuilder implements Builder<OperationObject> {
   private operation: OperationObject = { responses: {} };

@@ -1,9 +1,10 @@
 import deepmerge from "deepmerge";
-import { OperationBuilder } from "@/builders";
-import type { MediaTypeObject, OperationData, ParsedOperation, SourceOperationData } from "@/types";
-import { isExtensionKey } from "@/utils";
-import type { FrameworkAnalyzerRegistry } from "./FrameworkAnalyzerRegistry";
-import type { TagParserRegistry } from "./TagParserRegistry";
+import { OperationBuilder } from "@/builders/OperationBuilder";
+import type { FrameworkAnalyzerRegistry } from "@/registry/FrameworkAnalyzerRegistry";
+import type { TagParserRegistry } from "@/registry/TagParserRegistry";
+import type { MediaTypeObject } from "@/types/openapi";
+import type { OperationData, ParsedOperation, SourceOperationData } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
 
 /**
  * 操作组合器，负责整合 JSDoc 标签解析和框架代码分析的结果，构建完整的 API 操作

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GenerateSwaggerUIOptions } from "@/types";
-import { generateSwaggerUI, getSwaggerUIAssetInfo } from "./swagger";
+import { type GenerateSwaggerUIOptions, generateSwaggerUI, getSwaggerUIAssetInfo } from "./swagger";
 
 describe("swagger", () => {
   describe("getSwaggerUIAssetInfo", () => {

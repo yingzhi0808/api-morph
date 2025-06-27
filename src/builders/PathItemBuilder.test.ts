@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { HttpMethod } from "@/constants";
-import type { OperationObject, ParameterObject, ReferenceObject, ServerObject } from "@/types";
+import type { HttpMethod } from "@/types/common";
+import type {
+  OperationObject,
+  ParameterObject,
+  ReferenceObject,
+  ServerObject,
+} from "@/types/openapi";
 import { OperationBuilder } from "./OperationBuilder";
 import { ParameterBuilder } from "./ParameterBuilder";
 import { PathItemBuilder } from "./PathItemBuilder";

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { OpenAPIBuilder } from "@/builders";
-import type { GenerateDocumentOptions, OpenAPIObject } from "@/types";
-import { generateDocument } from "./document";
+import { OpenAPIBuilder } from "@/builders/OpenAPIBuilder";
+import type { OpenAPIObject } from "@/types/openapi";
+import { type GenerateDocumentOptions, generateDocument } from "./document";
 
 vi.mock("ts-morph", async () => {
   const { Project } = await vi.importActual<typeof import("ts-morph")>("ts-morph");

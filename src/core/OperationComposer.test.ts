@@ -1,14 +1,12 @@
 import { createParseContext } from "@tests/utils";
 import type { JSDocTag, Node } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import { FrameworkAnalyzer, FrameworkAnalyzerRegistry, TagParser, TagParserRegistry } from "@/core";
-import type {
-  OperationData,
-  ParseContext,
-  ParsedTagParams,
-  RequestBodyObject,
-  SourceOperationData,
-} from "@/types";
+import { FrameworkAnalyzer } from "@/analyzers/FrameworkAnalyzer";
+import { type ParsedTagParams, TagParser } from "@/parsers/TagParser";
+import { FrameworkAnalyzerRegistry } from "@/registry/FrameworkAnalyzerRegistry";
+import { TagParserRegistry } from "@/registry/TagParserRegistry";
+import type { RequestBodyObject } from "@/types/openapi";
+import type { OperationData, ParseContext, SourceOperationData } from "@/types/parser";
 import { OperationComposer } from "./OperationComposer";
 
 class MockTagParser extends TagParser {

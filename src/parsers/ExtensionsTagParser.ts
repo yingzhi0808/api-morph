@@ -1,12 +1,14 @@
 import type { JSDocTag } from "ts-morph";
 import z from "zod/v4";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
-import type { OperationData, ParsedTagParams } from "@/types";
+import { getZodErrorMessage } from "@/helpers/zod";
+import { type ParsedTagParams, TagParser } from "@/parsers/TagParser";
+import { JSDocTagName } from "@/types/common";
+import type { OperationData } from "@/types/parser";
 
 /**
  * 扩展解析器，处理 `@extensions` 标签
+ *
+ * @category Parsers
  */
 export class ExtensionsTagParser extends TagParser {
   tags: string[] = [JSDocTagName.EXTENSIONS];

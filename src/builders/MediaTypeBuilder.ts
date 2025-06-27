@@ -1,18 +1,20 @@
 import { cloneDeep } from "radashi";
 import type { ZodType } from "zod/v4";
 import { z } from "zod/v4";
-import type { Builder } from "@/core";
+import type { Builder } from "@/builders/Builder";
 import type {
   EncodingObject,
   ExampleObject,
   MediaTypeObject,
   ReferenceObject,
   SchemaObject,
-} from "@/types";
-import { isZodSchema } from "@/utils";
+} from "@/types/openapi";
+import { isZodSchema } from "@/utils/typeGuards";
 
 /**
  * 媒体类型构建器，用于构建 OpenAPI MediaTypeObject
+ *
+ * @category Builders
  */
 export class MediaTypeBuilder implements Builder<MediaTypeObject> {
   private mediaType: MediaTypeObject = {};

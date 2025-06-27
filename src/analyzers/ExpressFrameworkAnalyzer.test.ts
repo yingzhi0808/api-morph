@@ -2,8 +2,8 @@ import { createParseContext, createProject } from "@tests/utils";
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
-import { CodeAnalyzer } from "@/core/CodeAnalyzer";
-import type { OperationData, ParseContext } from "@/types";
+import { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
+import type { OperationData, ParseContext } from "@/types/parser";
 import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
 
 class CustomTestAnalyzer extends CodeAnalyzer {

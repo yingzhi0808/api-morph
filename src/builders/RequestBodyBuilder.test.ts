@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MediaTypeObject } from "@/types";
+import type { MediaTypeObject } from "@/types/openapi";
 import { RequestBodyBuilder } from "./RequestBodyBuilder";
 
 describe("RequestBodyBuilder", () => {

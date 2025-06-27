@@ -1,18 +1,21 @@
 import { cloneDeep } from "radashi";
-import type { OperationBuilder, ParameterBuilder } from "@/builders";
-import type { HttpMethod } from "@/constants";
-import type { Builder } from "@/core";
+import type { Builder } from "@/builders/Builder";
+import type { OperationBuilder } from "@/builders/OperationBuilder";
+import type { ParameterBuilder } from "@/builders/ParameterBuilder";
+import type { HttpMethod } from "@/types/common";
 import type {
   OperationObject,
   ParameterObject,
   PathItemObject,
   ReferenceObject,
   ServerObject,
-} from "@/types";
-import { isParameterObject } from "@/utils";
+} from "@/types/openapi";
+import { isParameterObject } from "@/utils/typeGuards";
 
 /**
  * 路径项构建器，用于构建 OpenAPI PathItemObject
+ *
+ * @category Builders
  */
 export class PathItemBuilder implements Builder<PathItemObject> {
   private pathItem: PathItemObject = {};

@@ -1,5 +1,5 @@
 import type { Node } from "ts-morph";
-import type { FrameworkAnalyzer } from "./FrameworkAnalyzer";
+import type { FrameworkAnalyzer } from "@/analyzers/FrameworkAnalyzer";
 
 /**
  * 框架分析器注册表，用于管理和查找框架分析器

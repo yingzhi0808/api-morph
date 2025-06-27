@@ -1,11 +1,13 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: any is used for extension */
 
 import type { JsonSchemaDraft202012Object } from "@hyperjump/json-schema/draft-2020-12";
-import type { ParameterIn, ParameterStyle } from "@/constants";
+import type { ParameterIn, ParameterStyle } from "./common";
 
 /**
  * This is the root object of the [OpenAPI Description](https://spec.openapis.org/oas/v3.1.1#openapi-description).
  * @see https://spec.openapis.org/oas/v3.1.1#openapi-object
+ *
+ * @category Types
  */
 export interface OpenAPIObject {
   /**
@@ -83,6 +85,8 @@ export interface OpenAPIObject {
  * The object provides metadata about the API. The metadata MAY be used by the clients if needed, and MAY be
  * presented in editing or documentation generation tools for convenience.
  * @see https://spec.openapis.org/oas/v3.1.1#info-object
+ *
+ * @category Types
  */
 export interface InfoObject {
   /**
@@ -130,6 +134,8 @@ export interface InfoObject {
 /**
  * Contact information for the exposed API.
  * @see https://spec.openapis.org/oas/v3.1.1#contact-object
+ *
+ * @category Types
  */
 export interface ContactObject {
   /**
@@ -156,6 +162,8 @@ export interface ContactObject {
 /**
  * License information for the exposed API.
  * @see https://spec.openapis.org/oas/v3.1.1#license-object
+ *
+ * @category Types
  */
 export interface LicenseObject {
   /**
@@ -183,6 +191,8 @@ export interface LicenseObject {
 /**
  * An object representing a Server.
  * @see https://spec.openapis.org/oas/v3.1.1#server-object
+ *
+ * @category Types
  */
 export interface ServerObject {
   /**
@@ -212,6 +222,8 @@ export interface ServerObject {
 /**
  * An object representing a Server Variable for server URL template substitution.
  * @see https://spec.openapis.org/oas/v3.1.1#server-variable-object
+ *
+ * @category Types
  */
 export interface ServerVariableObject {
   /**
@@ -243,6 +255,8 @@ export interface ServerVariableObject {
  * Holds a set of reusable objects for different aspects of the OAS. All objects defined within the Components
  * Object will have no effect on the API unless they are explicitly referenced from outside the Components Object.
  * @see https://spec.openapis.org/oas/v3.1.1#components-object
+ *
+ * @category Types
  */
 export interface ComponentsObject {
   /**
@@ -306,6 +320,8 @@ export interface ComponentsObject {
  * the Server Object in order to construct the full URL. The Paths Object MAY be empty, due to Access Control List
  * (ACL) constraints.
  * @see https://spec.openapis.org/oas/v3.1.1#paths-object
+ *
+ * @category Types
  */
 export interface PathsObject {
   /**
@@ -329,6 +345,8 @@ export interface PathsObject {
  * itself is still exposed to the documentation viewer but they will not know which operations and parameters are
  * available.
  * @see https://spec.openapis.org/oas/v3.1.1#path-item-object
+ *
+ * @category Types
  */
 export interface PathItemObject {
   /**
@@ -413,6 +431,8 @@ export interface PathItemObject {
 /**
  * Describes a single API operation on a path.
  * @see https://spec.openapis.org/oas/v3.1.1#operation-object
+ *
+ * @category Types
  */
 export interface OperationObject {
   /**
@@ -501,6 +521,8 @@ export interface OperationObject {
 /**
  * Allows referencing an external resource for extended documentation.
  * @see https://spec.openapis.org/oas/v3.1.1#external-documentation-object
+ *
+ * @category Types
  */
 export interface ExternalDocumentationObject {
   /**
@@ -522,6 +544,8 @@ export interface ExternalDocumentationObject {
 /**
  * Describes a single operation parameter. A unique parameter is defined by a combination of a name and location.
  * @see https://spec.openapis.org/oas/v3.1.1#parameter-object
+ *
+ * @category Types
  */
 export interface ParameterObject {
   /**
@@ -625,6 +649,8 @@ export interface ParameterObject {
 /**
  * Describes a single request body.
  * @see https://spec.openapis.org/oas/v3.1.1#request-body-object
+ *
+ * @category Types
  */
 export interface RequestBodyObject {
   /**
@@ -654,6 +680,8 @@ export interface RequestBodyObject {
 /**
  * Each Media Type Object provides schema and examples for the media type identified by its key.
  * @see https://spec.openapis.org/oas/v3.1.1#media-type-object
+ *
+ * @category Types
  */
 export interface MediaTypeObject {
   /**
@@ -688,6 +716,8 @@ export interface MediaTypeObject {
 /**
  * A single encoding definition applied to a single schema property.
  * @see https://spec.openapis.org/oas/v3.1.1#encoding-object
+ *
+ * @category Types
  */
 export interface EncodingObject {
   /**
@@ -747,6 +777,8 @@ export interface EncodingObject {
  * A container for the expected responses of an operation. The container maps a HTTP response code to the expected
  * response.
  * @see https://spec.openapis.org/oas/v3.1.1#responses-object
+ *
+ * @category Types
  */
 export interface ResponsesObject {
   /**
@@ -775,6 +807,8 @@ export interface ResponsesObject {
  * Describes a single response from an API operation, including design-time, static `links` to operations based on
  * the response.
  * @see https://spec.openapis.org/oas/v3.1.1#response-object
+ *
+ * @category Types
  */
 export interface ResponseObject {
   /**
@@ -813,6 +847,8 @@ export interface ResponseObject {
  * key value used to identify the Path Item Object is an expression, evaluated at runtime, that identifies a URL to
  * use for the callback operation.
  * @see https://spec.openapis.org/oas/v3.1.1#callback-object
+ *
+ * @category Types
  */
 export interface CallbackObject {
   /**
@@ -831,6 +867,8 @@ export interface CallbackObject {
  * object is typically used in fields named `examples` (plural), and is a referenceable alternative to older
  * `example` (singular) fields that do not support referencing or metadata.
  * @see https://spec.openapis.org/oas/v3.1.1#example-object
+ *
+ * @category Types
  */
 export interface ExampleObject {
   /**
@@ -868,6 +906,8 @@ export interface ExampleObject {
  * the caller's ability to successfully invoke it, rather it provides a known relationship and traversal mechanism
  * between responses and other operations.
  * @see https://spec.openapis.org/oas/v3.1.1#link-object
+ *
+ * @category Types
  */
 export interface LinkObject {
   /**
@@ -916,6 +956,8 @@ export interface LinkObject {
  * Describes a single header for HTTP responses and for individual parts in `multipart` representations; see the
  * relevant Response Object and Encoding Object documentation for restrictions on which headers can be described.
  * @see https://spec.openapis.org/oas/v3.1.1#header-object
+ *
+ * @category Types
  */
 export interface HeaderObject {
   /**
@@ -977,6 +1019,8 @@ export interface HeaderObject {
  * Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a Tag Object per
  * tag defined in the Operation Object instances.
  * @see https://spec.openapis.org/oas/v3.1.1#tag-object
+ *
+ * @category Types
  */
 export interface TagObject {
   /**
@@ -1003,6 +1047,8 @@ export interface TagObject {
 /**
  * A simple object to allow referencing other components in the OpenAPI Description, internally and externally.
  * @see https://spec.openapis.org/oas/v3.1.1#reference-object
+ *
+ * @category Types
  */
 export interface ReferenceObject {
   /**
@@ -1030,6 +1076,8 @@ export interface ReferenceObject {
  * (which allows any instance to validate) MAY be represented by the boolean value `true` and a schema which allows
  * no instance to validate MAY be represented by the boolean value `false`.
  * @see https://spec.openapis.org/oas/v3.1.1#schema-object
+ *
+ * @category Types
  */
 export interface SchemaObject extends Omit<JsonSchemaDraft202012Object, "$schema"> {
   $schema?: string;
@@ -1072,6 +1120,8 @@ export interface SchemaObject extends Omit<JsonSchemaDraft202012Object, "$schema
  * and validation. The Discriminator Object does this by implicitly or explicitly associating the possible values of
  * a named property with alternative schemas.
  * @see https://spec.openapis.org/oas/v3.1.1#discriminator-object
+ *
+ * @category Types
  */
 export interface DiscriminatorObject {
   /**
@@ -1094,6 +1144,8 @@ export interface DiscriminatorObject {
 /**
  * A metadata object that allows for more fine-tuned XML model definitions.
  * @see https://spec.openapis.org/oas/v3.1.1#xml-object
+ *
+ * @category Types
  */
 export interface XMLObject {
   /**
@@ -1136,6 +1188,8 @@ export interface XMLObject {
 /**
  * Defines a security scheme that can be used by the operations.
  * @see https://spec.openapis.org/oas/v3.1.1#security-scheme-object
+ *
+ * @category Types
  */
 export interface SecuritySchemeObject {
   /**
@@ -1197,6 +1251,8 @@ export interface SecuritySchemeObject {
 /**
  * Allows configuration of the supported OAuth Flows.
  * @see https://spec.openapis.org/oas/v3.1.1#oauth-flows-object
+ *
+ * @category Types
  */
 export interface OAuthFlowsObject {
   /**
@@ -1228,6 +1284,8 @@ export interface OAuthFlowsObject {
 /**
  * Configuration details for a supported OAuth Flow
  * @see https://spec.openapis.org/oas/v3.1.1#oauth-flow-object
+ *
+ * @category Types
  */
 export interface OAuthFlowObject {
   /**
@@ -1266,6 +1324,8 @@ export interface OAuthFlowObject {
  * Lists the required security schemes to execute this operation. The name used for each property MUST correspond to
  * a security scheme declared in the Security Schemes under the Components Object.
  * @see https://spec.openapis.org/oas/v3.1.1#security-requirement-object
+ *
+ * @category Types
  */
 export interface SecurityRequirementObject {
   /**

@@ -1,11 +1,11 @@
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { VALID_HTTP_METHODS } from "@/constants";
-import { CodeAnalyzerRegistry } from "@/core/CodeAnalyzerRegistry";
-import { FrameworkAnalyzer } from "@/core/FrameworkAnalyzer";
-import type { OperationData, ParseContext } from "@/types";
+import { CodeAnalyzerRegistry } from "@/registry/CodeAnalyzerRegistry";
+import type { OperationData, ParseContext } from "@/types/parser";
 import { ExpressRouteCodeAnalyzer } from "./ExpressRouteCodeAnalyzer";
 import { ExpressZodValidationCodeAnalyzer } from "./ExpressZodValidationCodeAnalyzer";
+import { FrameworkAnalyzer } from "./FrameworkAnalyzer";
 
 /**
  * Express框架分析器，用于分析Express应用的各种节点类型。

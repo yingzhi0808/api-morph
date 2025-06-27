@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { Project, type ProjectOptions, SyntaxKind } from "ts-morph";
-import type { ParseContext, ParserOptions } from "@/types";
+import type { ParseContext, ParserOptions } from "@/types/parser";
 
 /**
  * 创建一个 ts-morph Project 实例，默认使用内存文件系统。

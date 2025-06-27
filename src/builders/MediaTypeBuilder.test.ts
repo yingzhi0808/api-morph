@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod/v4";
-import type { EncodingObject, ExampleObject, ReferenceObject, SchemaObject } from "@/types";
+import type { EncodingObject, ExampleObject, ReferenceObject, SchemaObject } from "@/types/openapi";
 import { MediaTypeBuilder } from "./MediaTypeBuilder";
 
 describe("MediaTypeBuilder", () => {

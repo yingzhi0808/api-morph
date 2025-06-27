@@ -1,7 +1,7 @@
-/* v8 ignore start */
-
 /**
  * 构建器基础接口，定义所有构建器的通用契约
+ *
+ * @category Builders
  */
 export interface Builder<T> {
   /**

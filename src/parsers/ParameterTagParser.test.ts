@@ -1,7 +1,7 @@
 import { createJSDocTag, createParseContext, createProject } from "@tests/utils";
 import { type Project, SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ParseContext } from "@/types";
+import type { ParseContext } from "@/types/parser";
 import { ParameterTagParser } from "./ParameterTagParser";
 
 describe("ParameterTagParser", () => {

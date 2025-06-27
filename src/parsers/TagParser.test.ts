@@ -2,8 +2,10 @@ import { createJSDocTag, createParseContext, createProject } from "@tests/utils"
 import type { JSDocTag, Project } from "ts-morph";
 import { SyntaxKind } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TagParser } from "@/core/TagParser";
-import type { OperationData, ParseContext, ParsedTagParams, SchemaObject } from "@/types";
+import type { SchemaObject } from "@/types/openapi";
+import type { OperationData, ParseContext } from "@/types/parser";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 class TestTagParser extends TagParser {
   tags = ["test"];

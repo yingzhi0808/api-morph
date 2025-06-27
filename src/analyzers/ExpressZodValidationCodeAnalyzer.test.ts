@@ -2,7 +2,7 @@ import { createParseContext, createProject } from "@tests/utils";
 import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { ParseContext } from "@/types";
+import type { ParseContext } from "@/types/parser";
 import { ExpressZodValidationCodeAnalyzer } from "./ExpressZodValidationCodeAnalyzer";
 
 describe("ExpressZodValidationCodeAnalyzer", () => {

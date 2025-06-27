@@ -1,8 +1,10 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: any is used for extension */
 
 import type { JSDocTag, Node, Project, TypeChecker } from "ts-morph";
-import type { HttpMethod } from "@/constants";
-import type { CodeAnalyzer, FrameworkAnalyzer, TagParser } from "@/core";
+import type { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
+import type { FrameworkAnalyzer } from "@/analyzers/FrameworkAnalyzer";
+import type { TagParser } from "@/parsers/TagParser";
+import type { HttpMethod } from "./common";
 import type {
   CallbackObject,
   ExternalDocumentationObject,
@@ -13,34 +15,12 @@ import type {
   SchemaObject,
   SecurityRequirementObject,
   ServerObject,
-} from "@/types";
-
-/**
- * 解析上下文接口，提供解析过程中需要的所有共享状态和工具
- */
-export interface ParseContext {
-  /** ts-morph Project 实例 */
-  project: Project;
-  /** ts-morph TypeChecker 实例 */
-  typeChecker: TypeChecker;
-  /** 全局 Schema 缓存，避免重复转换同一类型 */
-  readonly schemas: Map<string, SchemaObject>;
-  /** 解析选项 */
-  readonly options: ParserOptions;
-}
-
-/**
- * 自定义 operationId 生成函数类型
- */
-export type GenerateOperationIdFunction = (
-  method: HttpMethod,
-  path: string,
-  fileName: string,
-  functionName?: string,
-) => string | null;
+} from "./openapi";
 
 /**
  * 解析选项
+ *
+ * @category Types
  */
 export interface ParserOptions {
   /** 要包含的文件模式 */
@@ -76,7 +56,37 @@ export interface ParserOptions {
 }
 
 /**
+ * 解析上下文接口，提供解析过程中需要的所有共享状态和工具
+ *
+ * @category Types
+ */
+export interface ParseContext {
+  /** ts-morph Project 实例 */
+  project: Project;
+  /** ts-morph TypeChecker 实例 */
+  typeChecker: TypeChecker;
+  /** 全局 Schema 缓存，避免重复转换同一类型 */
+  readonly schemas: Map<string, SchemaObject>;
+  /** 解析选项 */
+  readonly options: ParserOptions;
+}
+
+/**
+ * 自定义 operationId 生成函数类型
+ *
+ * @category Types
+ */
+export type GenerateOperationIdFunction = (
+  method: HttpMethod,
+  path: string,
+  fileName: string,
+  functionName?: string,
+) => string | null;
+
+/**
  * 表示待解析的 Operation 源数据
+ *
+ * @category Types
  */
 export interface SourceOperationData {
   /**代码节点 */
@@ -87,6 +97,8 @@ export interface SourceOperationData {
 
 /**
  * OperationComposer 解析后的结果
+ *
+ * @category Types
  */
 export interface ParsedOperation {
   /** API 路径 */
@@ -99,6 +111,8 @@ export interface ParsedOperation {
 
 /**
  * TagParser 解析后的结果
+ *
+ * @category Types
  */
 export interface OperationData {
   /** HTTP 方法 */
@@ -136,43 +150,9 @@ export interface OperationData {
 }
 
 /**
- * 解析后的标签参数
- */
-export interface ParsedTagParams {
-  /** 内联参数 */
-  inline: string[];
-  /** YAML参数 */
-  yaml?: Record<string, unknown>;
-  /** 原始文本 */
-  rawText: string;
-}
-
-/**
- * 响应标签内联参数类型
- */
-export interface ResponseTagParams {
-  /** 状态码 */
-  statusCode: string;
-  /** 响应描述 */
-  description?: string;
-  /** YAML参数对象 */
-  yaml?: Record<string, unknown>;
-}
-
-/**
- * 响应标签参数类型
- */
-export interface ResponseTagData {
-  /** 状态码 */
-  statusCode: string;
-  /** 响应描述 */
-  description?: string;
-  /** YAML参数对象 */
-  yaml?: ResponseObject;
-}
-
-/**
  * 外部文档标签内联参数类型
+ *
+ * @category Types
  */
 export interface ExternalDocsTagParams {
   /** 外部文档URL */
@@ -185,6 +165,8 @@ export interface ExternalDocsTagParams {
 
 /**
  * 外部文档标签参数类型
+ *
+ * @category Types
  */
 export interface ExternalDocsTagData {
   /** 外部文档URL */
@@ -197,6 +179,8 @@ export interface ExternalDocsTagData {
 
 /**
  * 回调标签内联参数类型
+ *
+ * @category Types
  */
 export interface CallbackTagParams {
   /** 回调名称 */
@@ -207,6 +191,8 @@ export interface CallbackTagParams {
 
 /**
  * 回调标签参数类型
+ *
+ * @category Types
  */
 export interface CallbackTagData {
   /** 回调名称 */
@@ -217,6 +203,8 @@ export interface CallbackTagData {
 
 /**
  * 安全标签内联参数类型
+ *
+ * @category Types
  */
 export interface SecurityTagParams {
   /** 安全方案名称 */
@@ -227,6 +215,8 @@ export interface SecurityTagParams {
 
 /**
  * 安全标签参数类型
+ *
+ * @category Types
  */
 export interface SecurityTagData {
   /** 安全方案名称 */
@@ -237,6 +227,8 @@ export interface SecurityTagData {
 
 /**
  * 服务器标签内联参数类型
+ *
+ * @category Types
  */
 export interface ServerTagParams {
   /** 服务器URL */
@@ -249,6 +241,8 @@ export interface ServerTagParams {
 
 /**
  * 服务器标签参数类型
+ *
+ * @category Types
  */
 export interface ServerTagData {
   /** 服务器URL */

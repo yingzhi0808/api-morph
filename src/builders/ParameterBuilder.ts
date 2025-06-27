@@ -1,10 +1,17 @@
 import { cloneDeep } from "radashi";
-import type { ParameterIn } from "@/constants";
-import type { Builder } from "@/core";
-import type { ExampleObject, MediaTypeObject, ParameterObject, ReferenceObject } from "@/types";
+import type { Builder } from "@/builders/Builder";
+import type { ParameterIn } from "@/types/common";
+import type {
+  ExampleObject,
+  MediaTypeObject,
+  ParameterObject,
+  ReferenceObject,
+} from "@/types/openapi";
 
 /**
  * 参数构建器，用于构建 OpenAPI ParameterObject
+ *
+ * @category Builders
  */
 export class ParameterBuilder implements Builder<ParameterObject> {
   private parameter: ParameterObject;

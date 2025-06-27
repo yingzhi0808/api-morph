@@ -1,9 +1,11 @@
 import { cloneDeep } from "radashi";
-import type { Builder } from "@/core";
-import type { CallbackObject, PathItemObject } from "@/types";
+import type { Builder } from "@/builders/Builder";
+import type { CallbackObject, PathItemObject } from "@/types/openapi";
 
 /**
  * 回调构建器，用于构建 OpenAPI CallbackObject
+ *
+ * @category Builders
  */
 export class CallbackBuilder implements Builder<CallbackObject> {
   private callback: CallbackObject = {};

@@ -1,6 +1,6 @@
 import { createProject } from "@tests/utils";
 import { describe, expect, it } from "vitest";
-import { OpenAPIBuilder } from "@/builders";
+import { OpenAPIBuilder } from "@/builders/OpenAPIBuilder";
 import { OpenAPIParser } from "./OpenAPIParser";
 
 describe("OpenAPIParser", () => {

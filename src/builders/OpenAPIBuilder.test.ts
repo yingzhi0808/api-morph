@@ -18,7 +18,7 @@ import type {
   SecuritySchemeObject,
   ServerObject,
   TagObject,
-} from "@/types";
+} from "@/types/openapi";
 import { OpenAPIBuilder } from "./OpenAPIBuilder";
 import { PathItemBuilder } from "./PathItemBuilder";
 

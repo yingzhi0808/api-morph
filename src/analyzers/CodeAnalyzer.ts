@@ -1,10 +1,10 @@
-/* v8 ignore start */
-
 import type { Node } from "ts-morph";
-import type { OperationData, ParseContext } from "@/types";
+import type { OperationData, ParseContext } from "@/types/parser";
 
 /**
  * 代码分析器抽象基类，用于分析代码结构并提取API信息
+ *
+ * @category Analyzers
  */
 export abstract class CodeAnalyzer {
   /**

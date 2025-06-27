@@ -1,9 +1,11 @@
 import { cloneDeep } from "radashi";
-import type { Builder } from "@/core";
-import type { ExternalDocumentationObject } from "@/types";
+import type { Builder } from "@/builders/Builder";
+import type { ExternalDocumentationObject } from "@/types/openapi";
 
 /**
  * 外部文档构建器，用于构建 OpenAPI ExternalDocumentationObject
+ *
+ * @category Builders
  */
 export class ExternalDocsBuilder implements Builder<ExternalDocumentationObject> {
   private externalDocs: ExternalDocumentationObject = { url: "" };

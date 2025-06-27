@@ -1,10 +1,12 @@
 import type { JSDocTag } from "ts-morph";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import type { OperationData, ParsedTagParams } from "@/types";
+import { type ParsedTagParams, TagParser } from "@/parsers/TagParser";
+import { JSDocTagName } from "@/types/common";
+import type { OperationData } from "@/types/parser";
 
 /**
  * 废弃标记解析器，处理 `@deprecated` 标签
+ *
+ * @category Parsers
  */
 export class DeprecatedTagParser extends TagParser {
   tags: string[] = [JSDocTagName.DEPRECATED];

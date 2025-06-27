@@ -1,14 +1,16 @@
 import type { JSDocTag } from "ts-morph";
 import { z } from "zod/v4";
-import { CallbackBuilder } from "@/builders";
-import { JSDocTagName } from "@/constants";
-import { TagParser } from "@/core/TagParser";
+import { CallbackBuilder } from "@/builders/CallbackBuilder";
 import { getZodErrorMessage } from "@/helpers/zod";
-import type { CallbackTagData, CallbackTagParams, OperationData, ParsedTagParams } from "@/types";
-import { isExtensionKey } from "@/utils";
+import { type ParsedTagParams, TagParser } from "@/parsers/TagParser";
+import { JSDocTagName } from "@/types/common";
+import type { CallbackTagData, CallbackTagParams, OperationData } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
 
 /**
  * 回调标签解析器，处理 `@callback` 标签
+ *
+ * @category Parsers
  */
 export class CallbackTagParser extends TagParser {
   tags: string[] = [JSDocTagName.CALLBACK];

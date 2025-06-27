@@ -1,8 +1,8 @@
 import { createParseContext } from "@tests/utils";
 import type { Node } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import type { OperationData } from "@/types";
-import { CodeAnalyzer } from "./CodeAnalyzer";
+import { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
+import type { OperationData } from "@/types/parser";
 import { CodeAnalyzerRegistry } from "./CodeAnalyzerRegistry";
 
 class MockCodeAnalyzer extends CodeAnalyzer {

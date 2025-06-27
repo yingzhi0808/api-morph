@@ -1,21 +1,21 @@
 import type { JSDocTag } from "ts-morph";
 import YAML from "yaml";
 import z from "zod/v4";
-import { ParameterBuilder } from "@/builders";
-import {
-  JSDocTagName,
-  type ParameterIn,
-  type ParameterStyle,
-  VALID_PARAMETER_IN,
-  VALID_PARAMETER_STYLE,
-} from "@/constants";
-import { TagParser } from "@/core/TagParser";
-import { getZodErrorMessage } from "@/helpers";
-import type { OperationData, ParameterObject, ParsedTagParams } from "@/types";
-import { isExtensionKey } from "@/utils";
+import { ParameterBuilder } from "@/builders/ParameterBuilder";
+import { VALID_PARAMETER_IN, VALID_PARAMETER_STYLE } from "@/constants";
+import { getZodErrorMessage } from "@/helpers/zod";
+import type { ParameterIn, ParameterStyle } from "@/types/common";
+import { JSDocTagName } from "@/types/common";
+import type { ParameterObject } from "@/types/openapi";
+import type { OperationData } from "@/types/parser";
+import { isExtensionKey } from "@/utils/typeGuards";
+import type { ParsedTagParams } from "./TagParser";
+import { TagParser } from "./TagParser";
 
 /**
  * 参数标签解析器，处理 `@parameter` 标签。
+ *
+ * @category Parsers
  */
 export class ParameterTagParser extends TagParser {
   tags: string[] = [JSDocTagName.PARAMETER];

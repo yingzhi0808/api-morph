@@ -3,15 +3,30 @@ import type { JSDocLink, JSDocTag } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import YAML from "yaml";
 import z from "zod/v4";
-import type { JSDocTagName } from "@/constants";
-import { isZodType } from "@/helpers";
-import type { OperationData, ParseContext, ParsedTagParams, SchemaObject } from "@/types";
-import { tokenizeString } from "@/utils";
+import { isZodType } from "@/helpers/zod";
+import type { JSDocTagName } from "@/types/common";
+import type { SchemaObject } from "@/types/openapi";
+import type { OperationData, ParseContext } from "@/types/parser";
+import { tokenizeString } from "@/utils/string";
+
+/**
+ * 解析后的标签参数
+ *
+ * @category Parsers
+ */
+export interface ParsedTagParams {
+  /** 内联参数 */
+  inline: string[];
+  /** YAML参数 */
+  yaml?: Record<string, unknown>;
+  /** 原始文本 */
+  rawText: string;
+}
 
 /**
  * 标签解析器接口，所有标签解析器必须实现此接口
  *
- * @category 核心
+ * @category Parsers
  */
 export abstract class TagParser {
   /** 解析器支持的 JSDoc 标签名称列表 */

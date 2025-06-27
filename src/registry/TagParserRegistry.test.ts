@@ -1,8 +1,9 @@
 import { createParseContext } from "@tests/utils";
 import type { JSDocTag } from "ts-morph";
 import { beforeEach, describe, expect, it } from "vitest";
-import { TagParser } from "@/core/TagParser";
-import type { OperationData, ParsedTagParams } from "@/types";
+import type { ParsedTagParams } from "@/parsers/TagParser";
+import { TagParser } from "@/parsers/TagParser";
+import type { OperationData } from "@/types/parser";
 import { TagParserRegistry } from "./TagParserRegistry";
 
 class TestParser1 extends TagParser {
