@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`swagger > generateSwaggerUI > 应该使用默认选项生成HTML 1`] = `
+exports[`swagger > generateSwaggerUIHTML > 应该使用默认选项生成HTML 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,7 +41,7 @@ exports[`swagger > generateSwaggerUI > 应该使用默认选项生成HTML 1`] = 
 </html>"
 `;
 
-exports[`swagger > generateSwaggerUI > 应该正确应用自定义CSS 1`] = `
+exports[`swagger > generateSwaggerUIHTML > 应该正确应用自定义CSS 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,7 +87,7 @@ exports[`swagger > generateSwaggerUI > 应该正确应用自定义CSS 1`] = `
 </html>"
 `;
 
-exports[`swagger > generateSwaggerUI > 应该正确应用自定义JavaScript 1`] = `
+exports[`swagger > generateSwaggerUIHTML > 应该正确应用自定义JavaScript 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,7 +131,7 @@ exports[`swagger > generateSwaggerUI > 应该正确应用自定义JavaScript 1`]
 </html>"
 `;
 
-exports[`swagger > generateSwaggerUI > 应该正确应用自定义URL 1`] = `
+exports[`swagger > generateSwaggerUIHTML > 应该正确应用自定义URL 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,7 +172,7 @@ exports[`swagger > generateSwaggerUI > 应该正确应用自定义URL 1`] = `
 </html>"
 `;
 
-exports[`swagger > generateSwaggerUI > 应该正确应用自定义标题 1`] = `
+exports[`swagger > generateSwaggerUIHTML > 应该正确应用自定义标题 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -213,7 +213,7 @@ exports[`swagger > generateSwaggerUI > 应该正确应用自定义标题 1`] = `
 </html>"
 `;
 
-exports[`swagger > generateSwaggerUI > 应该正确设置persistAuthorization为true 1`] = `
+exports[`swagger > generateSwaggerUIHTML > 应该正确设置persistAuthorization为true 1`] = `
 "<!DOCTYPE html>
 <html lang="en">
 <head>

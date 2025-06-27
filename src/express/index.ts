@@ -4,3 +4,4 @@
  */
 
 export * from "./middlewares/zodValidation";
+export * from "./swagger";

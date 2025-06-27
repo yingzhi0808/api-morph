@@ -336,23 +336,15 @@ app.listen(port, () => {
 最后，我们添加生成和提供 OpenAPI 文档的功能：
 
 ```typescript
-// [!code ++:6]
-import {
-  generateDocument,
-  generateSwaggerUI,
-  getSwaggerUIAssetInfo,
-  validateRequest,
-} from "api-morph";
-import { validateRequest } from "api-morph/express";
 import express from "express";
+import { validateRequest } from "api-morph/express"; // [!code --]
+import { generateDocument } from "api-morph"; // [!code ++]
+import { setupSwaggerUI, validateRequest } from "api-morph/express"; // [!code ++]
 import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema";
 
 const app = express();
 
 app.use(express.json());
-// [!code ++:2]
-// 提供 Swagger UI 需要的静态资源
-app.use(express.static(getSwaggerUIAssetInfo().assetPath));
 
 /**
  * @summary 更新用户信息
@@ -375,7 +367,7 @@ app.put(
   },
 );
 
-// [!code ++:24]
+// [!code ++:18]
 // 生成 OpenAPI 文档
 const openapi = await generateDocument(
   {
@@ -393,13 +385,7 @@ app.get("/openapi.json", (req, res) => {
 });
 
 // 提供 Swagger UI 界面
-app.get("/swagger-ui", (req, res) => {
-  res.send(
-    generateSwaggerUI({
-      url: "/openapi.json",
-    }),
-  );
-});
+setupSwaggerUI("/swagger-ui", app);
 
 const port = 3000;
 app.listen(port, () => {

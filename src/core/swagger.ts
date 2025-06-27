@@ -6,7 +6,7 @@ import path from "node:path";
  *
  * @category Core
  */
-export interface GenerateSwaggerUIOptions {
+export interface GenerateSwaggerUIHTMLOptions {
   /** Swagger JSON 文件的 URL 路径，默认为 '/openapi.json' */
   url?: string;
   /** HTML 页面标题，默认为 'Swagger UI' */
@@ -20,64 +20,40 @@ export interface GenerateSwaggerUIOptions {
 }
 
 /**
- * 静态资源信息
+ * Swagger UI 静态资源路径
  *
  * @category Core
  */
-export interface SwaggerUIAssetInfo {
-  /** swagger-ui-dist 包的绝对路径 */
-  assetPath: string;
-  /** 主要资源文件路径 */
-  files: {
-    indexCss: string;
-    css: string;
-    bundleJs: string;
-    standalonePresetJs: string;
-    favicon32: string;
-    favicon16: string;
-  };
+export interface SwaggerUIAssetPaths {
+  indexCss: string;
+  css: string;
+  bundleJs: string;
+  standalonePresetJs: string;
+  favicon32: string;
+  favicon16: string;
 }
 
 /**
- * 获取 swagger-ui-dist 包的路径。
- * @returns swagger-ui-dist 包的绝对路径。
+ * 获取 Swagger UI 静态资源目录。
+ * @returns Swagger UI 静态资源目录。
+ *
+ * @category Core
  */
-function getSwaggerUIAssetPath() {
+export function getSwaggerUIAssetDir() {
   const require = createRequire(import.meta.url);
   const packageJsonPath = require.resolve("swagger-ui-dist/package.json");
-  return path.dirname(packageJsonPath);
-}
-
-/**
- * 获取 Swagger UI 静态资源信息。
- * @returns 包含资源路径和文件信息的对象。
- *
- * @category Core
- */
-export function getSwaggerUIAssetInfo(): SwaggerUIAssetInfo {
-  const assetPath = getSwaggerUIAssetPath();
-
-  return {
-    assetPath,
-    files: {
-      indexCss: path.join(assetPath, "index.css"),
-      css: path.join(assetPath, "swagger-ui.css"),
-      bundleJs: path.join(assetPath, "swagger-ui-bundle.js"),
-      standalonePresetJs: path.join(assetPath, "swagger-ui-standalone-preset.js"),
-      favicon32: path.join(assetPath, "favicon-32x32.png"),
-      favicon16: path.join(assetPath, "favicon-16x16.png"),
-    },
-  };
+  const assetDir = path.dirname(packageJsonPath);
+  return assetDir;
 }
 
 /**
  * 生成 Swagger UI 的 HTML 字符串。
- * @param options wagger UI 配置选项。
+ * @param options 选项。
  * @returns 完整的 Swagger UI HTML 字符串。
  *
  * @category Core
  */
-export function generateSwaggerUI(options: GenerateSwaggerUIOptions = {}) {
+export function generateSwaggerUIHTML(options: GenerateSwaggerUIHTMLOptions = {}) {
   const {
     url = "/openapi.json",
     title = "Swagger UI",
