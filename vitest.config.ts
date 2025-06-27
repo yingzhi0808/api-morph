@@ -7,7 +7,7 @@ export default defineConfig({
     include: ["**/*.test.ts"],
     coverage: {
       include: ["src"],
-      exclude: ["src/types"],
+      exclude: ["src/**/index.ts"],
     },
   },
 });
