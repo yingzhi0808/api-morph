@@ -1,6 +1,6 @@
 {
   "name": "api-morph",
-  "entryPoints": ["src/index.ts", "src/express/index.ts"],
+  "entryPoints": ["src/index.ts", "src/express/index.ts", "src/koa/index.ts"],
   "out": "docs/api",
   "docsRoot": "docs",
   "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],

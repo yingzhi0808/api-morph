@@ -43,6 +43,10 @@ export interface ParserOptions {
   customExpressCodeAnalyzers?: (new (
     context: ParseContext,
   ) => CodeAnalyzer)[];
+  /** 自定义Koa代码分析器 */
+  customKoaCodeAnalyzers?: (new (
+    context: ParseContext,
+  ) => CodeAnalyzer)[];
   /**
    * 是否启用代码分析
    * @default true

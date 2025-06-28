@@ -9,7 +9,10 @@
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
-      "@tests/*": ["./tests/*"]
+      "@tests/*": ["./tests/*"],
+      "api-morph": ["./src"],
+      "api-morph/express": ["./src/express"],
+      "api-morph/koa": ["./src/koa"]
     },
     "resolveJsonModule": true,
     "types": ["node"],
@@ -30,5 +33,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "examples"]
 }

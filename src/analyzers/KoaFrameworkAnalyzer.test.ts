@@ -4,30 +4,30 @@ import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
 import type { OperationData, ParseContext } from "@/types/parser";
-import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
+import { KoaFrameworkAnalyzer } from "./KoaFrameworkAnalyzer";
 
 class CustomTestAnalyzer extends CodeAnalyzer {
   analyze(_node: Node): OperationData {
     return {
       extensions: {
-        "x-custom-analyzer": "test-value",
+        "x-custom-analyzer": "koa-test-value",
       },
     };
   }
 }
 
-describe("ExpressFrameworkAnalyzer", () => {
-  let analyzer: ExpressFrameworkAnalyzer;
+describe("KoaFrameworkAnalyzer", () => {
+  let analyzer: KoaFrameworkAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
     context = createParseContext();
-    analyzer = new ExpressFrameworkAnalyzer(context);
+    analyzer = new KoaFrameworkAnalyzer(context);
   });
 
   describe("properties", () => {
     it("应该有正确的框架名称", () => {
-      expect(analyzer.frameworkName).toBe("Express");
+      expect(analyzer.frameworkName).toBe("Koa");
     });
   });
 
@@ -54,13 +54,13 @@ describe("ExpressFrameworkAnalyzer", () => {
     });
 
     it("应该对无效HTTP方法返回false", () => {
-      const sourceFile = context.project.createSourceFile("test.ts", "app.invalid();");
+      const sourceFile = context.project.createSourceFile("test.ts", "router.invalid();");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
-    it("应该对不是Express类型的对象返回false", () => {
+    it("应该对不是Koa Router类型的对象返回false", () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
@@ -70,14 +70,13 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/", (req, res) => {})`,
+        const fakeRouter = { get: () => {} }
+        fakeRouter.get("/", async (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
@@ -92,14 +91,14 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/")`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/")`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
@@ -114,20 +113,20 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
+        import Router from "@koa/router"
+        const router = new Router()
         const path = '/'
-        app.get(path, (req, res) => {})`,
+        router.get(path, async (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
-    it("应该对符合Express路由调用规范的节点返回true", () => {
+    it("应该对符合Koa Router调用规范的节点返回true", () => {
       const project = createProject({
         tsConfigFilePath: "tsconfig.json",
         useInMemoryFileSystem: false,
@@ -137,32 +136,32 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/", (req, res) => {})`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/", async (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(true);
     });
   });
 
   describe("analyze", () => {
-    it("应该能够分析Express路由调用并返回操作数据", async () => {
+    it("应该能够分析Koa Router调用并返回操作数据", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/users/:id", (req, res) => {})`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/users/:id", async (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({ method: "get", path: "/users/{id}", operationId: "getUsersById" });
@@ -181,18 +180,19 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
+        import Router from "@koa/router"
         import { UserIdDto, UpdateUserDto } from "@tests/fixtures/schema"
-        const app = express()
-        app.put("/api/users/:id", zodValidator({
+        import { zodValidator } from "api-morph/koa"
+        const router = new Router()
+        router.put("/api/users/:id", zodValidator({
           params: UserIdDto,
           body: UpdateUserDto
-        }), (req, res) => {})`,
+        }), (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -220,29 +220,29 @@ describe("ExpressFrameworkAnalyzer", () => {
       });
     });
 
-    it("应该能够使用自定义 Express 代码分析器", async () => {
-      const context = createParseContext({
-        customExpressCodeAnalyzers: [CustomTestAnalyzer],
+    it("应该能够使用自定义 Koa 代码分析器", async () => {
+      const customContext = createParseContext({
+        customKoaCodeAnalyzers: [CustomTestAnalyzer],
       });
-      const sourceFile = context.project.createSourceFile(
+      const customAnalyzer = new KoaFrameworkAnalyzer(customContext);
+      const sourceFile = customContext.project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/users/:id", (req, res) => {})`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/users", async (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
-      const result = await analyzer.analyze(node);
+      const result = await customAnalyzer.analyze(node);
 
       expect(result).toEqual({
         method: "get",
-        path: "/users/{id}",
-        operationId: "getUsersById",
+        path: "/users",
+        operationId: "getUsers",
         extensions: {
-          "x-custom-analyzer": "test-value",
+          "x-custom-analyzer": "koa-test-value",
         },
       });
     });
@@ -254,14 +254,14 @@ describe("ExpressFrameworkAnalyzer", () => {
         const sourceFile = context.project.createSourceFile(
           `test-${method}.ts`,
           `
-          import express from "express"
-          const app = express()
-          app.${method}("/users", async (req, res) => {})`,
+          import Router from "@koa/router"
+          const router = new Router()
+          router.${method}("/users", async (ctx) => {})`,
         );
         const node = sourceFile
           .getFirstChildOrThrow()
           .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-        const analyzer = new ExpressFrameworkAnalyzer(context);
+        const analyzer = new KoaFrameworkAnalyzer(context);
         const result = await analyzer.analyze(node);
 
         expect(result.method).toBe(method);
@@ -274,14 +274,14 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/users", middleware1, middleware2, async (req, res) => {})`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/users", middleware1, middleware2, async (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({ method: "get", path: "/users", operationId: "getUsers" });
@@ -291,14 +291,14 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/users", async function getUsersHandler(req, res) {})`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/users", async function getUsersHandler(ctx) {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result.operationId).toBe("getUsersHandler");
@@ -308,14 +308,14 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/users", handlerFunction)`,
+        import Router from "@koa/router"
+        const router = new Router()
+        router.get("/users", handlerFunction)`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new KoaFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result.operationId).toBe("handlerFunction");

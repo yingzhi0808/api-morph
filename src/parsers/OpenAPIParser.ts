@@ -1,6 +1,7 @@
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { ExpressFrameworkAnalyzer } from "@/analyzers/ExpressFrameworkAnalyzer";
+import { KoaFrameworkAnalyzer } from "@/analyzers/KoaFrameworkAnalyzer";
 import type { OpenAPIBuilder } from "@/builders/OpenAPIBuilder";
 import { PathItemBuilder } from "@/builders/PathItemBuilder";
 import { OperationComposer } from "@/core/OperationComposer";
@@ -187,7 +188,7 @@ export class OpenAPIParser {
       return frameworkAnalyzerRegistry;
     }
 
-    const defaultFrameworkAnalyzers = [ExpressFrameworkAnalyzer];
+    const defaultFrameworkAnalyzers = [ExpressFrameworkAnalyzer, KoaFrameworkAnalyzer];
     const frameworkAnalyzers = [
       ...defaultFrameworkAnalyzers,
       ...(options.customFrameworkAnalyzers ?? []),

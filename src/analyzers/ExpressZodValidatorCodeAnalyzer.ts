@@ -14,12 +14,12 @@ import type { OperationData } from "@/types/parser";
 import { CodeAnalyzer } from "./CodeAnalyzer";
 
 /**
- * Express Zod 验证中间件代码分析器，负责从 Express 路由中的 validateRequest 中间件调用中提取 Zod schema
+ * Express Zod 验证中间件代码分析器，负责从 Express 路由中的 zodValidator 中间件调用中提取 Zod schema
  * 并转换为 OpenAPI 的参数和请求体定义
  */
-export class ExpressZodValidationCodeAnalyzer extends CodeAnalyzer {
+export class ExpressZodValidatorCodeAnalyzer extends CodeAnalyzer {
   /**
-   * 分析节点中的 validateRequest 调用，提取 Zod schema
+   * 分析节点中的 zodValidator 调用，提取 Zod schema
    * @param node 节点
    * @returns 提取的 Zod schemas
    */
@@ -27,7 +27,7 @@ export class ExpressZodValidationCodeAnalyzer extends CodeAnalyzer {
     const expression = node.getFirstChildByKindOrThrow(SyntaxKind.CallExpression);
     const args = expression.getArguments();
 
-    // 查找 validateRequest 中间件调用
+    // 查找 zodValidator 中间件调用
     const validateRequestCall = this.findValidateRequestCall(args);
     if (!validateRequestCall) {
       return {};
@@ -43,19 +43,16 @@ export class ExpressZodValidationCodeAnalyzer extends CodeAnalyzer {
   }
 
   /**
-   * 在路由参数中查找 validateRequest 调用
+   * 在路由参数中查找 zodValidator 调用
    * @param args 路由参数
-   * @returns 找到的 validateRequest 调用
+   * @returns 找到的 zodValidator 调用
    */
   private findValidateRequestCall(args: Node[]) {
     for (const arg of args) {
-      // 直接的 validateRequest 调用
+      // 直接的 zodValidator 调用
       if (arg.isKind(SyntaxKind.CallExpression)) {
         const expression = arg.getExpression();
-        if (
-          expression.isKind(SyntaxKind.Identifier) &&
-          expression.getText() === "validateRequest"
-        ) {
+        if (expression.isKind(SyntaxKind.Identifier) && expression.getText() === "zodValidator") {
           return arg;
         }
       }
@@ -64,8 +61,8 @@ export class ExpressZodValidationCodeAnalyzer extends CodeAnalyzer {
   }
 
   /**
-   * 从 validateRequest 的选项对象中提取 Zod schemas
-   * @param optionsObject validateRequest 的选项对象
+   * 从 zodValidator 的选项对象中提取 Zod schemas
+   * @param optionsObject zodValidator 的选项对象
    * @returns 提取的 Zod schemas
    */
   private async extractZodSchemas(optionsObject: Node): Promise<OperationData> {

@@ -3,15 +3,15 @@ import { SyntaxKind } from "typescript";
 import { VALID_HTTP_METHODS } from "@/constants";
 import { CodeAnalyzerRegistry } from "@/registry/CodeAnalyzerRegistry";
 import type { OperationData, ParseContext } from "@/types/parser";
-import { ExpressRouteCodeAnalyzer } from "./ExpressRouteCodeAnalyzer";
-import { ExpressZodValidatorCodeAnalyzer } from "./ExpressZodValidatorCodeAnalyzer";
 import { FrameworkAnalyzer } from "./FrameworkAnalyzer";
+import { KoaRouteCodeAnalyzer } from "./KoaRouteCodeAnalyzer";
+import { KoaZodValidatorCodeAnalyzer } from "./KoaZodValidatorCodeAnalyzer";
 
 /**
- * Express框架分析器，用于分析Express应用的各种节点类型。
+ * Koa框架分析器，用于分析Koa应用的各种节点类型。
  */
-export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
-  frameworkName = "Express";
+export class KoaFrameworkAnalyzer extends FrameworkAnalyzer {
+  frameworkName = "Koa";
 
   private readonly codeAnalyzerRegistry: CodeAnalyzerRegistry;
 
@@ -19,8 +19,8 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
     super(context);
     this.codeAnalyzerRegistry = new CodeAnalyzerRegistry();
 
-    const defaultAnalyzers = [ExpressRouteCodeAnalyzer, ExpressZodValidatorCodeAnalyzer];
-    const analyzers = [...defaultAnalyzers, ...(context.options.customExpressCodeAnalyzers ?? [])];
+    const defaultAnalyzers = [KoaRouteCodeAnalyzer, KoaZodValidatorCodeAnalyzer];
+    const analyzers = [...defaultAnalyzers, ...(context.options.customKoaCodeAnalyzers ?? [])];
 
     for (const analyzer of analyzers) {
       this.codeAnalyzerRegistry.register(new analyzer(this.context));
@@ -28,9 +28,9 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 判断节点是否属于Express框架
+   * 判断节点是否属于Koa框架
    * @param node 代码节点
-   * @returns 如果属于Express框架返回true
+   * @returns 如果属于Koa框架返回true
    */
   canAnalyze(node: Node) {
     // 必须是表达式语句
@@ -56,10 +56,10 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
       return false;
     }
 
-    // 必须是Express类型 (@types/express)
+    // 必须是Router类型 (@types/koa__router)
     const objectExpression = propertyAccess.getExpression();
-    const isExpressType = this.isExpressType(objectExpression);
-    if (!isExpressType) {
+    const isRouterType = this.isKoaRouterType(objectExpression);
+    if (!isRouterType) {
       return false;
     }
 
@@ -82,7 +82,7 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 分析Express节点，使用代码分析器注册表来获取不同的信息
+   * 分析Koa节点，使用代码分析器注册表来获取不同的信息
    * @param node 代码节点
    * @returns 解析后的操作数据
    */
@@ -99,16 +99,16 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 检查节点是否为Express类型
+   * 检查节点是否为Koa Router类型
    * @param node 要检查的节点
-   * @returns 如果是Express类型返回true
+   * @returns 如果是Router类型返回true
    */
-  private isExpressType(node: Node) {
+  private isKoaRouterType(node: Node) {
     const nodeType = node.getType();
     const typeSymbol = nodeType.getSymbol();
 
-    // 检查是否是@types/express的 Express 类型
-    if (nodeType.getText().includes("@types/express") && typeSymbol?.getName() === "Express") {
+    // 检查是否是@types/koa__router的 Router 类型
+    if (nodeType.getText().includes("@types/koa__router") && typeSymbol?.getName() === "Router") {
       return true;
     }
 

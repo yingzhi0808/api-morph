@@ -3,11 +3,11 @@ import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ParseContext } from "@/types/parser";
-import { ExpressZodValidationCodeAnalyzer } from "./ExpressZodValidationCodeAnalyzer";
+import { KoaZodValidatorCodeAnalyzer } from "./KoaZodValidatorCodeAnalyzer";
 
-describe("ExpressZodValidationCodeAnalyzer", () => {
+describe("KoaZodValidatorCodeAnalyzer", () => {
   let project: Project;
-  let analyzer: ExpressZodValidationCodeAnalyzer;
+  let analyzer: KoaZodValidatorCodeAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe("ExpressZodValidationCodeAnalyzer", () => {
     });
     project.addDirectoryAtPath("tests/fixtures");
     context = createParseContext({}, project);
-    analyzer = new ExpressZodValidationCodeAnalyzer(context);
+    analyzer = new KoaZodValidatorCodeAnalyzer(context);
   });
 
   describe("analyze", () => {
@@ -26,12 +26,11 @@ describe("ExpressZodValidationCodeAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-import { UpdateUserDto } from "@tests/fixtures/schema";
-app.put("/api/users/:id", validateRequest({
-  body: UpdateUserDto
-}), (req, res) => {})`,
+        import { UpdateUserDto } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.put("/api/users/:id", zodValidator({body: UpdateUserDto}), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -51,11 +50,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import { UserIdDto } from "@tests/fixtures/schema";
-        app.get("/users", validateRequest({ query: UserIdDto }), handler);
-        `,
+        import { UserIdDto } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator({ query: UserIdDto }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -75,11 +74,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import { UserIdDto } from "@tests/fixtures/schema";
-        app.get("/users/:id", validateRequest({ params: UserIdDto }), handler);
-        `,
+        import { UserIdDto } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users/:id", zodValidator({ params: UserIdDto }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -99,11 +98,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import { UserIdDto } from "@tests/fixtures/schema";
-        app.get("/users", validateRequest({ headers: UserIdDto }), handler);
-        `,
+        import { UserIdDto } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator({ headers: UserIdDto }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -120,7 +119,7 @@ app.put("/api/users/:id", validateRequest({
     });
 
     it("应该处理没有validateRequest调用的路由", async () => {
-      const sourceFile = project.createSourceFile("test.ts", 'app.get("/users", handler);');
+      const sourceFile = project.createSourceFile("test.ts", 'router.get("/users", (ctx) => {});');
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
@@ -130,7 +129,9 @@ app.put("/api/users/:id", validateRequest({
     it("应该处理validateRequest没有参数的情况", async () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
-        'app.get("/users", validateRequest(), handler);',
+        `
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator(), (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -141,7 +142,9 @@ app.put("/api/users/:id", validateRequest({
     it("应该处理validateRequest参数不是对象字面量的情况", async () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
-        'app.get("/users", validateRequest(someVariable), handler);',
+        `
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator(someVariable), (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -153,12 +156,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-import { UpdateUserDto } from "@tests/fixtures/schema";
-app.put("/api/users/:id", validateRequest({
-  unknown: UpdateUserDto
-}), (req, res) => {})`,
+        import { UpdateUserDto } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.put("/api/users/:id", zodValidator({ unknown: UpdateUserDto }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({});
@@ -168,11 +170,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-          const notZodSchema = { type: "object" };
-          app.get("/users", validateRequest({ body: notZodSchema }), handler);
-          `,
+        import { zodValidator } from "api-morph/koa"
+        const notZodSchema = { type: "object" }
+        router.get("/users", zodValidator({ body: notZodSchema }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({});
@@ -182,13 +184,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-          import { z } from "zod";
-          app.get("/users", validateRequest({
-            body: z.object({ name: z.string() })
-          }), handler);
-          `,
+        import { z } from "zod"
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator({ body: z.object({ name: z.string() })}), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       // 当前实现暂时跳过内联schema，所以应该返回空对象
@@ -199,10 +199,10 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-          app.get("/users", validateRequest({ body: "literal-string" }), handler);
-          `,
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator({ body: "literal-string" }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[0];
+      const node = sourceFile.getStatements()[1];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({});
@@ -215,15 +215,15 @@ app.put("/api/users/:id", validateRequest({
         },
         project,
       );
-      const customAnalyzer = new ExpressZodValidationCodeAnalyzer(customContext);
+      const customAnalyzer = new KoaZodValidatorCodeAnalyzer(customContext);
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-          import { UpdateUserDto } from "@tests/fixtures/schema";
-          app.put("/api/users/:id", validateRequest({ body: UpdateUserDto }), handler);
-          `,
+        import { UpdateUserDto } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.put("/api/users/:id", zodValidator({ body: UpdateUserDto }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await customAnalyzer.analyze(node);
 
       expect(result.requestBody?.content).toHaveProperty("application/json");
@@ -233,11 +233,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import { SpecialAttributesVo } from "@tests/fixtures/schema";
-        app.get("/users", validateRequest({ query: SpecialAttributesVo }), handler);
-        `,
+        import { SpecialAttributesVo } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator({ query: SpecialAttributesVo }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result.parameters).toEqual([
@@ -269,11 +269,11 @@ app.put("/api/users/:id", validateRequest({
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import { NonObjectSchemaVo } from "@tests/fixtures/schema";
-        app.get("/users", validateRequest({ query: NonObjectSchemaVo }), handler);
-        `,
+        import { NonObjectSchemaVo } from "@tests/fixtures/schema"
+        import { zodValidator } from "api-morph/koa"
+        router.get("/users", zodValidator({ query: NonObjectSchemaVo }), (ctx) => {})`,
       );
-      const node = sourceFile.getStatements()[1];
+      const node = sourceFile.getStatements()[2];
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({ parameters: [] });

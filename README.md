@@ -79,7 +79,7 @@ import {
   generateDocument,
   generateSwaggerUI,
   getSwaggerUIAssetInfo,
-  validateRequest,
+  zodValidator,
 } from "api-morph";
 import express from "express";
 import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema";
@@ -98,7 +98,7 @@ app.use(express.static(getSwaggerUIAssetInfo().assetPath));
  */
 app.put(
   "/api/users/:id",
-  validateRequest({ params: UserIdDto, body: UpdateUserDto }),
+  zodValidator({ params: UserIdDto, body: UpdateUserDto }),
   (req, res) => {
     const { id } = req.params;
     const { email, username } = req.body;

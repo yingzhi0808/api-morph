@@ -1,26 +1,5 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import express from "express";
-import type { ZodError, ZodObject, ZodType, z } from "zod/v4";
-
-// 处理 Express 5 中 req.query 只读的问题
-const descriptor = Object.getOwnPropertyDescriptor(express.request, "query");
-if (descriptor) {
-  Object.defineProperty(express.request, "query", {
-    get(this: Request) {
-      const req = this as Request & { _query?: unknown };
-      if (req._query) {
-        return req._query;
-      }
-      return descriptor?.get?.call(this);
-    },
-    set(this: Request, query: unknown) {
-      const req = this as Request & { _query?: unknown };
-      req._query = query;
-    },
-    configurable: true,
-    enumerable: true,
-  });
-}
+import type { ZodError, ZodType, z } from "zod/v4";
 
 /**
  * 校验配置选项
@@ -68,12 +47,15 @@ const defaultErrorHandler: ErrorRequestHandler = (error, _req, res) => {
 
 /**
  * 创建类型安全的 Zod 校验中间件
+ *
+ * @param options 校验配置选项
+ * @returns 类型化的Express中间件，提供对应schema字段的类型提示
  */
 export function zodValidator<
-  TParams extends ZodObject = ZodObject,
-  TQuery extends ZodObject = ZodObject,
-  TBody extends ZodObject = ZodObject,
-  THeaders extends ZodObject = ZodObject,
+  TParams extends ZodType,
+  TQuery extends ZodType,
+  TBody extends ZodType,
+  THeaders extends ZodType,
 >(
   options: ValidationOptions<TParams, TQuery, TBody, THeaders>,
 ): RequestHandler<z.output<TParams>, unknown, z.output<TBody>, z.output<TQuery>> {
@@ -84,9 +66,10 @@ export function zodValidator<
     if (body) {
       const result = await body.safeParseAsync(req.body);
       if (result.success) {
+        // @ts-ignore
         req.body = result.data;
       } else {
-        onError(result.error, req, res, next);
+        await onError(result.error, req, res, next);
         return;
       }
     }
@@ -95,10 +78,11 @@ export function zodValidator<
     if (query) {
       const result = await query.safeParseAsync(req.query);
       if (result.success) {
-        (req as Request & { _query?: unknown })._query = result.data;
+        // express 5 中 req.query 是只读的，所以不能直接赋值
+        // @ts-ignore
         Object.assign(req.query, result.data);
       } else {
-        onError(result.error, req, res, next);
+        await onError(result.error, req, res, next);
         return;
       }
     }
@@ -107,9 +91,10 @@ export function zodValidator<
     if (params) {
       const result = await params.safeParseAsync(req.params);
       if (result.success) {
-        Object.assign(req.params, result.data);
+        // @ts-ignore
+        req.params = result.data;
       } else {
-        onError(result.error, req, res, next);
+        await onError(result.error, req, res, next);
         return;
       }
     }
@@ -118,9 +103,10 @@ export function zodValidator<
     if (headers) {
       const result = await headers.safeParseAsync(req.headers);
       if (result.success) {
-        Object.assign(req.headers, result.data);
+        // @ts-ignore
+        req.headers = result.data;
       } else {
-        onError(result.error, req, res, next);
+        await onError(result.error, req, res, next);
         return;
       }
     }

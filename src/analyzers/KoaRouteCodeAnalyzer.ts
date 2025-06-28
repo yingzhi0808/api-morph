@@ -7,11 +7,11 @@ import type { OperationData } from "@/types/parser";
 import { CodeAnalyzer } from "./CodeAnalyzer";
 
 /**
- * 路由代码分析器，负责从Express路由调用中分析HTTP方法、路径和operationId
+ * Koa路由代码分析器，负责从Koa Router路由调用中分析HTTP方法、路径和operationId
  */
-export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
+export class KoaRouteCodeAnalyzer extends CodeAnalyzer {
   /**
-   * 分析路由信息（方法、路径和operationId）
+   * 分析Koa路由信息（方法、路径和operationId）
    */
   async analyze(node: Node): Promise<OperationData> {
     const expression = node.getFirstChildByKindOrThrow(SyntaxKind.CallExpression);
@@ -29,7 +29,7 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
       path = `/${path}`;
     }
 
-    path = this.convertExpressPathToOpenAPI(path);
+    path = this.convertKoaPathToOpenAPI(path);
 
     // 解析 operationId
     let operationId: string | undefined;
@@ -53,9 +53,9 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
   }
 
   /**
-   * 将 Express 路径参数格式转换为 OpenAPI 格式: `/users/:id` -> `/users/{id}`
+   * 将 Koa 路径参数格式转换为 OpenAPI 格式: `/users/:id` -> `/users/{id}`
    */
-  private convertExpressPathToOpenAPI(path: string) {
+  private convertKoaPathToOpenAPI(path: string) {
     return path.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "{$1}");
   }
 
@@ -65,7 +65,7 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
    * @returns 函数名，如果提取失败则返回 undefined
    */
   private extractHandlerName(args: Node[]) {
-    // 查找最后一个参数（通常是处理函数）
+    // 查找最后一个函数参数（通常是处理函数）
     const handlerArg = args[args.length - 1];
 
     // 如果是函数表达式，查找函数名
