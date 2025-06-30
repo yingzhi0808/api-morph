@@ -70,8 +70,7 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
+        const app = {get: () => {}}
         app.get("/", (req, res) => {})`,
       );
       const node = sourceFile
