@@ -1,8 +1,11 @@
+import { UpdateUserDto, UserIdDto } from "@tests/fixtures/schema";
 import { createParseContext, createProject } from "@tests/utils";
 import type { Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
+import { z } from "zod/v4";
 import { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
+import { SchemaRegistry } from "@/registry/SchemaRegistry";
 import type { OperationData, ParseContext } from "@/types/parser";
 import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
 
@@ -19,6 +22,7 @@ class CustomTestAnalyzer extends CodeAnalyzer {
 describe("ExpressFrameworkAnalyzer", () => {
   let analyzer: ExpressFrameworkAnalyzer;
   let context: ParseContext;
+  const registry = SchemaRegistry.getInstance();
 
   beforeEach(() => {
     context = createParseContext();
@@ -191,6 +195,9 @@ describe("ExpressFrameworkAnalyzer", () => {
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { params: UserIdDto, body: UpdateUserDto });
+
       const analyzer = new ExpressFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
@@ -217,6 +224,7 @@ describe("ExpressFrameworkAnalyzer", () => {
           },
         },
       });
+      expect(context.schemas.get("UpdateUserDto")).toEqual(z.toJSONSchema(UpdateUserDto));
     });
 
     it("应该能够使用自定义 Express 代码分析器", async () => {

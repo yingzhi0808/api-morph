@@ -1,4 +1,4 @@
-import { minimatch } from "minimatch";
+import micromatch from "micromatch";
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { ExpressFrameworkAnalyzer } from "@/analyzers/ExpressFrameworkAnalyzer";
@@ -70,13 +70,14 @@ export class OpenAPIParser {
 
     if (includePatterns && includePatterns.length > 0) {
       sourceFiles = sourceFiles.filter((file) =>
-        includePatterns.some((pattern) => minimatch(file.getFilePath(), pattern)),
+        includePatterns.some((pattern) => micromatch.contains(file.getFilePath(), pattern)),
       );
     }
 
     if (excludePatterns && excludePatterns.length > 0) {
       sourceFiles = sourceFiles.filter(
-        (file) => !excludePatterns.some((pattern) => minimatch(file.getFilePath(), pattern)),
+        (file) =>
+          !excludePatterns.some((pattern) => micromatch.contains(file.getFilePath(), pattern)),
       );
     }
 

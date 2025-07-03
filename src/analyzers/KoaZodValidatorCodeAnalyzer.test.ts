@@ -1,7 +1,10 @@
+import { SpecialAttributesVo, UpdateUserDto, UserIdDto } from "@tests/fixtures/schema";
 import { createParseContext, createProject } from "@tests/utils";
 import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
+import { z } from "zod/v4";
+import { SchemaRegistry } from "@/registry/SchemaRegistry";
 import type { ParseContext } from "@/types/parser";
 import { KoaZodValidatorCodeAnalyzer } from "./KoaZodValidatorCodeAnalyzer";
 
@@ -9,6 +12,8 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
   let project: Project;
   let analyzer: KoaZodValidatorCodeAnalyzer;
   let context: ParseContext;
+  const registry = SchemaRegistry.getInstance();
+  const filePath = "test.ts";
 
   beforeEach(() => {
     project = createProject({
@@ -19,18 +24,22 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
     project.addDirectoryAtPath("tests/fixtures");
     context = createParseContext({}, project);
     analyzer = new KoaZodValidatorCodeAnalyzer(context);
+    registry.clear();
   });
 
   describe("analyze", () => {
     it("应该处理body参数的Zod schema", async () => {
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
         import { UpdateUserDto } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.put("/api/users/:id", zodValidator({body: UpdateUserDto}), (ctx) => {})`,
+        router.put("/api/users/:id", zodValidator({ body: UpdateUserDto }), (req, res) => {})`,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { body: UpdateUserDto });
+
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -48,13 +57,17 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
 
     it("应该处理query参数的Zod schema", async () => {
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
         import { UserIdDto } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator({ query: UserIdDto }), (ctx) => {})`,
+        router.get("/users", zodValidator({ query: UserIdDto }), (req, res) => {})
+        `,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { query: UserIdDto });
+
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -72,13 +85,17 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
 
     it("应该处理path参数的Zod schema", async () => {
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
         import { UserIdDto } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.get("/users/:id", zodValidator({ params: UserIdDto }), (ctx) => {})`,
+        router.get("/users/:id", zodValidator({ params: UserIdDto }), (req, res) => {})
+        `,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { params: UserIdDto });
+
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -96,13 +113,17 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
 
     it("应该处理headers参数的Zod schema", async () => {
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
         import { UserIdDto } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator({ headers: UserIdDto }), (ctx) => {})`,
+        router.get("/users", zodValidator({ headers: UserIdDto }), (req, res) => {})
+        `,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { headers: UserIdDto });
+
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -118,115 +139,73 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
       });
     });
 
-    it("应该处理没有validateRequest调用的路由", async () => {
-      const sourceFile = project.createSourceFile("test.ts", 'router.get("/users", (ctx) => {});');
+    it("应该处理没有zodValidator调用的路由", async () => {
+      const sourceFile = project.createSourceFile(filePath, 'app.get("/users", (req, res) => {});');
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({});
     });
 
-    it("应该处理validateRequest没有参数的情况", async () => {
+    it("应该处理内联的Zod schema", async () => {
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
         import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator(), (ctx) => {})`,
-      );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({});
-    });
-
-    it("应该处理validateRequest参数不是对象字面量的情况", async () => {
-      const sourceFile = project.createSourceFile(
-        "test.ts",
-        `
-        import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator(someVariable), (ctx) => {})`,
-      );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({});
-    });
-
-    it("应该处理未知的属性名", async () => {
-      const sourceFile = project.createSourceFile(
-        "test.ts",
-        `
-        import { UpdateUserDto } from "@tests/fixtures/schema"
-        import { zodValidator } from "api-morph/koa"
-        router.put("/api/users/:id", zodValidator({ unknown: UpdateUserDto }), (ctx) => {})`,
-      );
-      const node = sourceFile.getStatements()[2];
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({});
-    });
-
-    it("应该处理非Zod类型的标识符", async () => {
-      const sourceFile = project.createSourceFile(
-        "test.ts",
-        `
-        import { zodValidator } from "api-morph/koa"
-        const notZodSchema = { type: "object" }
-        router.get("/users", zodValidator({ body: notZodSchema }), (ctx) => {})`,
-      );
-      const node = sourceFile.getStatements()[2];
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({});
-    });
-
-    it("应该处理内联Zod schema调用", async () => {
-      const sourceFile = project.createSourceFile(
-        "test.ts",
-        `
         import { z } from "zod"
-        import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator({ body: z.object({ name: z.string() })}), (ctx) => {})`,
+        router.put("/api/users/:id", zodValidator({ body: z.object({ name: z.string() }) }), (req, res) => {})
+        `,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { body: z.object({ name: z.string() }) });
+
       const result = await analyzer.analyze(node);
 
-      // 当前实现暂时跳过内联schema，所以应该返回空对象
-      expect(result).toEqual({});
-    });
-
-    it("应该处理非标识符和非调用表达式的节点", async () => {
-      const sourceFile = project.createSourceFile(
-        "test.ts",
-        `
-        import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator({ body: "literal-string" }), (ctx) => {})`,
-      );
-      const node = sourceFile.getStatements()[1];
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({});
+      expect(result).toEqual({
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                $schema: "https://json-schema.org/draft/2020-12/schema",
+                additionalProperties: false,
+                properties: {
+                  name: {
+                    type: "string",
+                  },
+                },
+                required: ["name"],
+                type: "object",
+              },
+            },
+          },
+        },
+      });
+      expect(context.schemas.size).toEqual(0);
     });
 
     it("应该使用默认的请求媒体类型", async () => {
       const customContext = createParseContext(
         {
-          defaultRequestBodyMediaType: "application/json",
+          defaultRequestBodyMediaType: "application/xml",
         },
         project,
       );
       const customAnalyzer = new KoaZodValidatorCodeAnalyzer(customContext);
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
         import { UpdateUserDto } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.put("/api/users/:id", zodValidator({ body: UpdateUserDto }), (ctx) => {})`,
+        router.put("/api/users/:id", zodValidator({ body: UpdateUserDto }), (req, res) => {})`,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { body: UpdateUserDto });
+
       const result = await customAnalyzer.analyze(node);
 
-      expect(result.requestBody?.content).toHaveProperty("application/json");
+      expect(result.requestBody?.content).toHaveProperty("application/xml");
     });
 
     it("应该处理包含特殊属性的参数schema", async () => {
@@ -235,9 +214,13 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
         `
         import { SpecialAttributesVo } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator({ query: SpecialAttributesVo }), (ctx) => {})`,
+        router.get("/users", zodValidator({ query: SpecialAttributesVo }), (req, res) => {})
+        `,
       );
       const node = sourceFile.getStatements()[2];
+      const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      registry.register(location, { query: SpecialAttributesVo });
+
       const result = await analyzer.analyze(node);
 
       expect(result.parameters).toEqual([
@@ -265,18 +248,20 @@ describe("KoaZodValidatorCodeAnalyzer", () => {
       ]);
     });
 
-    it("应该处理包含非对象类型属性的schema", async () => {
+    it("当 schema 未在注册表中注册时应返回空对象", async () => {
       const sourceFile = project.createSourceFile(
-        "test.ts",
+        filePath,
         `
-        import { NonObjectSchemaVo } from "@tests/fixtures/schema"
+        import { UpdateUserDto } from "@tests/fixtures/schema"
         import { zodValidator } from "api-morph/koa"
-        router.get("/users", zodValidator({ query: NonObjectSchemaVo }), (ctx) => {})`,
+        router.put("/api/users/:id", zodValidator({ body: UpdateUserDto }), (req, res) => {})`,
       );
       const node = sourceFile.getStatements()[2];
+      // 注意：这里我们没有调用 registry.register()
+
       const result = await analyzer.analyze(node);
 
-      expect(result).toEqual({ parameters: [] });
+      expect(result).toEqual({});
     });
   });
 });

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { ZodError, ZodType, z } from "zod/v4";
+import { getCallLocation, SchemaRegistry } from "@/registry/SchemaRegistry";
 
 /**
  * 校验配置选项
@@ -60,6 +61,18 @@ export function zodValidator<
   options: ValidationOptions<TParams, TQuery, TBody, THeaders>,
 ): RequestHandler<z.output<TParams>, unknown, z.output<TBody>, z.output<TQuery>> {
   const { body, query, params, headers, onError = defaultErrorHandler } = options;
+
+  // 获取调用位置
+  const location = getCallLocation();
+  const registry = SchemaRegistry.getInstance();
+
+  // 注册 Schema 信息，直接使用位置作为 key
+  registry.register(location, {
+    body,
+    query,
+    params,
+    headers,
+  });
 
   return async (req, res, next) => {
     // 校验请求体

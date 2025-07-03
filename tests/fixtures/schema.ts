@@ -83,6 +83,3 @@ export const SpecialAttributesVo = z.object({
     description: "可选字段",
   }),
 });
-
-// 创建一个特殊的schema来测试非对象类型的属性处理
-export const NonObjectSchemaVo = z.string();

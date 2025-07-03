@@ -77,8 +77,8 @@
     "@types/koa-static": "^4.0.4",
     "deepmerge": "^4.3.1",
     "koa-static": "^5.0.0",
+    "micromatch": "^4.0.8",
     "mime-types": "^3.0.1",
-    "minimatch": "^10.0.3",
     "radashi": "^12.6.0",
     "supertest": "^7.1.1",
     "swagger-ui-dist": "^5.25.3",
@@ -90,6 +90,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.0.6",
     "@oxc-node/core": "^0.0.29",
+    "@types/micromatch": "^4.0.9",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^24.0.7",
     "@types/supertest": "^6.0.3",
