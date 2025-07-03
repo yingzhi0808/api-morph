@@ -1,3 +1,4 @@
+import { minimatch } from "minimatch";
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { ExpressFrameworkAnalyzer } from "@/analyzers/ExpressFrameworkAnalyzer";
@@ -62,25 +63,21 @@ export class OpenAPIParser {
       this.frameworkAnalyzerRegistry,
     );
 
-    const include = this.context.options.include;
-    const excludes = this.context.options.exclude;
+    const includePatterns = this.context.options.include;
+    const excludePatterns = this.context.options.exclude;
 
-    let sourceFiles: SourceFile[];
-    if (Array.isArray(include)) {
-      if (include.length === 0) {
-        sourceFiles = this.project.getSourceFiles([]);
-      } else {
-        const patterns = [...include];
-        if (Array.isArray(excludes) && excludes.length > 0) {
-          patterns.push(...excludes.map((pattern) => `!${pattern}`));
-        }
-        sourceFiles = this.project.getSourceFiles(patterns);
-      }
-    } else if (Array.isArray(excludes) && excludes.length > 0) {
-      const patterns = excludes.map((pattern) => `!${pattern}`);
-      sourceFiles = this.project.getSourceFiles(patterns);
-    } else {
-      sourceFiles = this.project.getSourceFiles();
+    let sourceFiles = this.project.getSourceFiles();
+
+    if (includePatterns && includePatterns.length > 0) {
+      sourceFiles = sourceFiles.filter((file) =>
+        includePatterns.some((pattern) => minimatch(file.getFilePath(), pattern)),
+      );
+    }
+
+    if (excludePatterns && excludePatterns.length > 0) {
+      sourceFiles = sourceFiles.filter(
+        (file) => !excludePatterns.some((pattern) => minimatch(file.getFilePath(), pattern)),
+      );
     }
 
     const flatOperationDataList = sourceFiles.flatMap((sourceFile) =>

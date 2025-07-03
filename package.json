@@ -78,6 +78,7 @@
     "deepmerge": "^4.3.1",
     "koa-static": "^5.0.0",
     "mime-types": "^3.0.1",
+    "minimatch": "^10.0.3",
     "radashi": "^12.6.0",
     "supertest": "^7.1.1",
     "swagger-ui-dist": "^5.25.3",
