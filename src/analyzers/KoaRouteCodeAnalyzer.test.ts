@@ -258,4 +258,163 @@ describe("KoaRouteCodeAnalyzer", () => {
       expect(result.operationId).toBe("getUsersById");
     });
   });
+
+  it("应该正确处理基本的路由前缀", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const router = new Router({ prefix: "/api" });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/api/users");
+  });
+
+  it("应该处理前缀和路径都带斜杠的情况", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const router = new Router({ prefix: "/api/" });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/api//users");
+  });
+
+  it("应该处理空字符串前缀", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const router = new Router({ prefix: "" });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/users");
+  });
+
+  it("应该处理前缀为中模板字符串的情况", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const router = new Router({ prefix: \`/api\` });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/api/users");
+  });
+
+  it("应该处理作为标识符引用的前缀", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const apiPrefix = "/api";
+          const router = new Router({ prefix: apiPrefix });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/api/users");
+  });
+
+  it("应该处理作为标识符引用的模板字符串前缀", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const apiPrefix = \`/api\`;
+          const router = new Router({ prefix: apiPrefix });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/api/users");
+  });
+
+  it("should handle prefix value being a call expression", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          function getPrefix() { return "/api"; }
+          const router = new Router({ prefix: getPrefix() });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/users");
+  });
+
+  it("should handle router being a call expression", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          function getRouter() { return new Router({ prefix: "/api" }); }
+          getRouter().get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/users");
+  });
+
+  it("should handle router variable not initialized with new expression", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const routerFactory = { create: () => new Router({ prefix: "/api" }) };
+          const router = routerFactory.create();
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/users");
+  });
+
+  it("should handle router options without prefix property", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          const router = new Router({ methods: ['get'] });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/users");
+  });
+
+  it("should handle uninitialized prefix identifier", async () => {
+    const sourceFile = context.project.createSourceFile(
+      "test.ts",
+      `
+          import Router from "@koa/router";
+          let apiPrefix: string;
+          const router = new Router({ prefix: apiPrefix });
+          router.get("/users", handler);
+        `,
+    );
+    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
+    const result = await analyzer.analyze(node);
+    expect(result.path).toBe("/users");
+  });
 });

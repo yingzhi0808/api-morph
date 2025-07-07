@@ -151,6 +151,28 @@ describe("ExpressFrameworkAnalyzer", () => {
 
       expect(analyzer.canAnalyze(node)).toBe(true);
     });
+
+    it("应该对Express Router类型的路由调用返回true", () => {
+      const project = createProject({
+        tsConfigFilePath: "tsconfig.json",
+        useInMemoryFileSystem: false,
+        skipAddingFilesFromTsConfig: true,
+      });
+      const context = createParseContext({}, project);
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+        import express from "express"
+        const router = express.Router()
+        router.get("/api/users", (req, res) => {})`,
+      );
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new ExpressFrameworkAnalyzer(context);
+
+      expect(analyzer.canAnalyze(node)).toBe(true);
+    });
   });
 
   describe("analyze", () => {

@@ -1,6 +1,6 @@
 import { basename, extname } from "node:path";
 import { pascal } from "radashi";
-import type { Node } from "ts-morph";
+import type { LeftHandSideExpression, Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import type { HttpMethod } from "@/types/common";
 import type { OperationData } from "@/types/parser";
@@ -29,6 +29,15 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
       path = `/${path}`;
     }
 
+    // 查找Router的完整挂载路径
+    const objectExpression = propertyAccess.getExpression();
+    const basePath = this.findRouterBasePath(objectExpression);
+
+    // 如果找到了基础路径，拼接完整路径
+    if (basePath) {
+      path = basePath + path;
+    }
+
     path = this.convertExpressPathToOpenAPI(path);
 
     // 解析 operationId
@@ -50,6 +59,60 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
       path,
       operationId,
     };
+  }
+
+  /**
+   * 查找Router的完整挂载路径，支持嵌套Router
+   * @param objectExpression Router对象表达式
+   * @returns 完整的基础路径，如果没有找到则返回空字符串
+   */
+  private findRouterBasePath(objectExpression: LeftHandSideExpression): string {
+    const routerIdentifier = objectExpression.asKindOrThrow(SyntaxKind.Identifier);
+    const references = routerIdentifier.findReferencesAsNodes();
+
+    for (const reference of references) {
+      const parent = reference.getParentIfKind(SyntaxKind.CallExpression);
+      if (!parent) {
+        continue;
+      }
+
+      // 检查是否是 use 方法调用
+      const propertyAccess = parent.getFirstChildByKind(SyntaxKind.PropertyAccessExpression);
+      if (!propertyAccess || propertyAccess.getName() !== "use") {
+        continue;
+      }
+
+      const args = parent.getArguments();
+
+      let mountPath = "";
+      const pathArg = args[0];
+
+      // 如果第一个参数是字符串，并且不是当前Router，则视为路径
+      if (
+        args.length > 1 &&
+        (pathArg.isKind(SyntaxKind.StringLiteral) ||
+          pathArg.isKind(SyntaxKind.NoSubstitutionTemplateLiteral))
+      ) {
+        mountPath = pathArg.getLiteralText();
+      }
+
+      // 确保路径格式正确
+      if (mountPath && !mountPath.startsWith("/")) {
+        mountPath = `/${mountPath}`;
+      }
+      if (mountPath.endsWith("/")) {
+        mountPath = mountPath.slice(0, -1);
+      }
+
+      // 递归查找父级Router的基础路径
+      const mountTarget = propertyAccess.getExpression();
+      const parentBasePath = this.findRouterBasePath(mountTarget);
+
+      // 返回拼接后的完整路径
+      return parentBasePath + mountPath;
+    }
+
+    return "";
   }
 
   /**

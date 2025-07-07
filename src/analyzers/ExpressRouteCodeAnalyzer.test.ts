@@ -235,5 +235,113 @@ describe("ExpressRouteCodeAnalyzer", () => {
       // 箭头函数没有名称，应该使用生成的operationId
       expect(result.operationId).toBe("getUsersById");
     });
+
+    it("应该处理嵌套Router的路径拼接", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        import express from 'express'
+        const app = express()
+        const apiRouter = express.Router()
+        const userRouter = express.Router()
+
+        app.use('/api', apiRouter)
+        apiRouter.use('/users', userRouter)
+
+        userRouter.get('/:id', getUserById)`,
+      );
+
+      const statements = sourceFile.getStatements();
+      const lastStatement = statements[statements.length - 1];
+      const result = await analyzer.analyze(lastStatement);
+
+      expect(result.method).toBe("get");
+      expect(result.path).toBe("/api/users/{id}");
+      expect(result.operationId).toBe("getUserById");
+    });
+
+    it("应该处理Router挂载时的路径格式化", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        import express from 'express'
+        const app = express()
+        const router = express.Router()
+
+        app.use('api/', router)
+
+        router.get('/test', handler)`,
+      );
+
+      const statements = sourceFile.getStatements();
+      const lastStatement = statements[statements.length - 1];
+      const result = await analyzer.analyze(lastStatement);
+
+      expect(result.method).toBe("get");
+      expect(result.path).toBe("/api/test");
+    });
+
+    it("应该处理findRouterBasePath中空路径的情况", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        import express from 'express'
+        const app = express()
+        const router = express.Router()
+
+        app.use(router)
+
+        router.get('/test', handler)`,
+      );
+
+      const statements = sourceFile.getStatements();
+      const lastStatement = statements[statements.length - 1];
+      const result = await analyzer.analyze(lastStatement);
+
+      expect(result.method).toBe("get");
+      expect(result.path).toBe("/test");
+    });
+
+    it("应该处理findRouterBasePath中非use方法的情况", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        import express from 'express'
+        const app = express()
+        const router = express.Router()
+
+        app.get('/api', router)
+
+        router.get('/test', handler)`,
+      );
+
+      const statements = sourceFile.getStatements();
+      const lastStatement = statements[statements.length - 1];
+      const result = await analyzer.analyze(lastStatement);
+
+      expect(result.method).toBe("get");
+      expect(result.path).toBe("/test");
+    });
+
+    it("应该处理findRouterBasePath中模板字符串路径的情况", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        import express from 'express'
+        const app = express()
+        const router = express.Router()
+
+        app.use(\`/api\`, router)
+
+        router.get('/test', handler)`,
+      );
+
+      const statements = sourceFile.getStatements();
+      const lastStatement = statements[statements.length - 1];
+      const result = await analyzer.analyze(lastStatement);
+
+      expect(result.method).toBe("get");
+      expect(result.path).toBe("/api/test");
+    });
   });
 });

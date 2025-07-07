@@ -1,7 +1,5 @@
-- [ ] 支持配置路径全局前缀，需要适配框架的写法，或者自己封装
 - [ ] 模仿 nestjs 添加 addxxxAuth 方法
 - [ ] 模仿 nestjs 添加 addGlobalResponse/addGlobalParameter 方法
 - [ ] 更严格的校验（对 JSON Schema 进行校验）
-- [ ] 支持使用 new Router() 定义路由，并对tag分组，需要新设计 API
 - [ ] 支持通过 ClassValidator 校验请求参数并生成 schema
 - [ ] 适配其他 Node.js 框架

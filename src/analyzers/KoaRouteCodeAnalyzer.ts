@@ -1,6 +1,6 @@
 import { basename, extname } from "node:path";
 import { pascal } from "radashi";
-import type { Node } from "ts-morph";
+import type { Node, PropertyAccessExpression, VariableDeclaration } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import type { HttpMethod } from "@/types/common";
 import type { OperationData } from "@/types/parser";
@@ -21,6 +21,8 @@ export class KoaRouteCodeAnalyzer extends CodeAnalyzer {
 
     const method = propertyAccess.getName() as HttpMethod;
 
+    const prefix = this.extractRouterPrefix(propertyAccess);
+
     const args = expression.getArguments();
     let path = args[0].getText().slice(1, -1);
 
@@ -29,6 +31,9 @@ export class KoaRouteCodeAnalyzer extends CodeAnalyzer {
       path = `/${path}`;
     }
 
+    if (prefix) {
+      path = `${prefix}${path}`;
+    }
     path = this.convertKoaPathToOpenAPI(path);
 
     // 解析 operationId
@@ -50,6 +55,72 @@ export class KoaRouteCodeAnalyzer extends CodeAnalyzer {
       path,
       operationId,
     };
+  }
+
+  /**
+   * Extracts the router prefix from a router initialization, e.g. new Router({ prefix: "/api" })
+   * @param propertyAccess The property access expression node (e.g., `router.get`)
+   * @returns The prefix string if found, otherwise an empty string.
+   */
+  private extractRouterPrefix(propertyAccess: PropertyAccessExpression) {
+    const routerExpression = propertyAccess.getExpression();
+    if (!routerExpression.isKind(SyntaxKind.Identifier)) {
+      return "";
+    }
+
+    const definition = routerExpression.getDefinitionNodes()[0];
+    if (!definition?.isKind(SyntaxKind.VariableDeclaration)) {
+      return "";
+    }
+
+    const initializer = definition.getInitializer();
+
+    if (!initializer?.isKind(SyntaxKind.NewExpression)) {
+      return "";
+    }
+
+    const routerArgs = initializer.getArguments();
+    if (routerArgs.length > 0 && routerArgs[0].isKind(SyntaxKind.ObjectLiteralExpression)) {
+      const options = routerArgs[0];
+      const prefixProperty = options.getProperty("prefix");
+
+      if (prefixProperty?.isKind(SyntaxKind.PropertyAssignment)) {
+        const prefixValueNode = prefixProperty.getInitializerOrThrow();
+        return this.getStringValueFromNode(prefixValueNode);
+      }
+    }
+
+    return "";
+  }
+
+  /**
+   * 从 AST 节点中提取字符串字面量值。
+   * 支持直接的字符串字面量，或引用字符串字面量的变量。
+   * @param node The node to extract the string value from.
+   * @returns The string value if found, otherwise undefined.
+   */
+  private getStringValueFromNode(node: Node) {
+    if (
+      node.isKind(SyntaxKind.StringLiteral) ||
+      node.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
+    ) {
+      return node.getLiteralText();
+    }
+
+    if (!node.isKind(SyntaxKind.Identifier)) {
+      return;
+    }
+
+    const definition = node.getDefinitionNodes()[0] as VariableDeclaration;
+    const initializer = definition.getInitializer();
+    if (
+      initializer?.isKind(SyntaxKind.StringLiteral) ||
+      initializer?.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
+    ) {
+      return initializer.getLiteralText();
+    }
+
+    return;
   }
 
   /**
