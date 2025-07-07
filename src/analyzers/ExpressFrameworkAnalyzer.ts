@@ -58,8 +58,9 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
 
     // 必须是Express类型 (@types/express)
     const objectExpression = propertyAccess.getExpression();
-    const isExpressType = this.isExpressType(objectExpression);
-    if (!isExpressType) {
+    const isExpressAppType =
+      this.isExpressAppType(objectExpression) || this.isExpressRouterType(objectExpression);
+    if (!isExpressAppType) {
       return false;
     }
 
@@ -103,15 +104,24 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
    * @param node 要检查的节点
    * @returns 如果是Express类型返回true
    */
-  private isExpressType(node: Node) {
+  private isExpressAppType(node: Node) {
     const nodeType = node.getType();
     const typeSymbol = nodeType.getSymbol();
 
     // 检查是否是@types/express的 Express 类型
-    if (nodeType.getText().includes("@types/express") && typeSymbol?.getName() === "Express") {
-      return true;
-    }
+    return nodeType.getText().includes("@types/express") && typeSymbol?.getName() === "Express";
+  }
 
-    return false;
+  /**
+   * 检查节点是否为Express Router类型
+   * @param node 要检查的节点
+   * @returns 如果是Express Router类型返回true
+   */
+  private isExpressRouterType(node: Node) {
+    const nodeType = node.getType();
+    const typeSymbol = nodeType.getSymbol();
+
+    // 检查是否是@types/express的 Router 类型
+    return nodeType.getText().includes("@types/express") && typeSymbol?.getName() === "Router";
   }
 }
