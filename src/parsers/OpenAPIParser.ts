@@ -9,6 +9,7 @@ import { OperationComposer } from "@/core/OperationComposer";
 import { FrameworkAnalyzerRegistry } from "@/registry/FrameworkAnalyzerRegistry";
 import { TagParserRegistry } from "@/registry/TagParserRegistry";
 import { JSDocTagName } from "@/types/common";
+import type { ParameterObject, ReferenceObject } from "@/types/openapi";
 import type {
   ParseContext,
   ParsedOperation,
@@ -108,8 +109,26 @@ export class OpenAPIParser {
     const tags = new Set<string>();
     const pathItemBuilders = new Map<string, PathItemBuilder>();
 
+    // 获取全局响应配置
+    const globalResponses = builder.getGlobalResponses();
+    // 获取全局参数配置
+    const globalParameters = builder.getGlobalParameters();
+
     for (const parsedOperationData of parsedOperationList) {
       const { path, method, operation } = parsedOperationData;
+
+      // 应用全局响应到每个操作
+      if (Object.keys(globalResponses).length > 0) {
+        const mergedResponses = { ...globalResponses, ...operation.responses };
+        operation.responses = mergedResponses;
+      }
+
+      // 应用全局参数到每个操作
+      if (globalParameters.length > 0) {
+        const existingParameters = operation.parameters || [];
+        const mergedParameters = this.mergeParameters(globalParameters, existingParameters);
+        operation.parameters = mergedParameters;
+      }
 
       let pathItemBuilder = pathItemBuilders.get(path);
       if (!pathItemBuilder) {
@@ -137,6 +156,46 @@ export class OpenAPIParser {
     }
 
     return builder.build();
+  }
+
+  /**
+   * 合并全局参数和操作特定参数。
+   * 操作特定的参数会覆盖同名同位置的全局参数。
+   * @param globalParameters 全局参数数组。
+   * @param operationParameters 操作特定参数数组。
+   * @returns 合并后的参数数组。
+   */
+  private mergeParameters(
+    globalParameters: (ParameterObject | ReferenceObject)[],
+    operationParameters: (ParameterObject | ReferenceObject)[],
+  ): (ParameterObject | ReferenceObject)[] {
+    // 分离引用对象和普通参数对象
+    const globalRefs = globalParameters.filter((p): p is ReferenceObject => "$ref" in p);
+    const globalParams = globalParameters.filter((p): p is ParameterObject => !("$ref" in p));
+
+    const operationRefs = operationParameters.filter((p): p is ReferenceObject => "$ref" in p);
+    const operationParams = operationParameters.filter((p): p is ParameterObject => !("$ref" in p));
+
+    // 合并普通参数对象（操作特定参数覆盖同名同位置的全局参数）
+    const mergedParams: ParameterObject[] = [...globalParams];
+
+    for (const operationParam of operationParams) {
+      const existingIndex = mergedParams.findIndex(
+        (globalParam) =>
+          globalParam.name === operationParam.name && globalParam.in === operationParam.in,
+      );
+
+      if (existingIndex !== -1) {
+        // 替换同名同位置的全局参数
+        mergedParams[existingIndex] = operationParam;
+      } else {
+        // 添加新的操作特定参数
+        mergedParams.push(operationParam);
+      }
+    }
+
+    // 合并结果：全局引用 + 操作特定引用 + 合并后的普通参数
+    return [...globalRefs, ...operationRefs, ...mergedParams];
   }
 
   /**

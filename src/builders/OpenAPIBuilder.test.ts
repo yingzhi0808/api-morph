@@ -1215,4 +1215,221 @@ describe("OpenAPIBuilder", () => {
       expect(returnValue).toStrictEqual(builder);
     });
   });
+
+  describe("addGlobalResponse", () => {
+    it("应该添加全局响应对象", () => {
+      const builder = new OpenAPIBuilder();
+      const response: ResponseObject = {
+        description: "内部服务器错误",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                error: { type: "string" },
+                message: { type: "string" },
+              },
+            },
+          },
+        },
+      };
+      builder.addGlobalResponse("500", response);
+      const globalResponses = builder.getGlobalResponses();
+
+      expect(globalResponses["500"]).toStrictEqual(response);
+    });
+
+    it("应该添加全局响应引用对象", () => {
+      const builder = new OpenAPIBuilder();
+      const responseRef: ReferenceObject = {
+        $ref: "#/components/responses/InternalServerError",
+      };
+      builder.addGlobalResponse("500", responseRef);
+      const globalResponses = builder.getGlobalResponses();
+
+      expect(globalResponses["500"]).toStrictEqual(responseRef);
+    });
+
+    it("应该支持添加多个不同状态码的全局响应", () => {
+      const builder = new OpenAPIBuilder();
+      const response401: ResponseObject = { description: "未授权" };
+      const response500: ResponseObject = { description: "内部服务器错误" };
+
+      builder.addGlobalResponse("401", response401).addGlobalResponse("500", response500);
+
+      const globalResponses = builder.getGlobalResponses();
+
+      expect(globalResponses["401"]).toStrictEqual(response401);
+      expect(globalResponses["500"]).toStrictEqual(response500);
+    });
+
+    it("应该覆盖相同状态码的全局响应", () => {
+      const builder = new OpenAPIBuilder();
+      const firstResponse: ResponseObject = { description: "第一个响应" };
+      const secondResponse: ResponseObject = { description: "第二个响应" };
+
+      builder.addGlobalResponse("500", firstResponse).addGlobalResponse("500", secondResponse);
+
+      const globalResponses = builder.getGlobalResponses();
+
+      expect(globalResponses["500"]).toStrictEqual(secondResponse);
+    });
+
+    it("应该支持链式调用", () => {
+      const builder = new OpenAPIBuilder();
+      const response: ResponseObject = { description: "测试响应" };
+      const returnValue = builder.addGlobalResponse("500", response);
+
+      expect(returnValue).toStrictEqual(builder);
+    });
+  });
+
+  describe("getGlobalResponses", () => {
+    it("应该返回空对象当没有全局响应时", () => {
+      const builder = new OpenAPIBuilder();
+      const globalResponses = builder.getGlobalResponses();
+
+      expect(globalResponses).toStrictEqual({});
+    });
+
+    it("应该返回所有全局响应的深拷贝", () => {
+      const builder = new OpenAPIBuilder();
+      const response: ResponseObject = { description: "测试响应" };
+
+      builder.addGlobalResponse("500", response);
+      const globalResponses1 = builder.getGlobalResponses();
+      const globalResponses2 = builder.getGlobalResponses();
+
+      expect(globalResponses1).toStrictEqual(globalResponses2);
+      expect(globalResponses1).not.toBe(globalResponses2);
+      expect(globalResponses1["500"]).toStrictEqual(response);
+      expect(globalResponses1["500"]).not.toBe(response);
+    });
+  });
+
+  describe("addGlobalParameter", () => {
+    it("应该添加全局参数对象", () => {
+      const builder = new OpenAPIBuilder();
+      const parameter: ParameterObject = {
+        name: "Authorization",
+        in: "header",
+        description: "认证令牌",
+        required: true,
+        schema: {
+          type: "string",
+          example: "Bearer token123",
+        },
+      };
+      builder.addGlobalParameter(parameter);
+      const globalParameters = builder.getGlobalParameters();
+
+      expect(globalParameters).toHaveLength(1);
+      expect(globalParameters[0]).toStrictEqual(parameter);
+    });
+
+    it("应该添加全局参数引用对象", () => {
+      const builder = new OpenAPIBuilder();
+      const parameterRef: ReferenceObject = {
+        $ref: "#/components/parameters/Authorization",
+      };
+      builder.addGlobalParameter(parameterRef);
+      const globalParameters = builder.getGlobalParameters();
+
+      expect(globalParameters).toHaveLength(1);
+      expect(globalParameters[0]).toStrictEqual(parameterRef);
+    });
+
+    it("应该支持添加多个不同的全局参数", () => {
+      const builder = new OpenAPIBuilder();
+      const authParam: ParameterObject = {
+        name: "Authorization",
+        in: "header",
+        description: "认证令牌",
+        required: true,
+        schema: { type: "string" },
+      };
+      const versionParam: ParameterObject = {
+        name: "version",
+        in: "query",
+        description: "API版本",
+        required: false,
+        schema: { type: "string", example: "v1" },
+      };
+
+      builder.addGlobalParameter(authParam).addGlobalParameter(versionParam);
+
+      const globalParameters = builder.getGlobalParameters();
+
+      expect(globalParameters).toHaveLength(2);
+      expect(globalParameters[0]).toStrictEqual(authParam);
+      expect(globalParameters[1]).toStrictEqual(versionParam);
+    });
+
+    it("应该支持添加相同名称但不同位置的全局参数", () => {
+      const builder = new OpenAPIBuilder();
+      const headerParam: ParameterObject = {
+        name: "id",
+        in: "header",
+        description: "头部中的ID",
+        required: true,
+        schema: { type: "string" },
+      };
+      const queryParam: ParameterObject = {
+        name: "id",
+        in: "query",
+        description: "查询参数中的ID",
+        required: false,
+        schema: { type: "string" },
+      };
+
+      builder.addGlobalParameter(headerParam).addGlobalParameter(queryParam);
+
+      const globalParameters = builder.getGlobalParameters();
+
+      expect(globalParameters).toHaveLength(2);
+      expect(globalParameters[0]).toStrictEqual(headerParam);
+      expect(globalParameters[1]).toStrictEqual(queryParam);
+    });
+
+    it("应该支持链式调用", () => {
+      const builder = new OpenAPIBuilder();
+      const parameter: ParameterObject = {
+        name: "test",
+        in: "query",
+        description: "测试参数",
+        schema: { type: "string" },
+      };
+      const returnValue = builder.addGlobalParameter(parameter);
+
+      expect(returnValue).toStrictEqual(builder);
+    });
+  });
+
+  describe("getGlobalParameters", () => {
+    it("应该返回空数组当没有全局参数时", () => {
+      const builder = new OpenAPIBuilder();
+      const globalParameters = builder.getGlobalParameters();
+
+      expect(globalParameters).toStrictEqual([]);
+    });
+
+    it("应该返回所有全局参数的深拷贝", () => {
+      const builder = new OpenAPIBuilder();
+      const parameter: ParameterObject = {
+        name: "test",
+        in: "query",
+        description: "测试参数",
+        schema: { type: "string" },
+      };
+
+      builder.addGlobalParameter(parameter);
+      const globalParameters1 = builder.getGlobalParameters();
+      const globalParameters2 = builder.getGlobalParameters();
+
+      expect(globalParameters1).toStrictEqual(globalParameters2);
+      expect(globalParameters1).not.toBe(globalParameters2);
+      expect(globalParameters1[0]).toStrictEqual(parameter);
+      expect(globalParameters1[0]).not.toBe(parameter);
+    });
+  });
 });

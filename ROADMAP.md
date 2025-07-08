@@ -1,5 +1,3 @@
-- [ ] 模仿 nestjs 添加 addxxxAuth 方法
-- [ ] 模仿 nestjs 添加 addGlobalResponse/addGlobalParameter 方法
 - [ ] 更严格的校验（对 JSON Schema 进行校验）
 - [ ] 支持通过 ClassValidator 校验请求参数并生成 schema
 - [ ] 适配其他 Node.js 框架

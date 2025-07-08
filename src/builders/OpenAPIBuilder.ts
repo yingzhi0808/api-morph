@@ -33,6 +33,8 @@ import { isZodSchema } from "@/utils/typeGuards";
  */
 export class OpenAPIBuilder implements Builder<OpenAPIObject> {
   private document: OpenAPIObject;
+  private globalResponses: Record<string, ResponseObject | ReferenceObject> = {};
+  private globalParameters: (ParameterObject | ReferenceObject)[] = [];
 
   constructor(document?: Partial<Omit<OpenAPIObject, "info"> & { info: Partial<InfoObject> }>) {
     const defaultDocument: OpenAPIObject = {
@@ -45,6 +47,43 @@ export class OpenAPIBuilder implements Builder<OpenAPIObject> {
 
   build() {
     return cloneDeep(this.document);
+  }
+
+  /**
+   * 获取全局响应配置。
+   * @returns 全局响应对象。
+   */
+  getGlobalResponses() {
+    return cloneDeep(this.globalResponses);
+  }
+
+  /**
+   * 添加全局响应，该响应将应用于所有操作。
+   * @param statusCode HTTP 状态码或 "default"。
+   * @param response 响应对象或引用对象。
+   * @returns 文档构建器。
+   */
+  addGlobalResponse(statusCode: string | "default", response: ResponseObject | ReferenceObject) {
+    this.globalResponses[statusCode] = response;
+    return this;
+  }
+
+  /**
+   * 获取全局参数配置。
+   * @returns 全局参数数组。
+   */
+  getGlobalParameters() {
+    return cloneDeep(this.globalParameters);
+  }
+
+  /**
+   * 添加全局参数，该参数将应用于所有操作。
+   * @param parameter 参数对象或引用对象。
+   * @returns 文档构建器。
+   */
+  addGlobalParameter(parameter: ParameterObject | ReferenceObject) {
+    this.globalParameters.push(parameter);
+    return this;
   }
 
   /**
