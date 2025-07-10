@@ -124,5 +124,31 @@
     "hono": "^4.0.0",
     "koa": "^3.0.0",
     "zod": "^3.25.0"
+  },
+  "peerDependenciesMeta": {
+    "@koa/router": {
+      "optional": true
+    },
+    "@types/express": {
+      "optional": true
+    },
+    "@types/koa": {
+      "optional": true
+    },
+    "@types/koa__router": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    },
+    "koa": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
   }
 }
