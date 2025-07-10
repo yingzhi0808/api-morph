@@ -1,6 +1,6 @@
 import type { Next } from "koa";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import type { ErrorRequestHandler, TypedMiddleware, ValidationOptions } from "./zodValidator";
 import { zodValidator } from "./zodValidator";
 

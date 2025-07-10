@@ -109,7 +109,7 @@ app.listen(port, () => {
 接下来，我们创建必要的 Zod schema 来定义数据结构。创建 `schema.ts` 文件：
 
 ```typescript
-import { z } from "zod/v4";
+import z from "zod/v4";
 
 export const UserIdDto = z.object({
   id: z.string().meta({ description: "用户ID" }),

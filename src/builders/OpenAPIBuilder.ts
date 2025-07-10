@@ -1,6 +1,6 @@
 import { assign, cloneDeep } from "radashi";
 import type { ZodType } from "zod/v4";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import type { Builder } from "@/builders/Builder";
 import type { PathItemBuilder } from "@/builders/PathItemBuilder";
 import type {

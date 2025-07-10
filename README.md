@@ -41,7 +41,7 @@ yarn add api-morph
 
 ```typescript
 // schema.ts
-import { z } from "zod/v4";
+import z from "zod/v4";
 
 export const UserIdDto = z.object({
   id: z.string().meta({ description: "用户ID" }),

@@ -11,7 +11,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test1.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const stringSchema = z.string();
         `,
       );
@@ -28,7 +28,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test2.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const numberSchema = z.number();
         `,
       );
@@ -45,7 +45,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test3.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const objectSchema = z.object({
           name: z.string(),
           age: z.number()
@@ -65,7 +65,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test4.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const arraySchema = z.array(z.string());
         `,
       );
@@ -82,7 +82,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test5.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const unionSchema = z.union([z.string(), z.number()]);
         `,
       );
@@ -99,7 +99,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test6.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const optionalSchema = z.string().optional();
         `,
       );
@@ -116,7 +116,7 @@ describe("zod helpers", () => {
       const sourceFile = project.createSourceFile(
         "test7.ts",
         `
-        import { z } from "zod/v4";
+        import z from "zod/v4";
         const complexSchema = z.object({
           user: z.object({
             name: z.string(),

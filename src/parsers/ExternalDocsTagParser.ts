@@ -1,5 +1,5 @@
 import type { JSDocTag } from "ts-morph";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import { ExternalDocsBuilder } from "@/builders/ExternalDocsBuilder";
 import { getZodErrorMessage } from "@/helpers/zod";
 import { type ParsedTagParams, TagParser } from "@/parsers/TagParser";

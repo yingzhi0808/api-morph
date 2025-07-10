@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import type { ErrorRequestHandler, ValidationOptions } from "./zodValidator";
 import { zodValidator } from "./zodValidator";
 

@@ -144,7 +144,7 @@ app.get(
 ```
 
 ```typescript [schema.ts]
-import { z } from "zod/v4";
+import z from "zod/v4";
 
 export const UserIdDto = z.object({
   id: z.uuid().meta({ description: "用户ID", examples: ["123e4567-e89b-12d3-a456-426614174000"] }),

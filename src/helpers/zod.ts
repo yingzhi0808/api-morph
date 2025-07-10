@@ -1,6 +1,6 @@
 import type { Node } from "ts-morph";
 import type { ZodError } from "zod/v4";
-import { z } from "zod/v4";
+import z from "zod/v4";
 
 /**
  * 判断节点是否为 ZodType。

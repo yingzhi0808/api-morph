@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import { SchemaRegistry } from "@/registry/SchemaRegistry";
 import { zodValidator } from "./zodValidator";
 

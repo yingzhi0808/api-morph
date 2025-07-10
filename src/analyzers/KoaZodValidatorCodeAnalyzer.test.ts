@@ -3,7 +3,7 @@ import { createParseContext, createProject } from "@tests/utils";
 import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import { SchemaRegistry } from "@/registry/SchemaRegistry";
 import type { ParseContext } from "@/types/parser";
 import { KoaZodValidatorCodeAnalyzer } from "./KoaZodValidatorCodeAnalyzer";

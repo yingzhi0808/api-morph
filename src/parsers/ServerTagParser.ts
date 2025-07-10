@@ -1,5 +1,5 @@
 import type { JSDocTag } from "ts-morph";
-import { z } from "zod/v4";
+import z from "zod/v4";
 import { ServerBuilder } from "@/builders/ServerBuilder";
 import { getZodErrorMessage } from "@/helpers/zod";
 import { JSDocTagName } from "@/types/common";
