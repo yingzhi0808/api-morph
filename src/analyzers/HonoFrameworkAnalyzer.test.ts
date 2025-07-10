@@ -7,7 +7,7 @@ import { z } from "zod/v4";
 import { CodeAnalyzer } from "@/analyzers/CodeAnalyzer";
 import { SchemaRegistry } from "@/registry/SchemaRegistry";
 import type { OperationData, ParseContext } from "@/types/parser";
-import { ExpressFrameworkAnalyzer } from "./ExpressFrameworkAnalyzer";
+import { HonoFrameworkAnalyzer } from "./HonoFrameworkAnalyzer";
 
 class CustomTestAnalyzer extends CodeAnalyzer {
   analyze(_node: Node): OperationData {
@@ -19,9 +19,9 @@ class CustomTestAnalyzer extends CodeAnalyzer {
   }
 }
 
-describe("ExpressFrameworkAnalyzer", () => {
+describe("HonoFrameworkAnalyzer", () => {
   let project: Project;
-  let analyzer: ExpressFrameworkAnalyzer;
+  let analyzer: HonoFrameworkAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
@@ -32,54 +32,55 @@ describe("ExpressFrameworkAnalyzer", () => {
     });
     context = createParseContext({}, project);
     project.addDirectoryAtPath("tests/fixtures");
-    analyzer = new ExpressFrameworkAnalyzer(context);
+    analyzer = new HonoFrameworkAnalyzer(context);
   });
 
   describe("properties", () => {
     it("应该有正确的框架名称", () => {
-      expect(analyzer.frameworkName).toBe("Express");
+      expect(analyzer.frameworkName).toBe("Hono");
     });
   });
 
   describe("canAnalyze", () => {
     it("应该对非ExpressionStatement节点返回false", () => {
-      const sourceFile = project.createSourceFile("test.ts", "const x = 1");
+      const sourceFile = project.createSourceFile("test.ts", "const x = 1;");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.VariableStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对没有CallExpression的ExpressionStatement返回false", () => {
-      const sourceFile = project.createSourceFile("test.ts", "1 + 1");
+      const sourceFile = project.createSourceFile("test.ts", "1 + 1;");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对没有PropertyAccessExpression的CallExpression返回false", () => {
-      const sourceFile = project.createSourceFile("test.ts", "func()");
+      const sourceFile = project.createSourceFile("test.ts", "func();");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对无效HTTP方法返回false", () => {
-      const sourceFile = project.createSourceFile("test.ts", "app.invalid()");
+      const sourceFile = project.createSourceFile("test.ts", "app.invalid();");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
-    it("应该对不是Express类型的对象返回false", () => {
+    it("应该对不是Hono类型的对象返回false", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
         const app = {get: () => {}}
-        app.get("/", (req, res) => {})`,
+        app.get("/", (c) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new HonoFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
@@ -88,13 +89,14 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
+        import { Hono } from "hono"
+        const app = new Hono()
         app.get("/")`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new HonoFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
@@ -103,44 +105,31 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        const middleware = (req, res, next) => {}
-        app.get(middleware, (req, res) => {})`,
+        import { Hono } from "hono"
+        const app = new Hono()
+        const middleware = (c) => {}
+        app.get(middleware, (c) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new HonoFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
-    it("应该对符合Express路由调用规范的节点返回true", () => {
+    it("应该对符合Hono路由调用规范的节点返回true", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/", (req, res) => {})`,
+        import { Hono } from "hono"
+        const app = new Hono()
+        app.get("/", (c) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-
-      expect(analyzer.canAnalyze(node)).toBe(true);
-    });
-
-    it("应该对Express Router类型的路由调用返回true", () => {
-      const sourceFile = project.createSourceFile(
-        "test.ts",
-        `
-        import express from "express"
-        const router = express.Router()
-        router.get("/api/users", (req, res) => {})`,
-      );
-      const node = sourceFile
-        .getFirstChildOrThrow()
-        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const analyzer = new HonoFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(true);
     });
@@ -151,14 +140,11 @@ describe("ExpressFrameworkAnalyzer", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
+        import { Hono } from "hono"
         import { UserIdDto, UpdateUserDto } from "@tests/fixtures/schema"
-        import { zodValidator } from "api-morph/express"
-        const app = express()
-        app.put("/api/users/:id", zodValidator({
-          params: UserIdDto,
-          body: UpdateUserDto
-        }), (req, res) => {})`,
+        import { zodValidator } from "api-morph/hono"
+        const app = new Hono()
+        app.put("/api/users/:id", zodValidator("param", UserIdDto), zodValidator("json", UpdateUserDto), (c) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
@@ -195,24 +181,21 @@ describe("ExpressFrameworkAnalyzer", () => {
       expect(context.schemas.get("UpdateUserDto")).toEqual(z.toJSONSchema(UpdateUserDto));
     });
 
-    it("应该能够使用自定义 Express 代码分析器", async () => {
-      const context = createParseContext(
-        {
-          customExpressCodeAnalyzers: [CustomTestAnalyzer],
-        },
-        project,
-      );
+    it("应该能够使用自定义 Hono 代码分析器", async () => {
+      const context = createParseContext({
+        customHonoCodeAnalyzers: [CustomTestAnalyzer],
+      });
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
-        import express from "express"
-        const app = express()
-        app.get("/users/:id", (req, res) => {})`,
+        import { Hono } from "hono"
+        const app = new Hono()
+        app.get("/users/:id", (c) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new ExpressFrameworkAnalyzer(context);
+      const analyzer = new HonoFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({

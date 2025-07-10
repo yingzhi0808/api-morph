@@ -1,6 +1,6 @@
 {
   "name": "api-morph",
-  "entryPoints": ["src/index.ts", "src/express/index.ts", "src/koa/index.ts"],
+  "entryPoints": ["src/index.ts", "src/express/index.ts", "src/koa/index.ts", "src/hono/index.ts"],
   "out": "docs/api",
   "docsRoot": "docs",
   "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
@@ -15,5 +15,5 @@
   },
   "indexFormat": "table",
   "expandParameters": true,
-  "categoryOrder": ["Core", "Builders", "Parsers", "Analyzers", "Types", "Express"]
+  "categoryOrder": ["Core", "Builders", "Parsers", "Analyzers", "Types", "Express", "Koa", "Hono"]
 }

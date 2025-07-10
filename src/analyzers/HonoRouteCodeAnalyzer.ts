@@ -7,11 +7,11 @@ import type { OperationData } from "@/types/parser";
 import { CodeAnalyzer } from "./CodeAnalyzer";
 
 /**
- * 路由代码分析器，负责从Express路由调用中分析HTTP方法、路径和operationId
+ * Hono路由代码分析器，负责从Hono路由调用中分析HTTP方法、路径和operationId
  */
-export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
+export class HonoRouteCodeAnalyzer extends CodeAnalyzer {
   /**
-   * 分析路由信息（方法、路径和operationId）
+   * 分析Hono路由信息（方法、路径和operationId）
    */
   async analyze(node: Node): Promise<OperationData> {
     const expression = node.getFirstChildByKindOrThrow(SyntaxKind.CallExpression);
@@ -24,7 +24,7 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
 
     // 计算route的最终路径
     let path = this.calculateRoutePath(expression) || "/";
-    path = this.convertExpressPathToOpenAPI(path);
+    path = this.convertHonoPathToOpenAPI(path);
 
     // 解析 operationId
     let operationId: string | undefined;
@@ -60,11 +60,13 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
       return "";
     }
 
+    const identifier = propertyAccess.getExpression().asKindOrThrow(SyntaxKind.Identifier);
     const path = this.getStringValueFromNode(args[0]) || "";
-    const mountPath = this.normalizePath(path);
+    const basePath = identifier.getType().getTypeArguments()[2].getLiteralValue() as string;
+    const mountPath = this.normalizePath(basePath) + this.normalizePath(path);
+
     let parentBasePath = "";
 
-    const identifier = propertyAccess.getExpression().asKindOrThrow(SyntaxKind.Identifier);
     const references = identifier.findReferencesAsNodes();
     for (const reference of references) {
       const parent = reference.getParentIfKind(SyntaxKind.CallExpression);
@@ -113,9 +115,9 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
   }
 
   /**
-   * 将 Express 路径参数格式转换为 OpenAPI 格式: `/users/:id` -> `/users/{id}`
+   * 将 Hono 路径参数格式转换为 OpenAPI 格式: `/users/:id` -> `/users/{id}`
    */
-  private convertExpressPathToOpenAPI(path: string) {
+  private convertHonoPathToOpenAPI(path: string) {
     return path.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, "{$1}");
   }
 
@@ -125,7 +127,7 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
    * @returns 函数名，如果提取失败则返回 undefined
    */
   private extractHandlerName(args: Node[]) {
-    // 查找最后一个参数（通常是处理函数）
+    // 查找最后一个函数参数（通常是处理函数）
     const handlerArg = args[args.length - 1];
 
     // 如果是函数表达式，查找函数名
@@ -156,28 +158,23 @@ export class ExpressRouteCodeAnalyzer extends CodeAnalyzer {
    * 根据HTTP方法和路径生成operationId
    * @param method HTTP方法
    * @param path 路径
-   * @returns operationId
+   * @returns 生成的operationId
    */
-  private generateOperationIdFromRoute(method: HttpMethod, path: string) {
-    // 清理路径：移除开头的斜杠，将路径分段
-    const cleanPath = path.slice(1);
-    const segments = cleanPath.split("/").filter((segment) => segment.length > 0);
+  private generateOperationIdFromRoute(method: string, path: string): string {
+    // 移除路径参数的大括号，将路径转换为驼峰命名
+    const pathParts = path
+      .split("/")
+      .filter((part) => part.length > 0)
+      .map((part) => {
+        // 移除参数大括号 {id} -> id，然后添加 "By" 前缀
+        if (part.startsWith("{") && part.endsWith("}")) {
+          const paramName = part.slice(1, -1);
+          return `By${pascal(paramName)}`;
+        }
+        return pascal(part);
+      });
 
-    // 转换路径段为驼峰命名
-    const pathParts = segments.map((segment) => {
-      // 处理路径参数 {id} -> ById
-      if (segment.startsWith("{") && segment.endsWith("}")) {
-        const paramName = segment.slice(1, -1);
-        return `By${pascal(paramName)}`;
-      }
-      // 普通路径段转为PascalCase
-      return pascal(segment);
-    });
-
-    // 组合方法名和路径
-    const methodName = method.toLowerCase();
-    const pathName = pathParts.join("");
-
-    return methodName + pathName;
+    const pathString = pathParts.join("");
+    return `${method}${pathString}`;
   }
 }

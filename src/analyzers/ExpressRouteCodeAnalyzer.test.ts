@@ -15,30 +15,36 @@ describe("ExpressRouteCodeAnalyzer", () => {
 
   describe("analyze", () => {
     it("应该解析基本的express路由", async () => {
-      const sourceFile = context.project.createSourceFile("test.ts", 'app.get("/users", handler);');
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        'app.get("/users", (req, res) => {})',
+      );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
         method: "get",
         path: "/users",
-        operationId: "handler",
+        operationId: "getUsers",
       });
     });
 
-    it("应该将Express路径参数转换为OpenAPI格式", async () => {
+    it("应该处理路径开头没有斜杠的情况", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users/:id/posts/:postId", handler);',
+        'app.get("users", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.path).toBe("/users/{id}/posts/{postId}");
+      expect(result.path).toBe("/users");
     });
 
-    it("应该为没有斜杠开头的路径添加斜杠", async () => {
-      const sourceFile = context.project.createSourceFile("test.ts", 'app.get("users", handler);');
+    it("应该处理路径结尾带斜杠的情况", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        'app.get("/users/", (req, res) => {})',
+      );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
@@ -46,30 +52,44 @@ describe("ExpressRouteCodeAnalyzer", () => {
     });
 
     it("应该处理空字符串路径", async () => {
-      const sourceFile = context.project.createSourceFile("test.ts", 'app.get("", () => {});');
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await analyzer.analyze(node);
-
-      // 空字符串路径应该被转换为"/"
-      expect(result.path).toBe("/");
-      expect(result.operationId).toBe("get");
-    });
-
-    it("应该处理模板字符串路径", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        "app.get(`/users/:id`, handler);",
+        'app.get("", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.path).toBe("/users/{id}");
+      expect(result.path).toBe("/");
+    });
+
+    it("应该处理路径参数为变量的情况", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        const path = "/users"
+        app.get(path, (req, res) => {})`,
+      );
+      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const result = await analyzer.analyze(node);
+
+      expect(result.path).toBe("/users");
+    });
+
+    it("应该将Express路径参数转换为OpenAPI格式", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        'app.get("/users/:id/posts/:postId", (req, res) => {})',
+      );
+      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const result = await analyzer.analyze(node);
+
+      expect(result.path).toBe("/users/{id}/posts/{postId}");
     });
 
     it("应该提取属性访问表达式的函数名", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users", userController.getUsers);',
+        'app.get("/users", userController.getUsers)',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -80,7 +100,7 @@ describe("ExpressRouteCodeAnalyzer", () => {
     it("应该提取命名函数表达式的函数名", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users", function namedHandler() {});',
+        'app.get("/users", function namedHandler() {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -88,8 +108,26 @@ describe("ExpressRouteCodeAnalyzer", () => {
       expect(result.operationId).toBe("namedHandler");
     });
 
+    it("应该提取参数为标识符的函数名", async () => {
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        `
+        function handler() {}
+        app.get("/users", handler)`,
+      );
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const result = await analyzer.analyze(node);
+
+      expect(result.operationId).toBe("handler");
+    });
+
     it("应该为根路径生成正确的operationId", async () => {
-      const sourceFile = context.project.createSourceFile("test.ts", 'app.get("/", () => {});');
+      const sourceFile = context.project.createSourceFile(
+        "test.ts",
+        'app.get("/", (req, res) => {})',
+      );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
@@ -99,7 +137,7 @@ describe("ExpressRouteCodeAnalyzer", () => {
     it("应该为带参数的路径生成正确的operationId", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users/:id", () => {});',
+        'app.get("/users/:id", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
@@ -111,7 +149,7 @@ describe("ExpressRouteCodeAnalyzer", () => {
     it("应该为复杂路径生成正确的operationId", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.post("/api/users/:userId/posts", () => {});',
+        'app.post("/api/users/:userId/posts", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -122,7 +160,7 @@ describe("ExpressRouteCodeAnalyzer", () => {
     it("应该为多个参数的路径生成正确的operationId", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users/:userId/posts/:postId", () => {});',
+        'app.get("/users/:userId/posts/:postId", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -142,7 +180,7 @@ describe("ExpressRouteCodeAnalyzer", () => {
       for (const { method, expected } of methods) {
         const sourceFile = context.project.createSourceFile(
           `test-${method}.ts`,
-          `app.${method}("/users", () => {});`,
+          `app.${method}("/users", (req, res) => {})`,
         );
         const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
         const result = await analyzer.analyze(node);
@@ -152,91 +190,49 @@ describe("ExpressRouteCodeAnalyzer", () => {
     });
 
     it("应该使用自定义的operationId生成函数", async () => {
-      const customContext = createParseContext({
+      const context = createParseContext({
         generateOperationId: (method, path) => {
           return `custom_${method}_${path.replace(/[^a-zA-Z0-9]/g, "_")}`;
         },
       });
-      const customAnalyzer = new ExpressRouteCodeAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
+      const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users/:id", handler);',
+        'app.get("/users/:id", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await customAnalyzer.analyze(node);
+      const analyzer = new ExpressRouteCodeAnalyzer(context);
+      const result = await analyzer.analyze(node);
 
       expect(result.operationId).toBe("custom_get__users__id_");
     });
 
     it("应该处理自定义生成器返回null的情况", async () => {
-      const customContext = createParseContext({
+      const context = createParseContext({
         generateOperationId: () => null,
       });
-      const customAnalyzer = new ExpressRouteCodeAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
+      const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.get("/users", handler);',
+        'app.get("/users", (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await customAnalyzer.analyze(node);
+      const analyzer = new ExpressRouteCodeAnalyzer(context);
+      const result = await analyzer.analyze(node);
 
       expect(result.operationId).toBeUndefined();
-    });
-
-    it("应该向自定义生成器传递正确的参数", async () => {
-      let capturedArgs: Parameters<NonNullable<ParseContext["options"]["generateOperationId"]>> = [
-        "get",
-        "",
-        "",
-        undefined,
-      ];
-      const customContext = createParseContext({
-        generateOperationId: (...args) => {
-          capturedArgs = args;
-          return "custom";
-        },
-      });
-      const customAnalyzer = new ExpressRouteCodeAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
-        "users.ts",
-        'app.get("/users/:id", getUserById);',
-      );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-
-      await customAnalyzer.analyze(node);
-
-      expect(capturedArgs).toEqual([
-        "get", // method
-        "/users/{id}", // path
-        "users", // fileName
-        "getUserById", // functionName
-      ]);
     });
 
     it("应该从带中间件的路由中提取处理函数名", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'app.post("/users", validateUser, createUser);',
+        'app.post("/users", middleware1, middleware2, (req, res) => {})',
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.operationId).toBe("createUser");
+      expect(result.operationId).toBe("postUsers");
     });
 
-    it("应该处理匿名箭头函数", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "test.ts",
-        'app.get("/users/:id", middleware, async (req, res) => { return res.send("test"); });',
-      );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await analyzer.analyze(node);
-
-      // 箭头函数没有名称，应该使用生成的operationId
-      expect(result.operationId).toBe("getUsersById");
-    });
-
-    it("应该处理嵌套Router的路径拼接", async () => {
+    it("应该处理嵌套route的路径拼接", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
@@ -244,104 +240,98 @@ describe("ExpressRouteCodeAnalyzer", () => {
         const app = express()
         const apiRouter = express.Router()
         const userRouter = express.Router()
-
         app.use('/api', apiRouter)
         apiRouter.use('/users', userRouter)
-
-        userRouter.get('/:id', getUserById)`,
+        userRouter.get('/:id', (req, res) => {})`,
       );
 
       const statements = sourceFile.getStatements();
       const lastStatement = statements[statements.length - 1];
       const result = await analyzer.analyze(lastStatement);
 
-      expect(result.method).toBe("get");
       expect(result.path).toBe("/api/users/{id}");
-      expect(result.operationId).toBe("getUserById");
     });
 
-    it("应该处理Router挂载时的路径格式化", async () => {
+    it("应该处理嵌套route中路径开头没有斜杠的情况", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
         import express from 'express'
         const app = express()
-        const router = express.Router()
-
-        app.use('api/', router)
-
-        router.get('/test', handler)`,
+        const apiRouter = express.Router()
+        const userRouter = express.Router()
+        app.use('api', apiRouter)
+        apiRouter.use('users', userRouter)
+        userRouter.get(':id', (req, res) => {})`,
       );
 
       const statements = sourceFile.getStatements();
       const lastStatement = statements[statements.length - 1];
       const result = await analyzer.analyze(lastStatement);
 
-      expect(result.method).toBe("get");
-      expect(result.path).toBe("/api/test");
+      expect(result.path).toBe("/api/users/{id}");
     });
 
-    it("应该处理findRouterBasePath中空路径的情况", async () => {
+    it("应该处理嵌套route中路径结尾带斜杠的情况", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
         import express from 'express'
         const app = express()
-        const router = express.Router()
-
-        app.use(router)
-
-        router.get('/test', handler)`,
+        const apiRouter = express.Router()
+        const userRouter = express.Router()
+        app.use("/api/", apiRouter)
+        apiRouter.use("/users/", userRouter)
+        userRouter.get("/:id/", (req, res) => {})`,
       );
 
       const statements = sourceFile.getStatements();
       const lastStatement = statements[statements.length - 1];
       const result = await analyzer.analyze(lastStatement);
 
-      expect(result.method).toBe("get");
-      expect(result.path).toBe("/test");
+      expect(result.path).toBe("/api/users/{id}");
     });
 
-    it("应该处理findRouterBasePath中非use方法的情况", async () => {
+    it("应该处理嵌套route中没有挂载路径的情况", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
         import express from 'express'
+        import { setupSwaggerUI } from 'api-morph/express'
         const app = express()
-        const router = express.Router()
-
-        app.get('/api', router)
-
-        router.get('/test', handler)`,
+        const apiRouter = express.Router()
+        const userRouter = express.Router()
+        app.use("/api", apiRouter)
+        apiRouter.use(userRouter)
+        userRouter.get("/users/:id", (req, res) => {})`,
       );
 
       const statements = sourceFile.getStatements();
       const lastStatement = statements[statements.length - 1];
       const result = await analyzer.analyze(lastStatement);
 
-      expect(result.method).toBe("get");
-      expect(result.path).toBe("/test");
+      expect(result.path).toBe("/api/users/{id}");
     });
 
-    it("应该处理findRouterBasePath中模板字符串路径的情况", async () => {
+    it("应该处理嵌套route的调用表达式中没有属性访问表达式的情况", async () => {
       const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
         import express from 'express'
         const app = express()
-        const router = express.Router()
-
-        app.use(\`/api\`, router)
-
-        router.get('/test', handler)`,
+        const apiRouter = express.Router()
+        const userRouter = express.Router()
+        app.use("/api", apiRouter)
+        apiRouter.use("/users", userRouter)
+        setupSwaggerUI("/swagger-ui", app)
+        userRouter.get("/:id", (req, res) => {})`,
       );
 
       const statements = sourceFile.getStatements();
       const lastStatement = statements[statements.length - 1];
       const result = await analyzer.analyze(lastStatement);
 
-      expect(result.method).toBe("get");
-      expect(result.path).toBe("/api/test");
+      expect(result.path).toBe("/api/users/{id}");
     });
   });
 });

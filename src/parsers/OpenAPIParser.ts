@@ -2,6 +2,7 @@ import micromatch from "micromatch";
 import type { Project, SourceFile } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { ExpressFrameworkAnalyzer } from "@/analyzers/ExpressFrameworkAnalyzer";
+import { HonoFrameworkAnalyzer } from "@/analyzers/HonoFrameworkAnalyzer";
 import { KoaFrameworkAnalyzer } from "@/analyzers/KoaFrameworkAnalyzer";
 import type { OpenAPIBuilder } from "@/builders/OpenAPIBuilder";
 import { PathItemBuilder } from "@/builders/PathItemBuilder";
@@ -245,7 +246,11 @@ export class OpenAPIParser {
       return frameworkAnalyzerRegistry;
     }
 
-    const defaultFrameworkAnalyzers = [ExpressFrameworkAnalyzer, KoaFrameworkAnalyzer];
+    const defaultFrameworkAnalyzers = [
+      ExpressFrameworkAnalyzer,
+      KoaFrameworkAnalyzer,
+      HonoFrameworkAnalyzer,
+    ];
     const frameworkAnalyzers = [
       ...defaultFrameworkAnalyzers,
       ...(options.customFrameworkAnalyzers ?? []),

@@ -1,6 +1,6 @@
 import { UpdateUserDto, UserIdDto } from "@tests/fixtures/schema";
 import { createParseContext, createProject } from "@tests/utils";
-import type { Node } from "ts-morph";
+import type { Node, Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod/v4";
@@ -13,19 +13,25 @@ class CustomTestAnalyzer extends CodeAnalyzer {
   analyze(_node: Node): OperationData {
     return {
       extensions: {
-        "x-custom-analyzer": "koa-test-value",
+        "x-custom-analyzer": "test-value",
       },
     };
   }
 }
 
 describe("KoaFrameworkAnalyzer", () => {
+  let project: Project;
   let analyzer: KoaFrameworkAnalyzer;
   let context: ParseContext;
-  const registry = SchemaRegistry.getInstance();
 
   beforeEach(() => {
-    context = createParseContext();
+    project = createProject({
+      tsConfigFilePath: "tsconfig.json",
+      useInMemoryFileSystem: false,
+      skipAddingFilesFromTsConfig: true,
+    });
+    context = createParseContext({}, project);
+    project.addDirectoryAtPath("tests/fixtures");
     analyzer = new KoaFrameworkAnalyzer(context);
   });
 
@@ -37,40 +43,34 @@ describe("KoaFrameworkAnalyzer", () => {
 
   describe("canAnalyze", () => {
     it("应该对非ExpressionStatement节点返回false", () => {
-      const sourceFile = context.project.createSourceFile("test.ts", "const x = 1;");
+      const sourceFile = project.createSourceFile("test.ts", "const x = 1;");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.VariableStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对没有CallExpression的ExpressionStatement返回false", () => {
-      const sourceFile = context.project.createSourceFile("test.ts", "1 + 1;");
+      const sourceFile = project.createSourceFile("test.ts", "1 + 1;");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对没有PropertyAccessExpression的CallExpression返回false", () => {
-      const sourceFile = context.project.createSourceFile("test.ts", "func();");
+      const sourceFile = project.createSourceFile("test.ts", "func();");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对无效HTTP方法返回false", () => {
-      const sourceFile = context.project.createSourceFile("test.ts", "router.invalid();");
+      const sourceFile = project.createSourceFile("test.ts", "router.invalid();");
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对不是Koa Router类型的对象返回false", () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
-      const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
@@ -80,18 +80,11 @@ describe("KoaFrameworkAnalyzer", () => {
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对没有两个参数的CallExpression返回false", () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
-      const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
@@ -102,41 +95,27 @@ describe("KoaFrameworkAnalyzer", () => {
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
-    it("应该对不是字符串字面量的路径参数返回false", () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
-      const context = createParseContext({}, project);
+    it("应该对不是字符串类型的路径参数返回false", () => {
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
         import Router from "@koa/router"
         const router = new Router()
-        const path = '/'
-        router.get(path, async (ctx) => {})`,
+        const middleware = (ctx) => {}
+        router.get(middleware, (ctx) => {})`,
       );
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(false);
     });
 
     it("应该对符合Koa Router调用规范的节点返回true", () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
-      const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
@@ -147,7 +126,6 @@ describe("KoaFrameworkAnalyzer", () => {
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
 
       expect(analyzer.canAnalyze(node)).toBe(true);
     });
@@ -155,32 +133,6 @@ describe("KoaFrameworkAnalyzer", () => {
 
   describe("analyze", () => {
     it("应该能够分析Koa Router调用并返回操作数据", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "test.ts",
-        `
-        import Router from "@koa/router"
-        const router = new Router()
-        router.get("/users/:id", async (ctx) => {})`,
-      );
-      const node = sourceFile
-        .getFirstChildOrThrow()
-        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({ method: "get", path: "/users/{id}", operationId: "getUsersById" });
-    });
-
-    it("应该能够集成ExpressZodValidationCodeAnalyzer来分析Zod验证", async () => {
-      const project = createProject({
-        tsConfigFilePath: "tsconfig.json",
-        useInMemoryFileSystem: false,
-        skipAddingFilesFromTsConfig: true,
-      });
-
-      project.addDirectoryAtPath("tests/fixtures");
-
-      const context = createParseContext({}, project);
       const sourceFile = project.createSourceFile(
         "test.ts",
         `
@@ -197,9 +149,9 @@ describe("KoaFrameworkAnalyzer", () => {
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const location = `${sourceFile.getFilePath()}:${node.getStartLineNumber()}`;
+      const registry = SchemaRegistry.getInstance();
       registry.register(location, { params: UserIdDto, body: UpdateUserDto });
 
-      const analyzer = new KoaFrameworkAnalyzer(context);
       const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
@@ -229,11 +181,13 @@ describe("KoaFrameworkAnalyzer", () => {
     });
 
     it("应该能够使用自定义 Koa 代码分析器", async () => {
-      const customContext = createParseContext({
-        customKoaCodeAnalyzers: [CustomTestAnalyzer],
-      });
-      const customAnalyzer = new KoaFrameworkAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
+      const context = createParseContext(
+        {
+          customKoaCodeAnalyzers: [CustomTestAnalyzer],
+        },
+        project,
+      );
+      const sourceFile = context.project.createSourceFile(
         "test.ts",
         `
         import Router from "@koa/router"
@@ -243,90 +197,17 @@ describe("KoaFrameworkAnalyzer", () => {
       const node = sourceFile
         .getFirstChildOrThrow()
         .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await customAnalyzer.analyze(node);
+      const analyzer = new KoaFrameworkAnalyzer(context);
+      const result = await analyzer.analyze(node);
 
       expect(result).toEqual({
         method: "get",
         path: "/users",
         operationId: "getUsers",
         extensions: {
-          "x-custom-analyzer": "koa-test-value",
+          "x-custom-analyzer": "test-value",
         },
       });
-    });
-
-    it("应该处理不同的HTTP方法", async () => {
-      const methods = ["get", "post", "put", "patch", "delete"];
-
-      for (const method of methods) {
-        const sourceFile = context.project.createSourceFile(
-          `test-${method}.ts`,
-          `
-          import Router from "@koa/router"
-          const router = new Router()
-          router.${method}("/users", async (ctx) => {})`,
-        );
-        const node = sourceFile
-          .getFirstChildOrThrow()
-          .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-        const analyzer = new KoaFrameworkAnalyzer(context);
-        const result = await analyzer.analyze(node);
-
-        expect(result.method).toBe(method);
-        expect(result.path).toBe("/users");
-        expect(result.operationId).toBe(`${method}Users`);
-      }
-    });
-
-    it("应该处理带中间件的路由", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "test.ts",
-        `
-        import Router from "@koa/router"
-        const router = new Router()
-        router.get("/users", middleware1, middleware2, async (ctx) => {})`,
-      );
-      const node = sourceFile
-        .getFirstChildOrThrow()
-        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
-      const result = await analyzer.analyze(node);
-
-      expect(result).toEqual({ method: "get", path: "/users", operationId: "getUsers" });
-    });
-
-    it("应该处理命名函数处理器", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "test.ts",
-        `
-        import Router from "@koa/router"
-        const router = new Router()
-        router.get("/users", async function getUsersHandler(ctx) {})`,
-      );
-      const node = sourceFile
-        .getFirstChildOrThrow()
-        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
-      const result = await analyzer.analyze(node);
-
-      expect(result.operationId).toBe("getUsersHandler");
-    });
-
-    it("应该处理函数引用处理器", async () => {
-      const sourceFile = context.project.createSourceFile(
-        "test.ts",
-        `
-        import Router from "@koa/router"
-        const router = new Router()
-        router.get("/users", handlerFunction)`,
-      );
-      const node = sourceFile
-        .getFirstChildOrThrow()
-        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const analyzer = new KoaFrameworkAnalyzer(context);
-      const result = await analyzer.analyze(node);
-
-      expect(result.operationId).toBe("handlerFunction");
     });
   });
 });

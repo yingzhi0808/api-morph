@@ -47,6 +47,10 @@ export interface ParserOptions {
   customKoaCodeAnalyzers?: (new (
     context: ParseContext,
   ) => CodeAnalyzer)[];
+  /** 自定义Hono代码分析器 */
+  customHonoCodeAnalyzers?: (new (
+    context: ParseContext,
+  ) => CodeAnalyzer)[];
   /**
    * 是否启用代码分析
    * @default true

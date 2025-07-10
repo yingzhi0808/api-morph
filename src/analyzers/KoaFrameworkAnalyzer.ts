@@ -69,12 +69,10 @@ export class KoaFrameworkAnalyzer extends FrameworkAnalyzer {
       return false;
     }
 
-    // 路径参数必须是字符串字面量
+    // 路径参数必须是字符串类型
     const pathArg = args[0];
-    if (
-      !pathArg.isKind(SyntaxKind.StringLiteral) &&
-      !pathArg.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
-    ) {
+    const pathArgType = pathArg.getType();
+    if (!pathArgType.isString() && !pathArgType.isStringLiteral()) {
       return false;
     }
 

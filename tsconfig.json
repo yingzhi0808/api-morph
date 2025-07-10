@@ -12,7 +12,8 @@
       "@tests/*": ["./tests/*"],
       "api-morph": ["./src"],
       "api-morph/express": ["./src/express"],
-      "api-morph/koa": ["./src/koa"]
+      "api-morph/koa": ["./src/koa"],
+      "api-morph/hono": ["./src/hono"]
     },
     "resolveJsonModule": true,
     "types": ["node"],

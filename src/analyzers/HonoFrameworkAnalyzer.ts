@@ -3,15 +3,15 @@ import { SyntaxKind } from "typescript";
 import { VALID_HTTP_METHODS } from "@/constants";
 import { CodeAnalyzerRegistry } from "@/registry/CodeAnalyzerRegistry";
 import type { OperationData, ParseContext } from "@/types/parser";
-import { ExpressRouteCodeAnalyzer } from "./ExpressRouteCodeAnalyzer";
-import { ExpressZodValidatorCodeAnalyzer } from "./ExpressZodValidatorCodeAnalyzer";
 import { FrameworkAnalyzer } from "./FrameworkAnalyzer";
+import { HonoRouteCodeAnalyzer } from "./HonoRouteCodeAnalyzer";
+import { HonoZodValidatorCodeAnalyzer } from "./HonoZodValidatorCodeAnalyzer";
 
 /**
- * Express框架分析器，用于分析Express应用的各种节点类型。
+ * Hono框架分析器，用于分析Hono应用的各种节点类型。
  */
-export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
-  frameworkName = "Express";
+export class HonoFrameworkAnalyzer extends FrameworkAnalyzer {
+  frameworkName = "Hono";
 
   private readonly codeAnalyzerRegistry: CodeAnalyzerRegistry;
 
@@ -19,8 +19,8 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
     super(context);
     this.codeAnalyzerRegistry = new CodeAnalyzerRegistry();
 
-    const defaultAnalyzers = [ExpressRouteCodeAnalyzer, ExpressZodValidatorCodeAnalyzer];
-    const analyzers = [...defaultAnalyzers, ...(context.options.customExpressCodeAnalyzers ?? [])];
+    const defaultAnalyzers = [HonoRouteCodeAnalyzer, HonoZodValidatorCodeAnalyzer];
+    const analyzers = [...defaultAnalyzers, ...(context.options.customHonoCodeAnalyzers ?? [])];
 
     for (const analyzer of analyzers) {
       this.codeAnalyzerRegistry.register(new analyzer(this.context));
@@ -28,9 +28,9 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 判断节点是否属于Express框架
+   * 判断节点是否属于Hono框架
    * @param node 代码节点
-   * @returns 如果属于Express框架返回true
+   * @returns 如果属于Hono框架返回true
    */
   canAnalyze(node: Node) {
     // 必须是表达式语句
@@ -56,11 +56,10 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
       return false;
     }
 
-    // 必须是Express类型 (@types/express)
+    // 必须是Hono类型
     const objectExpression = propertyAccess.getExpression();
-    const isExpressAppType =
-      this.isExpressAppType(objectExpression) || this.isExpressRouterType(objectExpression);
-    if (!isExpressAppType) {
+    const isHonoAppType = this.isHonoAppType(objectExpression);
+    if (!isHonoAppType) {
       return false;
     }
 
@@ -81,7 +80,7 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 分析Express节点，使用代码分析器注册表来获取不同的信息
+   * 分析Hono节点，使用代码分析器注册表来获取不同的信息
    * @param node 代码节点
    * @returns 解析后的操作数据
    */
@@ -98,28 +97,15 @@ export class ExpressFrameworkAnalyzer extends FrameworkAnalyzer {
   }
 
   /**
-   * 检查节点是否为Express类型
+   * 检查节点是否为Hono类型
    * @param node 要检查的节点
-   * @returns 如果是Express类型返回true
+   * @returns 如果是Hono类型返回true
    */
-  private isExpressAppType(node: Node) {
+  private isHonoAppType(node: Node) {
     const nodeType = node.getType();
     const typeSymbol = nodeType.getSymbol();
 
-    // 检查是否是@types/express的 Express 类型
-    return nodeType.getText().includes("@types/express") && typeSymbol?.getName() === "Express";
-  }
-
-  /**
-   * 检查节点是否为Express Router类型
-   * @param node 要检查的节点
-   * @returns 如果是Express Router类型返回true
-   */
-  private isExpressRouterType(node: Node) {
-    const nodeType = node.getType();
-    const typeSymbol = nodeType.getSymbol();
-
-    // 检查是否是@types/express的 Router 类型
-    return nodeType.getText().includes("@types/express") && typeSymbol?.getName() === "Router";
+    // 检查是否是 Hono 类型
+    return nodeType.getText().includes("hono") && typeSymbol?.getName() === "Hono";
   }
 }

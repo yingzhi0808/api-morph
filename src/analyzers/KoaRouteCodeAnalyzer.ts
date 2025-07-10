@@ -1,6 +1,6 @@
 import { basename, extname } from "node:path";
 import { pascal } from "radashi";
-import type { Node, PropertyAccessExpression, VariableDeclaration } from "ts-morph";
+import type { CallExpression, Node } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import type { HttpMethod } from "@/types/common";
 import type { OperationData } from "@/types/parser";
@@ -20,20 +20,10 @@ export class KoaRouteCodeAnalyzer extends CodeAnalyzer {
     );
 
     const method = propertyAccess.getName() as HttpMethod;
-
-    const prefix = this.extractRouterPrefix(propertyAccess);
-
     const args = expression.getArguments();
-    let path = args[0].getText().slice(1, -1);
 
-    // OpenAPI 规范要求路径必须以 / 开头
-    if (!path.startsWith("/")) {
-      path = `/${path}`;
-    }
-
-    if (prefix) {
-      path = `${prefix}${path}`;
-    }
+    // 计算route的最终路径
+    let path = this.calculateRoutePath(expression) || "/";
     path = this.convertKoaPathToOpenAPI(path);
 
     // 解析 operationId
@@ -58,69 +48,67 @@ export class KoaRouteCodeAnalyzer extends CodeAnalyzer {
   }
 
   /**
-   * Extracts the router prefix from a router initialization, e.g. new Router({ prefix: "/api" })
-   * @param propertyAccess The property access expression node (e.g., `router.get`)
-   * @returns The prefix string if found, otherwise an empty string.
+   * 计算route的最终路径
+   * @param callExpression route方法调用表达式
+   * @returns 路由最终路径，如果没有找到则返回空字符串
    */
-  private extractRouterPrefix(propertyAccess: PropertyAccessExpression) {
-    const routerExpression = propertyAccess.getExpression();
-    if (!routerExpression.isKind(SyntaxKind.Identifier)) {
-      return "";
-    }
+  private calculateRoutePath(callExpression: CallExpression) {
+    const args = callExpression.getArguments();
 
-    const definition = routerExpression.getDefinitionNodes()[0];
-    if (!definition?.isKind(SyntaxKind.VariableDeclaration)) {
-      return "";
-    }
+    const propertyAccess = callExpression.getFirstChildByKindOrThrow(
+      SyntaxKind.PropertyAccessExpression,
+    );
+    const identifier = propertyAccess.getExpression().asKindOrThrow(SyntaxKind.Identifier);
+    const definition = identifier.getDefinitionNodes()[0];
+    const initializer = definition.asKindOrThrow(SyntaxKind.VariableDeclaration).getInitializer();
+    const routerArgs = initializer?.asKindOrThrow(SyntaxKind.NewExpression).getArguments();
 
-    const initializer = definition.getInitializer();
+    const path = this.getStringValueFromNode(args[0]) || "";
+    const mountPath = this.normalizePath(path);
+    let prefixPath = "";
 
-    if (!initializer?.isKind(SyntaxKind.NewExpression)) {
-      return "";
-    }
-
-    const routerArgs = initializer.getArguments();
-    if (routerArgs.length > 0 && routerArgs[0].isKind(SyntaxKind.ObjectLiteralExpression)) {
-      const options = routerArgs[0];
+    if (routerArgs && routerArgs.length > 0) {
+      const options = routerArgs[0].asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
       const prefixProperty = options.getProperty("prefix");
 
       if (prefixProperty?.isKind(SyntaxKind.PropertyAssignment)) {
         const prefixValueNode = prefixProperty.getInitializerOrThrow();
-        return this.getStringValueFromNode(prefixValueNode);
+        prefixPath = this.getStringValueFromNode(prefixValueNode) || "";
       }
     }
 
-    return "";
+    return prefixPath + mountPath;
   }
 
   /**
-   * 从 AST 节点中提取字符串字面量值。
-   * 支持直接的字符串字面量，或引用字符串字面量的变量。
-   * @param node The node to extract the string value from.
-   * @returns The string value if found, otherwise undefined.
+   * 规范化路径，确保路径以 / 开头，且不以 / 结尾
+   * @param path 路径
+   * @returns 规范化后的路径
+   */
+  private normalizePath(path: string) {
+    // 确保路径格式正确
+    if (path && !path.startsWith("/")) {
+      path = `/${path}`;
+    }
+    if (path.endsWith("/")) {
+      path = path.slice(0, -1);
+    }
+    return path;
+  }
+
+  /**
+   * 从 AST 节点中提取字符串字面量值
+   * @param node 要提取字符串值的节点
+   * @returns 字符串值，如果提取失败则返回undefined
    */
   private getStringValueFromNode(node: Node) {
-    if (
-      node.isKind(SyntaxKind.StringLiteral) ||
-      node.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
-    ) {
-      return node.getLiteralText();
+    const nodeType = node.getType();
+
+    if (nodeType.isString() || nodeType.isStringLiteral()) {
+      return nodeType.getLiteralValue() as string;
     }
 
-    if (!node.isKind(SyntaxKind.Identifier)) {
-      return;
-    }
-
-    const definition = node.getDefinitionNodes()[0] as VariableDeclaration;
-    const initializer = definition.getInitializer();
-    if (
-      initializer?.isKind(SyntaxKind.StringLiteral) ||
-      initializer?.isKind(SyntaxKind.NoSubstitutionTemplateLiteral)
-    ) {
-      return initializer.getLiteralText();
-    }
-
-    return;
+    return undefined;
   }
 
   /**

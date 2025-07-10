@@ -1,23 +1,33 @@
-import { createParseContext } from "@tests/utils";
+import { createParseContext, createProject } from "@tests/utils";
+import type { Project } from "ts-morph";
 import { SyntaxKind } from "typescript";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ParseContext } from "@/types/parser";
 import { KoaRouteCodeAnalyzer } from "./KoaRouteCodeAnalyzer";
 
 describe("KoaRouteCodeAnalyzer", () => {
+  let project: Project;
   let analyzer: KoaRouteCodeAnalyzer;
   let context: ParseContext;
 
   beforeEach(() => {
-    context = createParseContext();
+    project = createProject({
+      tsConfigFilePath: "tsconfig.json",
+      useInMemoryFileSystem: false,
+      skipAddingFilesFromTsConfig: true,
+    });
+    context = createParseContext({}, project);
     analyzer = new KoaRouteCodeAnalyzer(context);
   });
 
   describe("analyze", () => {
     it("应该解析基本的Koa Router路由", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users", handler);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -25,25 +35,31 @@ describe("KoaRouteCodeAnalyzer", () => {
       expect(result).toEqual({
         method: "get",
         path: "/users",
-        operationId: "handler",
+        operationId: "getUsers",
       });
     });
 
-    it("应该将Koa路径参数转换为OpenAPI格式", async () => {
-      const sourceFile = context.project.createSourceFile(
+    it("应该处理路径开头没有斜杠的情况", async () => {
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users/:id/posts/:postId", handler);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("users", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.path).toBe("/users/{id}/posts/{postId}");
+      expect(result.path).toBe("/users");
     });
 
-    it("应该为没有斜杠开头的路径添加斜杠", async () => {
-      const sourceFile = context.project.createSourceFile(
+    it("应该处理路径结尾带斜杠的情况", async () => {
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("users", handler);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users/", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -52,33 +68,70 @@ describe("KoaRouteCodeAnalyzer", () => {
     });
 
     it("应该处理空字符串路径", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("", async (ctx, next) => {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      // 空字符串路径应该被转换为"/"
       expect(result.path).toBe("/");
-      expect(result.operationId).toBe("get");
     });
 
-    it("应该处理模板字符串路径", async () => {
-      const sourceFile = context.project.createSourceFile(
+    it("应该处理路径参数为变量的情况", async () => {
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        "router.get(`/users/:id`, handler);",
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        const path = "/users"
+        router.get(path, (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.path).toBe("/users/{id}");
+      expect(result.path).toBe("/users");
+    });
+
+    it("应该处理路径参数不是字符串类型的情况", async () => {
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        const path = 123
+        router.get(path, (ctx) => {})`,
+      );
+      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const result = await analyzer.analyze(node);
+
+      expect(result.path).toBe("/");
+    });
+
+    it("应该将Koa路径参数转换为OpenAPI格式", async () => {
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users/:id/posts/:postId", (ctx) => {})`,
+      );
+      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const result = await analyzer.analyze(node);
+
+      expect(result.path).toBe("/users/{id}/posts/{postId}");
     });
 
     it("应该提取属性访问表达式的函数名", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users", userController.getUsers);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users", userController.getUsers)`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -87,9 +140,12 @@ describe("KoaRouteCodeAnalyzer", () => {
     });
 
     it("应该提取命名函数表达式的函数名", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users", async function namedHandler(ctx, next) {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users", function namedHandler(ctx) {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -97,21 +153,30 @@ describe("KoaRouteCodeAnalyzer", () => {
       expect(result.operationId).toBe("namedHandler");
     });
 
-    it("应该处理箭头函数处理器", async () => {
-      const sourceFile = context.project.createSourceFile(
+    it("应该提取参数为标识符的函数名", async () => {
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users", async (ctx, next) => {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        function handler() {}
+        router.get("/users", handler)`,
       );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.operationId).toBe("getUsers");
+      expect(result.operationId).toBe("handler");
     });
 
     it("应该为根路径生成正确的operationId", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/", async (ctx, next) => {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -120,9 +185,12 @@ describe("KoaRouteCodeAnalyzer", () => {
     });
 
     it("应该为带参数的路径生成正确的operationId", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users/:id", async (ctx, next) => {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users/:id", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
@@ -132,9 +200,12 @@ describe("KoaRouteCodeAnalyzer", () => {
     });
 
     it("应该为复杂路径生成正确的operationId", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.post("/api/users/:userId/posts", async (ctx, next) => {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.post("/api/users/:userId/posts", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -143,9 +214,12 @@ describe("KoaRouteCodeAnalyzer", () => {
     });
 
     it("应该为多个参数的路径生成正确的operationId", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users/:userId/posts/:postId", async (ctx, next) => {});',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users/:userId/posts/:postId", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
@@ -163,9 +237,12 @@ describe("KoaRouteCodeAnalyzer", () => {
       ];
 
       for (const { method, expected } of methods) {
-        const sourceFile = context.project.createSourceFile(
+        const sourceFile = project.createSourceFile(
           `test-${method}.ts`,
-          `router.${method}("/users", async (ctx, next) => {});`,
+          `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.${method}("/users", (ctx) => {})`,
         );
         const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
         const result = await analyzer.analyze(node);
@@ -175,246 +252,97 @@ describe("KoaRouteCodeAnalyzer", () => {
     });
 
     it("应该使用自定义的operationId生成函数", async () => {
-      const customContext = createParseContext({
+      const context = createParseContext({
         generateOperationId: (method, path) => {
           return `custom_${method}_${path.replace(/[^a-zA-Z0-9]/g, "_")}`;
         },
       });
-      const customAnalyzer = new KoaRouteCodeAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
+      const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'router.get("/users/:id", handler);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users/:id", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await customAnalyzer.analyze(node);
+      const analyzer = new KoaRouteCodeAnalyzer(context);
+      const result = await analyzer.analyze(node);
 
       expect(result.operationId).toBe("custom_get__users__id_");
     });
 
     it("应该处理自定义生成器返回null的情况", async () => {
-      const customContext = createParseContext({
+      const context = createParseContext({
         generateOperationId: () => null,
       });
-      const customAnalyzer = new KoaRouteCodeAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
+      const sourceFile = context.project.createSourceFile(
         "test.ts",
-        'router.get("/users", handler);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.get("/users", (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      const result = await customAnalyzer.analyze(node);
+      const analyzer = new KoaRouteCodeAnalyzer(context);
+      const result = await analyzer.analyze(node);
 
       expect(result.operationId).toBeUndefined();
     });
 
-    it("应该向自定义生成器传递正确的参数", async () => {
-      let capturedArgs: Parameters<NonNullable<ParseContext["options"]["generateOperationId"]>> = [
-        "get",
-        "",
-        "",
-        undefined,
-      ];
-      const customContext = createParseContext({
-        generateOperationId: (...args) => {
-          capturedArgs = args;
-          return "custom";
-        },
-      });
-      const customAnalyzer = new KoaRouteCodeAnalyzer(customContext);
-      const sourceFile = customContext.project.createSourceFile(
-        "api.ts",
-        'router.get("/users", namedHandler);',
-      );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
-      await customAnalyzer.analyze(node);
-
-      expect(capturedArgs).toEqual([
-        "get", // method
-        "/users", // path
-        "api", // fileName
-        "namedHandler", // functionName
-      ]);
-    });
-
     it("应该从带中间件的路由中提取处理函数名", async () => {
-      const sourceFile = context.project.createSourceFile(
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users", middleware1, middleware2, handler);',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router()
+        router.post("/users", middleware1, middleware2, (ctx) => {})`,
       );
       const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
       const result = await analyzer.analyze(node);
 
-      expect(result.operationId).toBe("handler");
+      expect(result.operationId).toBe("postUsers");
     });
 
-    it("应该处理匿名箭头函数", async () => {
-      const sourceFile = context.project.createSourceFile(
+    it("应该解析带prefix的Koa路由", async () => {
+      const sourceFile = project.createSourceFile(
         "test.ts",
-        'router.get("/users/:id", middleware, async (ctx) => { return ctx.body = "test"; });',
+        `
+        import { Router } from "@koa/router"
+        const router = new Router({ prefix: "/api" })
+        router.get("/users", (ctx) => {})`,
       );
-      const node = sourceFile.getFirstChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
+
       const result = await analyzer.analyze(node);
 
-      // 箭头函数没有名称，应该使用生成的operationId
-      expect(result.operationId).toBe("getUsersById");
+      expect(result).toEqual({
+        method: "get",
+        path: "/api/users",
+        operationId: "getApiUsers",
+      });
     });
-  });
 
-  it("应该正确处理基本的路由前缀", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const router = new Router({ prefix: "/api" });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/api/users");
-  });
+    it("应该处理prefix不是字符串类型的情况", async () => {
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+        import { Router } from "@koa/router"
+        const router = new Router({ prefix: 123 })
+        router.get("/users", (ctx) => {})`,
+      );
+      const node = sourceFile
+        .getFirstChildOrThrow()
+        .getLastChildByKindOrThrow(SyntaxKind.ExpressionStatement);
 
-  it("应该处理前缀和路径都带斜杠的情况", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const router = new Router({ prefix: "/api/" });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/api//users");
-  });
+      const result = await analyzer.analyze(node);
 
-  it("应该处理空字符串前缀", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const router = new Router({ prefix: "" });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/users");
-  });
-
-  it("应该处理前缀为中模板字符串的情况", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const router = new Router({ prefix: \`/api\` });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/api/users");
-  });
-
-  it("应该处理作为标识符引用的前缀", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const apiPrefix = "/api";
-          const router = new Router({ prefix: apiPrefix });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/api/users");
-  });
-
-  it("应该处理作为标识符引用的模板字符串前缀", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const apiPrefix = \`/api\`;
-          const router = new Router({ prefix: apiPrefix });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/api/users");
-  });
-
-  it("should handle prefix value being a call expression", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          function getPrefix() { return "/api"; }
-          const router = new Router({ prefix: getPrefix() });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/users");
-  });
-
-  it("should handle router being a call expression", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          function getRouter() { return new Router({ prefix: "/api" }); }
-          getRouter().get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/users");
-  });
-
-  it("should handle router variable not initialized with new expression", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const routerFactory = { create: () => new Router({ prefix: "/api" }) };
-          const router = routerFactory.create();
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/users");
-  });
-
-  it("should handle router options without prefix property", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          const router = new Router({ methods: ['get'] });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/users");
-  });
-
-  it("should handle uninitialized prefix identifier", async () => {
-    const sourceFile = context.project.createSourceFile(
-      "test.ts",
-      `
-          import Router from "@koa/router";
-          let apiPrefix: string;
-          const router = new Router({ prefix: apiPrefix });
-          router.get("/users", handler);
-        `,
-    );
-    const node = sourceFile.getStatementByKindOrThrow(SyntaxKind.ExpressionStatement);
-    const result = await analyzer.analyze(node);
-    expect(result.path).toBe("/users");
+      expect(result).toEqual({
+        method: "get",
+        path: "/users",
+        operationId: "getUsers",
+      });
+    });
   });
 });

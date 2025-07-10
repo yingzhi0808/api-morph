@@ -1,11 +1,10 @@
-import Router from "@koa/router";
+import { serve } from "@hono/node-server";
 import { generateDocument } from "api-morph";
-import { setupSwaggerUI, zodValidator } from "api-morph/koa";
-import Koa from "koa";
+import { setupSwaggerUI, zodValidator } from "api-morph/hono";
+import { Hono } from "hono";
 import { UpdateUserDto, UpdateUserVo, UserIdDto } from "./schema";
 
-const app = new Koa();
-const router = new Router();
+const app = new Hono();
 
 /**
  * @summary 更新用户信息
@@ -13,25 +12,21 @@ const router = new Router();
  * @tags users
  * @response 200 {@link UpdateUserVo} 更新用户信息成功
  */
-router.put(
+app.put(
   "/api/users/:id",
-  zodValidator({
-    params: UserIdDto,
-    body: UpdateUserDto,
-  }),
-  (ctx) => {
-    const { id } = ctx.params;
-    const { email, username } = ctx.request.body;
+  zodValidator("param", UserIdDto),
+  zodValidator("json", UpdateUserDto),
+  (c) => {
+    const { id } = c.req.valid("param");
+    const { email, username } = c.req.valid("json");
 
-    ctx.body = {
+    return c.json({
       id,
       email,
       username,
-    };
+    });
   },
 );
-
-app.use(router.routes());
 
 // 生成 OpenAPI 文档
 const openapi = await generateDocument(
@@ -44,21 +39,26 @@ const openapi = await generateDocument(
   },
   {
     parserOptions: {
-      include: ["examples/koa/**/*.ts"],
+      include: ["examples/hono/**/*.ts"],
     },
   },
 );
 
 // 提供 OpenAPI JSON 文档
-router.get("/openapi.json", (ctx) => {
-  ctx.body = openapi;
+app.get("/openapi.json", (c) => {
+  return c.json(openapi);
 });
 
 // 提供 Swagger UI 界面
 setupSwaggerUI("/swagger-ui", app);
 
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-  console.log(`访问 http://localhost:${port}/swagger-ui 查看 API 文档`);
-});
+serve(
+  {
+    fetch: app.fetch,
+    port: 3000,
+  },
+  (info) => {
+    console.log(`Example app listening on port ${info.port}`);
+    console.log(`访问 http://localhost:${info.port}/swagger-ui 查看 API 文档`);
+  },
+);

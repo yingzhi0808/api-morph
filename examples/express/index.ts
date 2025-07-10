@@ -7,14 +7,17 @@ const app = express();
 
 app.use(express.json());
 
+const usersRouter = express.Router();
+const versionRouter = express.Router();
+
 /**
  * @summary 更新用户信息
  * @description 更新指定用户的个人信息
  * @tags users
  * @response 200 {@link UpdateUserVo} 更新用户信息成功
  */
-app.put(
-  "/api/users/:id",
+usersRouter.put(
+  ":id",
   zodValidator({
     params: UserIdDto,
     body: UpdateUserDto,
@@ -31,6 +34,9 @@ app.put(
   },
 );
 
+versionRouter.use("users", usersRouter);
+app.use(versionRouter);
+
 // 生成 OpenAPI 文档
 const openapi = await generateDocument(
   {
@@ -46,6 +52,8 @@ const openapi = await generateDocument(
     },
   },
 );
+
+console.log(openapi);
 
 // 提供 OpenAPI JSON 文档
 app.get("/openapi.json", (_req, res) => {

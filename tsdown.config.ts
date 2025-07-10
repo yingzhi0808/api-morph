@@ -5,5 +5,6 @@ export default defineConfig({
     index: "src/index.ts",
     express: "src/express/index.ts",
     koa: "src/koa/index.ts",
+    hono: "src/hono/index.ts",
   },
 });
