@@ -1,7 +1,7 @@
 {
   "name": "api-morph",
   "type": "module",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "packageManager": "pnpm@10.13.1",
   "description": "A modern TypeScript-first OpenAPI document generator that analyzes your code and JSDoc comments to automatically generate comprehensive and accurate API documentation.",
   "author": "Yingzhi Ji <jiyingzhi0808@gmail.com>",
